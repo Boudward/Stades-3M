@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stades 3M</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
+<style>
+:root{--bg:#eef1f3;--ink:#1c2b33;--mute:#5d6e77;--line:#d3dadf;--accent:#0d5c63;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
+header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+header h1{font-size:18px;margin:0}header div{display:flex;gap:8px;align-items:center}
+main{max-width:1750px;margin:0 auto;padding:20px}
+button,input,select,textarea{font:inherit;color:inherit}
+button{background:var(--accent);color:#fff;border:0;border-radius:4px;padding:8px 14px;cursor:pointer}
+button.sec{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+header button{background:#fff;color:var(--accent)}header select{width:auto;color:var(--accent);font-weight:600}
+:focus-visible{outline:2px solid var(--warn);outline-offset:1px}
+input,select,textarea{border:1px solid var(--line);border-radius:4px;padding:7px 9px;background:#fff;width:100%}
+label{display:block;font-size:13px;color:var(--mute);margin:10px 0 3px}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:end;margin-bottom:14px}.bar>*{flex:1 1 140px}.bar .btn{flex:0 0 auto}
+.panel,.table{background:#fff;border:1px solid var(--line);border-radius:4px}.table{overflow-x:auto}.panel{padding:14px;margin-bottom:14px}
+table{border-collapse:collapse;width:100%;min-width:0}th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line)}
+th{font-size:13px;color:var(--mute)}tbody tr.c{cursor:pointer}tbody tr.c:hover{background:#f5f8f9}
+.tag{padding:2px 8px;border-radius:10px;font-size:12px;border:1px solid currentColor}
+.p-urgente,.off{color:var(--bad)}.p-haute,.s-en_attente{color:var(--warn)}.p-normale,.p-basse{color:var(--mute)}.s-resolue,.s-archivee,.on{color:var(--ok)}.s-en_cours{color:var(--accent)}
+dialog{border:0;border-radius:6px;padding:20px;width:min(560px,94vw);box-shadow:0 8px 30px #0004}dialog::backdrop{background:#0006}
+.row{display:flex;gap:10px}.row>*{flex:1}.msg{color:var(--bad);font-size:13px;min-height:18px}
+.suivi{border-left:3px solid var(--line);padding:4px 10px;margin:8px 0;font-size:14px}.suivi small{color:var(--mute)}
+.empty{padding:24px;text-align:center;color:var(--mute)}
+#login{max-width:400px;margin:40px auto;background:#fff;padding:24px;border-radius:6px;border:1px solid var(--line)}
+th{white-space:nowrap}
+td.nw{white-space:nowrap}td.tt{min-width:220px;overflow-wrap:anywhere}td.lc{min-width:180px;overflow-wrap:anywhere}
+tr.new td{font-weight:700}
+tr.urg td,tr.urg .tag{color:var(--bad)}
+tr.res{opacity:.7}tr.arc{opacity:.5}
+.vasbar{max-width:1750px;margin:8px auto -8px;padding:0 20px;text-align:right}.vasbar select{width:auto;font-size:12px;padding:3px 6px;color:var(--mute)}
+.tabrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.acts{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
+button.cta{background:var(--warn);font-weight:600}button.cta:hover{filter:brightness(.92)}
+table.rt{table-layout:fixed;width:auto;max-width:none}.rt th{position:relative;overflow:hidden;padding-right:12px}.rt td{overflow:hidden}.rt td.nw{text-overflow:ellipsis}.rt td.tt,.rt td.lc{overflow-wrap:anywhere}
+.rs{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;touch-action:none}.rs:hover,.rs:active{background:var(--accent);opacity:.4}
+header h1 small{font-size:12px;font-weight:400;opacity:.85;margin-left:8px}.gh{margin:22px 0 8px;color:var(--accent)}.gh small{color:var(--mute);font-weight:400}.s-refusee{color:var(--bad)}
+#dDet,#dIv{width:min(640px,94vw)}.dh{display:flex;justify-content:space-between;align-items:start;gap:10px}.dh h2{margin:0}.sub{color:var(--mute)}
+button.ic{background:none;color:var(--accent);border:1px solid var(--line);padding:3px 9px;font-size:17px}
+.big{font-size:17px;margin:10px 0 4px}.meta{color:var(--mute);font-size:13px;margin:4px 0}
+.desc{white-space:pre-wrap;background:#f4f7f8;border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;font-size:16px}
+.btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ep{border:1px dashed var(--line);padding:4px 10px 10px;margin:8px 0}
+.tl{font-size:13px;padding:3px 0;border-bottom:1px solid var(--line)}.tl span{color:var(--mute);margin-right:6px}.tl.nt{background:#f7fafb}
+header button#out,header button#sug{padding:6px 9px;line-height:0}header button#hlp{padding:6px 12px;font-weight:700;font-size:16px}
+#ver{color:var(--bg);font-size:11px;text-align:center;padding:14px}
+button.hb,button.hf{background:none;color:var(--mute);border:0;padding:0 3px;font-size:13px;font-weight:600}
+button.hb:hover,button.hf:hover{color:var(--accent)}button.hf.on{color:var(--accent)}
+.pop{position:absolute;z-index:20;width:260px;background:#fff;border:1px solid var(--line);border-radius:4px;box-shadow:0 6px 20px #0003;padding:10px;display:flex;flex-direction:column;gap:6px}
+#pl{max-height:200px;overflow:auto;border:1px solid var(--line);padding:4px}
+.ck{display:flex;gap:6px;align-items:center;margin:2px 0;color:var(--ink);font-size:14px}.ck input{width:auto}
+button.pb{text-align:left;padding:6px 8px;font-size:13px}
+.hide{display:none!important}a.lnk{color:var(--accent);cursor:pointer;text-decoration:underline}
+</style></head><body>
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v2.9</small></h1><div id="hd" class="hide">
+ <span id="who"></span>
+ 
+ <button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
+<div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable_batiments">Voir en tant que Responsable bâtiments</option><option value="responsable_exploitation">Voir en tant que Responsable exploitation</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
+
+<section id="login">
+ <h2 id="lt" style="margin-top:0">Connexion</h2>
+ <div id="sg" class="hide"><div class="row"><div><label for="sn">Nom</label><input id="sn"></div><div><label for="sp">Prénom</label><input id="sp"></div></div>
+ <div class="row"><div><label for="ss">Société</label><input id="ss"></div><div><label for="sf">Fonction</label><input id="sf"></div></div></div>
+ <label for="em">Adresse e-mail</label><input id="em" type="email" autocomplete="username">
+ <div id="pwb"><label for="pw">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"></div>
+ <p class="msg" id="lmsg"></p>
+ <button id="go">Se connecter</button> <a class="lnk" id="tog">Demander un compte</a>
+</section>
+
+<main id="app" class="hide">
+ <div id="pending" class="panel hide">Votre compte est en attente d'activation par l'administrateur.</div>
+ <div id="tabs" class="tabrow hide"><button class="btn" id="tabt">Tickets</button><button class="btn sec" id="tabi">Interventions</button>
+ <div class="acts"><button class="cta" id="new">Nouveau ticket</button><button class="cta hide" id="newint">Nouvelle intervention</button><button class="sec" id="colt">Colonnes</button><button class="sec hide" id="coli">Colonnes</button></div></div>
+ <div id="iv" class="hide">
+  <div class="table"><table class="rt" data-tb="i"><colgroup id="icg"></colgroup><thead><tr id="ihr"></tr></thead><tbody id="irows"></tbody></table>
+  <div id="iempty" class="empty hide">Aucune intervention.</div></div>
+  <h3 id="ich" style="margin:24px 0 8px"></h3><div class="table"><table class="rt" data-tb="i"><colgroup id="icg2"></colgroup><thead><tr id="ihr2"></tr></thead><tbody id="irows2"></tbody></table><div id="iempty2" class="empty hide">Aucune intervention close.</div></div></div>
+ <div id="tk" class="hide">
+  
+  <div id="tkA"></div><h3 id="clh" class="hide" style="margin:30px 0 0"></h3><div id="tkC"></div>
+  <p class="empty hide" id="agentmsg">Les interventions arriveront à l'étape suivante : cet espace est réservé aux agents.</p>
+ </div>
+ <div id="ad" class="hide">
+  <div class="panel"><h3 style="margin-top:0">Demandes de compte</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></div>
+  <div class="panel"><h3 style="margin-top:0">Catégories et corps d'état</h3>
+   <div class="row"><select id="ac" aria-label="Catégorie"></select><input id="acn" placeholder="Nouveau corps d'état"><button id="acb">Ajouter</button></div><div id="clists" style="margin-top:12px"></div></div>
+  <div class="panel"><h3 style="margin-top:0">Suggestions des utilisateurs</h3><div id="sug_l"></div></div>
+  <div class="panel"><h3 style="margin-top:0">Annuaire des entreprises</h3>
+   <div class="row"><select id="en_c" aria-label="Corps d'état"></select><input id="en_e" placeholder="Entreprise"></div>
+   <div id="en_k" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><input id="en_n" placeholder="Chargé d'affaires"><input id="en_m" type="email" placeholder="E-mail"><input id="en_t" placeholder="Mobile"><button id="en_b">Ajouter</button><button class="sec hide" id="en_x">Annuler</button></div><div id="en_l" style="margin-top:12px"></div></div>
+  <div class="panel"><h3 style="margin-top:0">Utilisateurs</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></div>
+  <div class="panel"><h3 style="margin-top:0">Sites et zones/tribunes</h3>
+   <div class="row"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div>
+   <div class="row" style="margin-top:8px"><select id="at"></select><input id="atn" placeholder="Nom de la nouvelle zone/tribune"><button id="atb">Ajouter la zone/tribune</button></div>
+   <div id="lists" style="margin-top:12px"></div><p class="msg" id="amsg"></p></div>
+ </div>
+</main>
+
+<dialog id="dNew"><form id="fNew" style="margin:0"><h2 style="margin-top:0">Nouveau ticket</h2>
+ <div class="row"><div><label for="ns">Site (obligatoire)</label><select id="ns" required></select></div><div><label for="nt2">Zone/tribune (obligatoire)</label><select id="nt2" required></select></div></div>
+ <label for="nl">Local (facultatif, recommandé)</label><input id="nl">
+ <div class="row"><div><label for="ncat">Catégorie (obligatoire)</label><select id="ncat" required></select></div><div><label for="ncorps">Corps d'état (obligatoire)</label><select id="ncorps" required></select></div></div>
+ <label for="nt">Titre</label><input id="nt" required>
+ <label for="nd">Description</label><textarea id="nd" rows="3"></textarea>
+ <label for="np">Priorité</label><select id="np"></select>
+ <p class="msg" id="nmsg"></p><div class="row"><button type="submit">Enregistrer le ticket</button><button type="button" class="sec" data-close>Annuler</button></div></form></dialog>
+
+<dialog id="dIv"><div id="ibody"></div></dialog>
+<dialog id="dJ"><h3 id="jt" style="margin-top:0"></h3><label for="jx">Justification (obligatoire)</label><textarea id="jx" rows="3"></textarea><p class="msg" id="jm"></p>
+ <div class="row"><button id="jok">Valider</button><button class="sec" id="jno">Annuler</button></div></dialog>
+<dialog id="dS"><h2 style="margin-top:0">Une idée, une amélioration ?</h2><p class="meta">Votre message est transmis à l'administrateur de l'application.</p>
+ <label for="sugt">Type</label><select id="sugt"><option>Idée</option><option>Amélioration</option><option>Problème rencontré</option></select>
+ <label for="sugti">Titre (obligatoire)</label><input id="sugti"><label for="sugtx">Détail</label><textarea id="sugtx" rows="4"></textarea>
+ <p class="msg" id="sugm"></p><div class="row"><button id="sugb">Envoyer la suggestion</button><button class="sec" data-close>Fermer</button></div></dialog>
+<footer id="ver" aria-hidden="true">Version 2.9 – 30/10/2026</footer>
+<div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
+<dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (8 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
+<dialog id="dDet"><div id="tbody"></div></dialog>
+
+<script>
+const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
+const SUPABASE_URL = 'https://xiljtqitrormxdyzgote.supabase.co/';
+const SUPABASE_KEY = 'sb_publishable_pURiKZr-53--jTGNIq7Vvg_6kCcthWZ';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const $ = id => document.getElementById(id);
+const ST = {nouvelle:"Nouveau",en_cours:"En cours",en_attente:"En attente",resolue:"Résolu",refusee:"Refusé",archivee:"Archivé"};
+const PR = {basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"};
+const ROLES = {demandeur:"Demandeur",responsable_batiments:"Responsable bâtiments",responsable_exploitation:"Responsable exploitation",agent_travaux:"Agent bâtiment",agent_exploitation:"Agent exploitation",admin:"Admin"};
+let me, sites=[], trib=[], tk=[], cur, signup=false, view="";
+const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const opts = (o,all)=>(all?`<option value="">${all}</option>`:"")+Object.entries(o).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
+const sOpts = (all)=>(all?`<option value="">${all}</option>`:"")+sites.map(s=>`<option value="${s.id}">${esc(s.nom)}</option>`).join("");
+const tOpts = (sid,all)=>(all?`<option value="">${all}</option>`:"")+trib.filter(t=>!sid||t.site_id==sid).map(t=>`<option value="${t.id}">${esc(t.nom)}</option>`).join("");
+const siteN = id=>(sites.find(s=>s.id==id)||{}).nom||"?", tribN = id=>(trib.find(t=>t.id==id)||{}).nom||"?";
+const role = ()=> me.role==="admin" && view ? view : me.role;
+$("np").innerHTML=opts(PR); $("np").value="normale";
+document.querySelectorAll("[data-close]").forEach(b=>b.onclick=()=>b.closest("dialog").close());
+
+$("tog").onclick=()=>{signup=!signup;$("pwb").classList.toggle("hide",signup);$("lmsg").style.color="";$("sg").classList.toggle("hide",!signup);$("lt").textContent=signup?"Demande de création de compte":"Connexion";
+ $("go").textContent=signup?"Envoyer la demande":"Se connecter";$("tog").textContent=signup?"J'ai déjà un compte":"Demander un compte";$("lmsg").textContent=""};
+$("go").onclick=async()=>{$("lmsg").style.color="";
+ const email=$("em").value,password=$("pw").value;
+ if(signup){
+  if(![$("sn"),$("sp"),$("ss"),$("sf"),$("em")].every(i=>i.value.trim())){$("lmsg").textContent="Renseignez tous les champs.";return}
+  const {error}=await sb.from("demandes_compte").insert({nom:$("sn").value.trim(),prenom:$("sp").value.trim(),societe:$("ss").value.trim(),fonction:$("sf").value.trim(),email:email.trim()});
+  if(error){$("lmsg").textContent="Demande impossible : "+error.message;return}
+  $("lmsg").style.color="var(--ok)";$("lmsg").textContent="Demande envoyée. L'administrateur l'examinera puis vous invitera par e-mail à choisir votre mot de passe.";return}
+ const {error}=await sb.auth.signInWithPassword({email,password});
+ if(error)$("lmsg").textContent="Connexion impossible : vérifiez l'e-mail et le mot de passe.";else start()};
+$("out").onclick=async()=>{await sb.auth.signOut();location.reload()};
+
+async function start(){
+ const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
+ const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;
+ $("login").classList.add("hide");$("app").classList.remove("hide");$("hd").classList.remove("hide");
+ $("who").textContent=`${me.prenom||""} ${me.nom||""} · ${ROLES[me.role]}`;
+ $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",me.role!=="admin");
+ if(!me.actif){$("pending").classList.remove("hide");return}sb.rpc("marquer_connexion").then(()=>{});
+ await load();
+}
+$("vas").onchange=()=>{view=$("vas").value;$("ad").classList.add("hide");render()};
+$("adm").onclick=()=>{$("ad").classList.toggle("hide");render();if(!$("ad").classList.contains("hide"))loadAdmin()};
+
+async function load(){
+ const [s,t,k]=await Promise.all([sb.from("sites").select("*").order("nom"),sb.from("tribunes").select("*").order("nom"),sb.from("tickets").select("*").order("created_at",{ascending:false})]);
+ if(s.error||t.error||k.error){alert("Erreur de chargement : "+(s.error||t.error||k.error).message);return}
+ sites=s.data;trib=t.data;tk=k.data;
+ const [c1,c2]=await Promise.all([sb.from("categories").select("*").order("id"),sb.from("corps_etat").select("*").order("id")]);
+ cats=c1.data||[];corps=c2.data||[];
+ const [iv,ag]=await Promise.all([sb.from("interventions").select("*").order("created_at",{ascending:false}),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable_batiments","responsable_exploitation","admin"]).eq("actif",true)]);
+ ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
+ 
+ $("ns").innerHTML=sOpts();$("nt2").innerHTML=tOpts($("ns").value);
+ render();
+}
+
+$("ns").onchange=()=>$("nt2").innerHTML=tOpts($("ns").value);
+
+function render(){
+ const r=role(),isAgent=r.startsWith("agent");
+ const inAdm=!$("ad").classList.contains("hide");renderIv();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").textContent=inAdm?"Retour":"Console admin";
+ $("tkA").classList.toggle("hide",isAgent);$("tkC").classList.toggle("hide",isAgent);$("agentmsg").classList.toggle("hide",!isAgent);
+ const baseL=tk.filter(x=>canSee(x,r));TB.t.base=baseL;const list=sortFilt(baseL,"t");
+ const act=list.filter(x=>!done(x)),clo=list.filter(done);
+ $("tkA").innerHTML=tkGroups(act,"Aucun ticket ne correspond à ces filtres.",3);
+ $("clh").textContent=`Tickets clos – résolus, refusés, archivés (${clo.length})`;$("clh").classList.toggle("hide",!clo.length);
+ $("tkC").innerHTML=tkGroups(clo,"",4)}
+
+
+$("new").onclick=()=>{$("fNew").reset();$("np").value="normale";if(me.site_defaut_id&&sites.some(x=>x.id===me.site_defaut_id))$("ns").value=me.site_defaut_id;$("nt2").innerHTML=tOpts($("ns").value);$("ncorps").innerHTML=corpsOpts($("ncat").value);$("nmsg").textContent="";$("dNew").showModal()};
+$("fNew").onsubmit=async e=>{e.preventDefault();
+ if(!$("ns").value||!$("nt2").value){$("nmsg").textContent="Site et zone/tribune sont obligatoires.";return}
+ const {error}=await sb.from("tickets").insert({site_id:$("ns").value,tribune_id:$("nt2").value,local:$("nl").value||null,titre:$("nt").value,description:$("nd").value,priorite:$("np").value,categorie_id:$("ncat").value,corps_etat_id:$("ncorps").value});
+ if(error){$("nmsg").textContent="Enregistrement impossible : "+error.message;return}
+ $("dNew").close();load()};
+
+async function loadAdmin(){
+ const dc=await sb.from("demandes_compte").select("*").order("created_at",{ascending:false});
+ const pr=await sb.from("profiles").select("email,premiere_connexion_at");
+ const pm=Object.fromEntries((pr.data||[]).map(u=>[(u.email||"").toLowerCase(),u]));
+ const cpt=d=>{if(d.statut==="refusee")return "—";const u=pm[d.email.toLowerCase()];return !u?`<span class="off">Pas de compte</span>`:u.premiere_connexion_at?`<span class="on">Connecté (${new Date(u.premiere_connexion_at).toLocaleDateString("fr-FR")})</span>`:`<span class="s-en_attente">Compte créé, jamais connecté</span>`};
+ $("drows").innerHTML=(dc.data||[]).map(d=>{const a=d.statut==="en_attente";return `<tr><td>${esc(d.prenom)} ${esc(d.nom)}</td><td>${esc(d.societe)} – ${esc(d.fonction)}</td><td>${esc(d.email)}</td><td>${cpt(d)}</td>
+  <td>${a?`<select data-d="${d.id}" aria-label="Rôle à attribuer">${opts(ROLES)}</select>`:(d.statut==="approuvee"?"Approuvée : "+ROLES[d.role_prevu]:"Refusée")}</td>
+  <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec" data-d="${d.id}" data-a="suppr">Supprimer</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
+ const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false});
+ $("urows").innerHTML=(data||[]).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
+  <td><select data-u="${u.id}" data-f="role">${opts(ROLES)}</select></td><td><select data-u="${u.id}" data-f="site_defaut_id" aria-label="Site par défaut">${O([["","— Aucun —"],...sites.map(x=>[x.id,x.nom])],u.site_defaut_id)}</select></td>
+  <td><button class="sec" data-u="${u.id}" data-f="actif" data-v="${!u.actif}"><span class="${u.actif?"on":"off"}">${u.actif?"Actif – désactiver":"Inactif – activer"}</span></button></td></tr>`).join("");
+ (data||[]).forEach(u=>{const s=document.querySelector(`select[data-u="${u.id}"]`);if(s)s.value=u.role});
+ $("at").innerHTML=sOpts();$("ac").innerHTML=catOpts();renderAnn();renderSug();
+ $("clists").innerHTML=cats.map(c=>`<p><b>${esc(c.nom)}</b><br>${corps.filter(x=>x.categorie_id===c.id).map(x=>`${esc(x.nom)} <a class="lnk" data-del="corps_etat" data-id="${x.id}">supprimer</a>`).join(" · ")}</p>`).join("");
+ $("lists").innerHTML=sites.map(s=>`<p><b>${esc(s.nom)}</b> <a class="lnk" data-del="sites" data-id="${s.id}">supprimer</a><br>${trib.filter(t=>t.site_id===s.id).map(t=>`${esc(t.nom)} <a class="lnk" data-del="tribunes" data-id="${t.id}">supprimer</a>`).join(" · ")||"Aucune zone/tribune"}</p>`).join("");
+}
+async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+error.message:"";await load();loadAdmin()}
+$("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
+$("urows").onclick=e=>{const b=e.target.closest("button");if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
+$("asb").onclick=()=>{if($("as").value.trim()){adm(sb.from("sites").insert({nom:$("as").value.trim()}));$("as").value=""}};
+$("atb").onclick=()=>{if($("atn").value.trim()&&$("at").value){adm(sb.from("tribunes").insert({site_id:$("at").value,nom:$("atn").value.trim()}));$("atn").value=""}};
+$("lists").onclick=e=>{const a=e.target.closest("[data-del]");if(a&&confirm("Supprimer cet élément ? Les tickets liés bloqueront la suppression."))adm(sb.from(a.dataset.del).delete().eq("id",a.dataset.id))};
+$("drows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.a==="suppr"){if(!confirm("Supprimer cette demande ? Le compte éventuellement déjà créé n'est pas touché."))return;
+  const {error}=await sb.from("demandes_compte").delete().eq("id",b.dataset.d);
+  $("cmsg").style.color=error?"":"var(--ok)";$("cmsg").textContent=error?"Suppression impossible : "+error.message:"Demande supprimée.";loadAdmin();return}
+ const sel=document.querySelector(`select[data-d="${b.dataset.d}"]`);
+ const {error}=await sb.from("demandes_compte").update({statut:b.dataset.a,role_prevu:sel.value}).eq("id",b.dataset.d);
+ $("cmsg").style.color=error?"":"var(--ok)";
+ $("cmsg").textContent=error?"Action impossible : "+error.message:(b.dataset.a==="approuvee"?`Demande approuvée. Invitez maintenant ${b.dataset.e} dans Supabase (Authentication > Users > Invite user).`:"Demande refusée.");
+ loadAdmin()};
+$("pwok").onclick=async()=>{if($("np1").value.length<8){$("pmsg").textContent="8 caractères minimum.";return}
+ const {error}=await sb.auth.updateUser({password:$("np1").value});
+ if(error){$("pmsg").textContent="Enregistrement impossible : "+error.message;return}
+ $("dPw").close();history.replaceState(null,"",location.pathname)};
+const TB={t:{f:{},s:{k:null,d:1},base:[]},i:{f:{},s:{k:null,d:1},base:[]}};
+const ts=d=>d?+new Date(d):0,mk=(l,v)=>({l,v,k:x=>String(v(x)).toLowerCase()});
+const catLab=x=>x.categorie_id?`${(cats.find(c=>c.id===x.categorie_id)||{}).nom||"?"} / ${(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—"}`:"—";
+const refK=(x,o)=>{const [a,b,c]=x.ref.split("-").slice(o).map(Number);return a*1e8+b*1e6+c};
+const COLS={
+ ref:{l:"N°",c:"nw",lock:1,v:x=>x.ref,k:x=>refK(x,0)},
+ titre:{...mk("Ticket",x=>x.titre),c:"tt",lock:1},
+ date:{l:"Créé le",c:"nw",v:x=>new Date(x.created_at).toLocaleDateString("fr-FR"),k:x=>ts(x.created_at)},
+ priorite:{l:"Priorité",c:"nw",v:x=>PR[x.priorite],k:x=>["urgente","haute","normale","basse"].indexOf(x.priorite),h:x=>`<span class="tag p-${x.priorite}">${PR[x.priorite]}</span>`},
+ site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone/tribune",x=>tribN(x.tribune_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
+ corps:{...mk("Corps d'état",x=>(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—"),c:"lc"},
+ par:{...mk("Demandeur",x=>x.demandeur_nom||"—"),c:"nw"},
+ charge:{...mk("En charge",x=>x.en_charge_nom||"—"),c:"nw"},
+ fin:{l:"Fin prévue",c:"nw",v:x=>x.fin_prevue?fdate(x.fin_prevue):"—",k:x=>ts(x.fin_prevue)},
+ statut:{l:"Statut",c:"nw",v:x=>ST[x.statut],k:x=>Object.keys(ST).indexOf(x.statut),h:x=>`<span class="tag s-${x.statut}">${ST[x.statut]}</span>`}};
+const attV=x=>{const en=ents.find(e=>e.id===x.entreprise_id);return [x.agents_noms,en?eLab(en):x.prestataire].filter(Boolean).join(" · ")||"—"};
+const ICOLS={
+ ref:{l:"N°",c:"nw",lock:1,v:x=>x.ref,k:x=>refK(x,1)},
+ titre:{...mk("Intervention",x=>x.titre),c:"tt",lock:1},
+ site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone/tribune",x=>tribN(x.tribune_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
+ cat:{l:"Catégorie / corps d'état",c:"lc",v:catLab,k:x=>catLab(x).toLowerCase()},
+ fin:{l:"Fin prévue",c:"nw",v:x=>fdate(x.echeance),k:x=>ts(x.echeance)},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
+ etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`}};
+Object.entries({ref:85,titre:280,date:105,priorite:105,site:130,zone:140,local:120,corps:160,par:150,charge:150,fin:105,statut:115}).forEach(([k,w])=>COLS[k].w=w);
+Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:105,att:220,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
+const CB={t:COLS,i:ICOLS},redraw=tb=>tb==="t"?render():renderIv();
+const done=x=>["resolue","refusee","archivee"].includes(x.statut);
+const rowCls=x=>(x.statut==="nouvelle"?"new ":"")+(x.priorite==="urgente"&&!done(x)?"urg ":"")+(["resolue","refusee"].includes(x.statut)?"res":x.statut==="archivee"?"arc":"");
+function sortFilt(l,tb){const T=TB[tb],C=CB[tb];l=l.filter(x=>Object.entries(T.f).every(([k,s])=>s.has(C[k].v(x))));
+ if(!T.s.k)return l;const f=C[T.s.k].k;return [...l].sort((a,b)=>((f(a)>f(b))-(f(a)<f(b)))*T.s.d)}
+const VIS={},vkey=tb=>`colvis:${tb}:${me.id}`;
+const visOf=tb=>VIS[tb]||(VIS[tb]=(()=>{try{return JSON.parse(localStorage.getItem(vkey(tb)))||{}}catch(e){return{}}})());
+const saveVis=tb=>{try{localStorage.setItem(vkey(tb),JSON.stringify(VIS[tb]))}catch(e){}};
+const WID={},wkey=tb=>`colw:${tb}:${me.id}`;
+const wOf=tb=>WID[tb]||(WID[tb]=(()=>{try{return JSON.parse(localStorage.getItem(wkey(tb)))||{}}catch(e){return{}}})());
+const saveW=tb=>{try{localStorage.setItem(wkey(tb),JSON.stringify(WID[tb]))}catch(e){}};
+const visCols=tb=>Object.entries(CB[tb]).filter(([k,c])=>c.lock||!visOf(tb)[k]);
+const tw=tb=>visCols(tb).reduce((a,[k,c])=>a+(wOf(tb)[k]||c.w||120),0);
+const colsHtml=tb=>visCols(tb).map(([k,c])=>`<col data-tb="${tb}" data-k="${k}" style="width:${wOf(tb)[k]||c.w||120}px">`).join("");
+const thHtml=tb=>{const T=TB[tb];return visCols(tb).map(([k,c])=>`<th aria-sort="${T.s.k===k?(T.s.d>0?"ascending":"descending"):"none"}"><button class="hb" data-s="${k}">${c.l}${T.s.k===k?(T.s.d>0?" ▲":" ▼"):""}</button><button class="hf${T.f[k]?" on":""}" data-f="${k}" aria-label="Filtrer la colonne ${c.l}">${T.f[k]?"⧩":"▾"}</button><span class="rs" data-tb="${tb}" data-r="${k}" title="Glisser pour ajuster la largeur"></span></th>`).join("")};
+const rowH=(tb,x,cls,attr)=>`<tr class="c ${cls}" ${attr}>${visCols(tb).map(([k,c])=>`<td class="${c.c||""}">${c.h?c.h(x):esc(c.v(x))}</td>`).join("")}</tr>`;
+function head(tb){if(tb==="i"){$("ihr").innerHTML=thHtml("i");$("ihr2").innerHTML=thHtml("i");$("icg").innerHTML=$("icg2").innerHTML=colsHtml("i");document.querySelectorAll('table[data-tb="i"]').forEach(t=>t.style.width=tw("i")+"px")}}
+const hdClick=tb=>e=>{const b=e.target.closest("button");if(!b)return;const T=TB[tb];
+ if(b.dataset.s){T.s=T.s.k===b.dataset.s?{k:T.s.k,d:-T.s.d}:{k:b.dataset.s,d:1};redraw(tb)}else openPop(tb,b.dataset.f,b)};
+$("ihr").onclick=$("ihr2").onclick=hdClick("i");
+const catGroups=()=>[...cats.filter(c=>c.domaine==="exploitation"),...cats.filter(c=>c.domaine==="batiments"),...cats.filter(c=>c.domaine!=="exploitation"&&c.domaine!=="batiments"),{id:null,nom:"Sans catégorie"}];
+function tkGroups(list,msg,lvl){const o=catGroups().map(g=>{const l=list.filter(x=>(x.categorie_id||null)===g.id);if(!l.length)return"";
+ return `<h${lvl} class="gh">${esc(g.nom)} <small>(${l.length})</small></h${lvl}><div class="table"><table class="rt" data-tb="t" style="width:${tw("t")}px"><colgroup>${colsHtml("t")}</colgroup><thead><tr>${thHtml("t")}</tr></thead><tbody>${l.map(x=>rowH("t",x,rowCls(x),`data-id="${x.id}"`)).join("")}</tbody></table></div>`}).join("");
+ return o||(msg?`<p class="empty">${msg}</p>`:"")}
+const tkClick=e=>{if(e.target.closest("button.hb,button.hf"))return hdClick("t")(e);const tr=e.target.closest("tr.c");if(tr)openDet(+tr.dataset.id)};
+$("tkA").onclick=$("tkC").onclick=tkClick;
+let cpTb=null;
+function openCols(tb,btn){const p=$("cpop");if(!p.classList.contains("hide")&&cpTb===tb){p.classList.add("hide");return}
+ cpTb=tb;const V=visOf(tb);p.innerHTML=`<b style="font-size:13px">Colonnes affichées</b>`+Object.entries(CB[tb]).map(([k,c])=>`<label class="ck"><input type="checkbox" data-c="${k}"${!V[k]||c.lock?" checked":""}${c.lock?" disabled":""}> ${esc(c.l)}</label>`).join("")+`<button class="sec pb" data-all>Tout afficher</button><button class="sec pb" data-rw>Réinitialiser les largeurs</button>`;
+ const r=btn.getBoundingClientRect();p.style.top=(r.bottom+scrollY+4)+"px";p.style.left=Math.max(8,Math.min(r.left+scrollX,innerWidth-275))+"px";p.classList.remove("hide")}
+$("cpop").onchange=e=>{const k=e.target.dataset.c;if(!k)return;const V=visOf(cpTb);if(e.target.checked)delete V[k];else{V[k]=true;delete TB[cpTb].f[k]}saveVis(cpTb);redraw(cpTb)};
+$("cpop").onclick=e=>{if(e.target.closest("[data-rw]")){WID[cpTb]={};saveW(cpTb);redraw(cpTb);return}if(!e.target.closest("[data-all]"))return;const V=visOf(cpTb);Object.keys(V).forEach(k=>delete V[k]);saveVis(cpTb);document.querySelectorAll("#cpop [data-c]").forEach(b=>b.checked=true);redraw(cpTb)};
+$("colt").onclick=e=>openCols("t",e.currentTarget);$("coli").onclick=e=>openCols("i",e.currentTarget);
+function setW(tb,k,w){wOf(tb)[k]=w;document.querySelectorAll(`col[data-tb="${tb}"][data-k="${k}"]`).forEach(c=>c.style.width=w+"px");document.querySelectorAll(`table[data-tb="${tb}"]`).forEach(t=>t.style.width=tw(tb)+"px")}
+document.addEventListener("pointerdown",e=>{const h=e.target.closest(".rs");if(!h)return;e.preventDefault();
+ const tb=h.dataset.tb,k=h.dataset.r,x0=e.clientX,w0=h.parentElement.getBoundingClientRect().width;
+ const mv=ev=>setW(tb,k,Math.max(60,Math.round(w0+ev.clientX-x0))),up=()=>{document.removeEventListener("pointermove",mv);document.removeEventListener("pointerup",up);saveW(tb)};
+ document.addEventListener("pointermove",mv);document.addEventListener("pointerup",up)});
+function openPop(tb,k,btn){const T=TB[tb],C=CB[tb],c=C[k],o=T.base.filter(x=>Object.entries(T.f).every(([j,s])=>j===k||s.has(C[j].v(x)))).sort((a,b)=>(c.k(a)>c.k(b))-(c.k(a)<c.k(b)));
+ const vals=[...new Set(o.map(c.v))],cur=T.f[k]||new Set(vals),p=$("pop");p.dataset.k=k;p.dataset.tb=tb;
+ p.innerHTML=`<button class="sec pb" data-o="asc">Trier du plus petit au plus grand (A → Z)</button><button class="sec pb" data-o="desc">Trier du plus grand au plus petit (Z → A)</button>
+ <input id="pq" placeholder="Rechercher" aria-label="Rechercher dans les valeurs">
+ <label class="ck"><input type="checkbox" id="pall"${vals.every(v=>cur.has(v))?" checked":""}> (Tout sélectionner)</label>
+ <div id="pl">${vals.map(v=>`<label class="ck"><input type="checkbox" data-v="${esc(v)}"${cur.has(v)?" checked":""}> ${esc(v)}</label>`).join("")}</div>
+ <button class="sec pb" data-o="clear">Effacer le filtre de cette colonne</button>`;
+ const r=btn.getBoundingClientRect();p.style.top=(r.bottom+scrollY+4)+"px";p.style.left=Math.max(8,Math.min(r.left+scrollX,innerWidth-275))+"px";p.classList.remove("hide")}
+$("pop").onclick=e=>{const b=e.target.closest("button");if(!b)return;const tb=$("pop").dataset.tb,k=$("pop").dataset.k,T=TB[tb];
+ if(b.dataset.o==="clear")delete T.f[k];else T.s={k,d:b.dataset.o==="asc"?1:-1};$("pop").classList.add("hide");redraw(tb)};
+$("pop").onchange=e=>{const tb=$("pop").dataset.tb,k=$("pop").dataset.k,T=TB[tb],bx=[...document.querySelectorAll("#pl input")];
+ if(e.target.id==="pall")bx.forEach(b=>b.checked=e.target.checked);
+ if(bx.every(b=>b.checked))delete T.f[k];else T.f[k]=new Set(bx.filter(b=>b.checked).map(b=>b.dataset.v));
+ $("pall").checked=bx.every(b=>b.checked);redraw(tb)};
+$("pop").oninput=e=>{if(e.target.id!=="pq")return;const q=e.target.value.toLowerCase();
+ document.querySelectorAll("#pl label").forEach(l=>l.classList.toggle("hide",!l.textContent.toLowerCase().includes(q)))};
+document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli"))$("cpop").classList.add("hide")});
+const isResp=r=>r==="responsable_batiments"||r==="responsable_exploitation";
+const dom=r=>({responsable_batiments:"batiments",agent_travaux:"batiments",responsable_exploitation:"exploitation",agent_exploitation:"exploitation"})[r];
+const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
+const peutEditer=(x,r)=>r==="admin"||(isResp(r)&&(!x.categorie_id||catDom(x)===dom(r)));
+const canSee=(x,r)=>peutEditer(x,r)||(["demandeur","responsable_batiments","responsable_exploitation"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
+let cats=[],corps=[];
+const ET={planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
+const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"]];
+const NPO=[["non","Non"],["partiel","Partiel"],["oui","Oui"]];
+const suIn=(k,l,t,c)=>`<div style="flex:1 1 45%"><label>${l}</label>${t==="d"?`<input type="date" data-f="${k}" value="${c[k]||""}">`:t==="t"?`<input data-f="${k}" value="${esc(c[k]||"")}">`:`<select data-f="${k}">${O(NPO,c[k]||"non")}</select>`}</div>`;
+const suVw=(k,l,t,c)=>t==="d"?(c[k]?`✔ ${l} (${fdate(c[k])})`:`○ ${l}`):t==="t"?(c[k]?`✔ BC n° ${esc(c[k])}`:"○ N° de bon de commande"):`${l} : ${(NPO.find(x=>x[0]===(c[k]||"non"))||[])[1]}`;
+function fmtTel(v){if(!v)return"";const s=String(v).trim(),d=s.replace(/\D/g,"");let m=d.match(/^(?:0033|33)0?(\d{9})$/);
+ if(m)return"+33 "+m[1][0]+" "+m[1].slice(1).replace(/(\d{2})(?=\d)/g,"$1 ");m=d.match(/^0(\d{9})$/);
+ if(m)return"0"+m[1][0]+" "+m[1].slice(1).replace(/(\d{2})(?=\d)/g,"$1 ");
+ return(s[0]==="+"?"+":"")+d.replace(/(\d{2})(?=\d)/g,"$1 ")}
+const eLab=e=>e.entreprise+(e.contact?" – "+e.contact:"");
+function entOpts(c){const inC=ents.filter(e=>!(e.categorie_ids||[]).length||(e.categorie_ids||[]).includes(c.categorie_id)),m=c.corps_etat_id?inC.filter(e=>e.corps_etat_id===c.corps_etat_id):[],o=inC.filter(e=>!m.includes(e)),
+ op=(e,b)=>`<option value="${e.id}"${e.id===c.entreprise_id?" selected":""}${b?' style="font-weight:bold"':""}>${esc(eLab(e))}</option>`;
+ return (m.length?`<optgroup label="Corps d'état : ${esc((corps.find(x=>x.id===c.corps_etat_id)||{}).nom||"")}">${m.map(e=>op(e,1)).join("")}</optgroup>`:"")+(o.length?`<optgroup label="${m.length?"Autres entreprises de la catégorie":"Entreprises de la catégorie"}">${o.map(e=>op(e)).join("")}</optgroup>`:"")}
+const dv=()=>`<label class="ck"><input type="checkbox" data-dv${devisMail?" checked":""}> Inclure une demande de devis dans le mail</label>`;
+let ints=[],agents=[],ents=[],curI=null,pendingTicket=null,tab="t",ed=false,imode="a",devisMail=false;
+const fdate=d=>d?new Date(d).toLocaleDateString("fr-FR"):"—",nm=()=>`${me.prenom} ${me.nom}`,isAg=()=>role().startsWith("agent"),today=()=>new Date().toLocaleDateString("sv-SE");
+const O=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${esc(l)}</option>`).join("");
+const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.filter(c=>!mine||!isResp(role())||c.domaine===dom(role())).map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
+const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
+function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
+ $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
+function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&v!==null)v=+v;const u={[f]:v};
+ if(f==="site_id")u.tribune_id=(trib.find(x=>x.site_id===v)||{}).id||null;
+ if(f==="categorie_id")u.corps_etat_id=(corps.find(x=>x.categorie_id===v)||{}).id||null;return u}
+const baseF=(c,mine)=>`<div class="row"><div><label>Site</label><select data-f="site_id">${sitesO(c.site_id)}</select></div><div><label>Zone/tribune</label><select data-f="tribune_id">${tribO(c.site_id,c.tribune_id)}</select></div></div>
+<label>Local</label><input data-f="local" value="${esc(c.local||"")}">
+<div class="row"><div><label>Catégorie</label><select data-f="categorie_id">${catsO(c.categorie_id,mine)}</select></div><div><label>Corps d'état</label><select data-f="corps_etat_id">${corpsO(c.categorie_id,c.corps_etat_id)}</select></div></div>
+<label>Titre</label><input data-f="titre" value="${esc(c.titre)}">`;
+const chargeO=c=>{const d=catDom(c);return O([...agents.filter(a=>a.role==="admin"||(isResp(a.role)&&(!d||dom(a.role)===d))).map(a=>[a.id,`${((a.prenom||"")+" "+(a.nom||"")).trim()} (${ROLES[a.role]})`])],c.en_charge_id)};
+const hdr=c=>`<div class="dh"><div><h2>${esc(siteN(c.site_id))}</h2><div class="sub">${esc(tribN(c.tribune_id))}${c.local?" · "+esc(c.local):""}</div></div>`;
+// ===== TICKET =====
+const canT=()=>peutEditer(cur,role()),canF=()=>canT()||(cur.demandeur_id===me.id&&cur.statut==="nouvelle"&&["demandeur","responsable_batiments","responsable_exploitation"].includes(role()));
+function openDet(id){cur=tk.find(x=>x.id===id);ed=false;drawT();$("dDet").showModal()}
+function drawT(){const c=cur,E=ed&&canF(),cn=canT();
+ $("tbody").innerHTML=`${hdr(c)}${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
+ <p class="big"><b>${c.ref}</b> – ${esc(c.titre)}</p><div class="desc">${esc(c.description||"Aucune description.")}</div>
+ ${E?`<div class="ep">${baseF(c)}<label>Description</label><textarea data-f="description" rows="3">${esc(c.description||"")}</textarea><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select>${cn?`<label>En charge</label><select data-f="en_charge_id">${chargeO(c)}</select>`:""}</div>`:""}
+ <p class="meta">${esc(catLab(c))} · demandé par ${esc(c.demandeur_nom||"—")} le ${fdate(c.created_at)} · Priorité ${PR[c.priorite]}</p>
+ <p><span class="tag s-${c.statut}">${ST[c.statut]}</span>${c.fin_prevue?` &nbsp;Fin d'intervention prévue : <b>${fdate(c.fin_prevue)}</b>`:""}</p>
+ ${c.en_charge_nom||cn?`<p>En charge : <b>${esc(c.en_charge_nom||"personne pour l'instant")}</b>${cn&&c.en_charge_id!==me.id?` <button class="sec" data-me>Me l'attribuer</button>`:""}</p>`:""}
+ ${cn?`<div class="btns">${Object.entries(ST).filter(([k])=>k!==c.statut).map(([k,v])=>`<button class="sec" data-st="${k}">${v}</button>`).join("")}</div>`:""}
+ <h3>Historique</h3><div id="tl"></div>
+ ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Ajouter la note</button>
+ <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
+ <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}`;loadTl()}
+async function loadTl(){const cn=canT();
+ const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
+ const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
+  ...(n.data||[]).filter(x=>!(cn&&x.message.startsWith("Statut changé"))).map(x=>({d:x.created_at,a:x.auteur,t:x.message,n:1}))].sort((a,b)=>new Date(a.d)-new Date(b.d));
+ $("tl").innerHTML=L.map(x=>`<div class="tl${x.n?" nt":""}"><span>${tlTime(x.d)}</span>${x.a?"<b>"+esc(x.a)+"</b> : ":""}${esc(x.t)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucun historique.</p>`}
+async function reloadT(){await load();const n=tk.find(x=>x.id===cur.id);
+ if(!n){$("dDet").close();alert("Le ticket a été transféré vers l'autre catégorie : il n'apparaît plus dans votre liste.");return}cur=n;drawT()}
+async function setSt(k){let j=null;if(k==="resolue"||k==="refusee"){j=await askJust((k==="refusee"?"Refus du ticket ":"Clôture du ticket ")+cur.ref);if(!j)return}
+ const {error}=await sb.from("tickets").update({statut:k}).eq("id",cur.id);if(error){alert("Modification impossible : "+error.message);return}
+ if(j)await sb.from("ticket_suivi").insert({ticket_id:cur.id,auteur:nm(),message:(k==="refusee"?"Refus : ":"Clôture : ")+j});reloadT()}
+$("tbody").onchange=async e=>{if(!e.target.dataset.f)return;const u=norm(e.target);if(u.titre===null){alert("Le titre est obligatoire.");drawT();return}
+ const {error}=await sb.from("tickets").update(u).eq("id",cur.id);if(error){alert("Modification impossible : "+error.message);drawT();return}reloadT()};
+$("tbody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-st],[data-note],[data-newint],[data-i],[data-me]");if(!b)return;const d=b.dataset;
+ if("edit" in d){ed=!ed;drawT()}else if("me" in d){const {error}=await sb.from("tickets").update({en_charge_id:me.id}).eq("id",cur.id);if(error)alert("Modification impossible : "+error.message);else reloadT()}else if(d.st)setSt(d.st)
+ else if("note" in d){const m=$("nt1").value.trim();if(!m)return;const {error}=await sb.from("ticket_suivi").insert({ticket_id:cur.id,auteur:nm(),message:m});if(error)alert(error.message);else loadTl();$("nt1").value=""}
+ else if("newint" in d){$("dDet").close();pendingTicket=cur;openIv(null,cur)}
+ else if(d.i){$("dDet").close();pendingTicket=null;openIv(ints.find(x=>x.id==d.i))}};
+// ===== INTERVENTIONS =====
+function renderIv(){const r=role(),ag=isAg(),edt=r!=="demandeur"&&!ag;
+ if(ag)tab="i";if(r==="demandeur")tab="t";
+ const inAdm=!$("ad").classList.contains("hide");$("tabs").classList.toggle("hide",inAdm);
+ $("tabt").classList.toggle("hide",ag||r==="demandeur");$("tabi").classList.toggle("hide",r==="demandeur");
+ $("tabt").classList.toggle("sec",tab!=="t");$("tabi").classList.toggle("sec",tab!=="i");
+ $("new").classList.toggle("hide",tab!=="t"||ag);$("colt").classList.toggle("hide",tab!=="t"||ag);$("newint").classList.toggle("hide",tab!=="i"||!edt);$("coli").classList.toggle("hide",tab!=="i");
+ const base=ints.filter(i=>ag?(i.agent_ids||[]).includes(me.id):peutEditer(i,r));TB.i.base=base;
+ const l=sortFilt(base,"i"),cl=i=>["terminee","annulee"].includes(i.etat),act=l.filter(i=>!cl(i)),clo=l.filter(cl);head("i");
+ $("iempty").classList.toggle("hide",act.length>0);$("iempty2").classList.toggle("hide",clo.length>0);$("ich").textContent=`Interventions closes – terminées, annulées (${clo.length})`;
+ const row=i=>rowH("i",i,i.etat==="terminee"?"res":i.etat==="annulee"?"arc":"",`data-i="${i.id}"`);
+ $("irows").innerHTML=act.map(row).join("");$("irows2").innerHTML=clo.map(row).join("")}
+$("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()};
+$("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
+$("irows").onclick=e=>{const tr=e.target.closest("tr");if(tr){pendingTicket=null;openIv(ints.find(x=>x.id==tr.dataset.i))}};
+function openIv(i,t){const v=i?{...i}:{site_id:t?t.site_id:((sites.find(x=>x.id===me.site_defaut_id)||sites[0])||{}).id,tribune_id:t?t.tribune_id:null,local:t?t.local:null,categorie_id:t?t.categorie_id:((isResp(role())&&cats.find(x=>x.domaine===dom(role())))||cats[0]||{}).id,corps_etat_id:t?t.corps_etat_id:null,
+ titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"planifiee",agent_ids:[],echeance:null};
+ if(!i&&!v.tribune_id)v.tribune_id=(trib.find(x=>x.site_id===v.site_id)||{}).id;if(!i&&!v.corps_etat_id)v.corps_etat_id=(corps.find(x=>x.categorie_id===v.categorie_id)||{}).id||null;
+ curI=v;ed=false;imode=v.entreprise_id?"e":"a";devisMail=false;drawI();if(!$("dIv").open)$("dIv").showModal()}
+function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="demandeur"&&(!saved||peutEditer(c,r)),E=canE&&(ed||!saved),mine=ag&&(c.agent_ids||[]).includes(me.id);
+ const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
+ const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
+ $("ibody").innerHTML=`${hdr(c)}${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
+ <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>
+ ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
+  <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date de fin d'intervention (prévision)</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div></div>
+  <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
+  ${mode==="a"?agents.filter(a=>!cd||dom(a.role)===cd).map(a=>`<label class="ck"><input type="checkbox" data-agent="${a.id}" data-n="${esc(((a.prenom||"")+" "+(a.nom||"")).trim())}"${(c.agent_ids||[]).includes(a.id)?" checked":""}> ${esc(a.prenom||"")} ${esc(a.nom||"")} <small>(${ROLES[a.role]})</small></label>`).join("")||`<span class="empty" style="padding:4px">Aucun agent actif dans ce domaine.</span>`
+  :`<label>Interlocuteur (entreprises de la catégorie, celles du corps d'état en tête)</label><select data-f="entreprise_id"><option value="">— Choisir —</option>${entOpts(c)}</select>${dv()}
+  <div class="row" style="flex-wrap:wrap">${SU.map(([k,l,t])=>suIn(k,l,t,c)).join("")}</div>`}</div>`:""}
+ <p class="meta">${t?"Ticket "+esc(t.ref)+" · ":"Sans ticket · "}${esc(catLab(c))} · Priorité ${PR[c.priorite]} · Fin prévue : <b>${fdate(c.echeance)}</b></p>
+ <p>${mode==="e"?`<b>${esc(ent?ent.entreprise:c.prestataire||"")}</b>${ent?`<br>${esc(ent.contact||"")} · ${esc(ent.email||"")} · ${esc(fmtTel(ent.mobile))}`:""}`:`Attribué à : ${esc(c.agents_noms||"à désigner")}`}</p>${mode==="e"&&saved&&canE&&!E?dv():""}
+ ${saved&&mode==="e"?`<p class="meta">${SU.map(([k,l,t])=>suVw(k,l,t,c)).join(" · ")}</p>`:""}
+ ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
+ ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
+ ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
+ ${saved?`<h3>Notes</h3><div id="inl"></div><textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button>`}`;if(saved)loadN()}
+async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
+ $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
+async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+error.message);drawI();return}
+ await load();curI=ints.find(x=>x.id===curI.id)||{...curI,...u}}else Object.assign(curI,u);drawI()}
+$("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
+ if(d.agent!==undefined){const ch=[...document.querySelectorAll("#ibody [data-agent]:checked")];return upd({agent_ids:ch.map(b=>b.dataset.agent),agents_noms:ch.map(b=>b.dataset.n).join(", ")})}
+ if(d.dv!==undefined){devisMail=t.checked;return t.checked&&!curI.devis_demande_at?upd({devis_demande_at:today()}):drawI()}
+ if(!d.f)return;let u=norm(t);
+ if(d.f==="mode"){imode=t.value;if(t.value==="e"){drawI();return}u={entreprise_id:null,prestataire:null,prestataire_email:null}}
+ if(d.f==="entreprise_id"){const en=ents.find(x=>x.id===u.entreprise_id);u=en?{entreprise_id:en.id,prestataire:en.entreprise+(en.contact?" – "+en.contact:""),prestataire_email:en.email,agent_ids:[],agents_noms:null}:{entreprise_id:null,prestataire:null,prestataire_email:null}}
+ if(d.f==="titre"&&!u.titre){alert("Le titre est obligatoire.");drawI();return}
+ if(d.f==="bc_numero"&&u.bc_numero){u.bc_numero=u.bc_numero.trim();if(u.bc_numero.length<12){alert("Le numéro de bon de commande doit comporter au moins 12 caractères.");drawI();return}}upd(u)};
+async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture de l'intervention "+curI.ref);if(!j)return}
+ const {error}=isAg()?await sb.rpc("agent_maj_etat",{p_id:curI.id,p_etat:k}):await sb.from("interventions").update({etat:k}).eq("id",curI.id);
+ if(error){alert("Modification impossible : "+error.message);return}
+ if(j)await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:"Clôture : "+j});
+ const tid=curI.ticket_id,t=tid&&tk.find(x=>x.id===tid);
+ if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)){const au=ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length;
+  if(confirm(`Passer aussi le ticket ${t.ref} en « Résolu » ?`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){await sb.from("tickets").update({statut:"resolue"}).eq("id",tid);await sb.from("ticket_suivi").insert({ticket_id:tid,auteur:nm(),message:`Clôture (intervention ${curI.ref}) : ${j}`})}}
+ await load();curI=ints.find(x=>x.id===curI.id)||curI;drawI()}
+async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
+ if(!o.titre||!o.site_id||!o.tribune_id||!o.categorie_id){$("imsg").textContent="Titre, site, zone/tribune et catégorie sont obligatoires.";return}
+ const tid=pendingTicket?pendingTicket.id:null,{data,error}=await sb.from("interventions").insert({...o,ticket_id:tid}).select().single();
+ if(error){$("imsg").textContent="Création impossible : "+error.message;return}
+ const t=tid&&tk.find(x=>x.id===tid);if(t&&["nouvelle","resolue"].includes(t.statut)){await sb.from("tickets").update({statut:"en_cours"}).eq("id",tid);if(t.statut==="resolue")await sb.from("ticket_suivi").insert({ticket_id:tid,auteur:nm(),message:`Ticket rouvert : nouvelle intervention ${data.ref}`})}
+ await load();curI=ints.find(x=>x.id===data.id)||data;ed=false;drawI()}
+function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
+ const T=(t,b,z)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(z||11);const L=d.splitTextToSize(String(t),180);d.text(L,15,y);y+=L.length*6+2};
+ T("FICHE D'INTERVENTION "+c.ref,1,16);y+=2;T(c.titre,1,13);T(`Lieu : ${siteN(c.site_id)} / ${tribN(c.tribune_id)}${c.local?" / "+c.local:""}`);T(`Catégorie : ${catLab(c)}`);
+ T(`Priorité : ${PR[c.priorite]}      Fin d'intervention prévue : ${c.echeance?fdate(c.echeance):"non précisée"}`);T(`Intervenants : ${c.agents_noms||"à définir"}`);
+ y+=3;T("Consignes",1);T(c.consignes||"Aucune consigne particulière.");y+=6;T(`Fiche émise le ${fdate(new Date())} par ${nm()}`,0,9);d.save(`fiche-${c.ref}.pdf`)}
+function mailI(){const c=curI,e=c.entreprise_id?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
+ const to=e==="e"?(ent?ent.email:c.prestataire_email)||"":agents.filter(a=>(c.agent_ids||[]).includes(a.id)).map(a=>a.email).join(",");
+ const L=["Bonjour,","",dv?"Nous vous remercions de nous adresser un devis pour l'intervention ci-dessous :":"Nous vous confions l'intervention ci-dessous :",
+  `Objet : ${c.titre}${c.consignes?" : "+c.consignes:""}`,`Lieu : ${siteN(c.site_id)}`,`Zone : ${tribN(c.tribune_id)}`,...(c.local?[`Local : ${c.local}`]:[]),
+  ...(ce?[`Corps d'état : ${ce}`]:[]),`Priorité : ${PR[c.priorite]}`,...(c.echeance?[`Demande finalisation intervention pour le : ${fdate(c.echeance)}`]:[]),
+  ...(e==="a"?["","(Fiche d'intervention à joindre : bouton « Fiche PDF »)"]:[]),"","Cordialement,",nm()];
+ location.href="mailto:"+to+"?subject="+encodeURIComponent(`${siteN(c.site_id).toUpperCase()} - ${dv?"Demande de devis":"Intervention"} ${c.ref} – ${c.titre}`)+"&body="+encodeURIComponent(L.join("\r\n"))}
+$("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
+ if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)pdfI();else if("mail" in d)mailI();
+ else if("nadd" in d){const m=$("inm").value.trim();if(!m)return;const {error}=await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:m});if(error)alert(error.message);else{$("inm").value="";loadN()}}};
+// ===== ANNUAIRE (console admin) =====
+function fillCorpsAnn(){const ks=[...document.querySelectorAll("#en_k [data-ec]:checked")].map(b=>+b.dataset.ec),cur=$("en_c").value,seen=new Set();
+ const l=corps.filter(x=>ks.includes(x.categorie_id)&&!seen.has(x.nom)&&seen.add(x.nom));
+ $("en_c").innerHTML=`<option value="">Corps d'état (facultatif)</option>`+O(l.map(x=>[x.id,x.nom]),cur)}
+function renderAnn(){
+ $("en_k").innerHTML=`<b style="font-size:13px">Apparaît dans les catégories :</b> `+cats.map(c=>`<label class="ck" style="display:inline-flex;margin-right:14px"><input type="checkbox" data-ec="${c.id}" checked> ${esc(c.nom)}</label>`).join("");
+ fillCorpsAnn();$("en_l").innerHTML=`<div class="table"><table><thead><tr><th>Entreprise</th><th>Catégories</th><th>Corps d'état</th><th>Chargé d'affaires</th><th>E-mail</th><th>Mobile</th><th></th></tr></thead><tbody>${ents.map(e=>`<tr><td>${esc(e.entreprise)}</td><td>${esc((e.categorie_ids||[]).map(i=>(cats.find(c=>c.id===i)||{}).nom).filter(Boolean).join(", ")||"Toutes")}</td><td>${esc((corps.find(x=>x.id===e.corps_etat_id)||{}).nom||"—")}</td><td>${esc(e.contact||"")}</td><td>${esc(e.email||"")}</td><td class="nw">${esc(fmtTel(e.mobile))}</td><td class="nw"><a class="lnk" data-ee="${e.id}">modifier</a> · <a class="lnk" data-en="${e.id}">supprimer</a></td></tr>`).join("")||`<tr><td colspan="7" class="empty">Annuaire vide.</td></tr>`}</tbody></table></div>`}
+$("en_t").oninput=()=>{$("en_t").value=fmtTel($("en_t").value)};$("en_k").onchange=fillCorpsAnn;
+let enEd=null;
+const enReset=()=>{enEd=null;["en_e","en_n","en_m","en_t"].forEach(i=>$(i).value="");$("en_b").textContent="Ajouter";$("en_x").classList.add("hide");document.querySelectorAll("#en_k [data-ec]").forEach(b=>b.checked=true);fillCorpsAnn();$("en_c").value=""};
+$("en_b").onclick=()=>{if(!$("en_e").value.trim())return;const ks=[...document.querySelectorAll("#en_k [data-ec]:checked")].map(b=>+b.dataset.ec);if(!ks.length){alert("Cochez au moins une catégorie.");return}
+ const o={corps_etat_id:$("en_c").value||null,categorie_ids:ks,entreprise:$("en_e").value.trim(),contact:$("en_n").value.trim()||null,email:$("en_m").value.trim()||null,mobile:fmtTel($("en_t").value)||null};
+ const q=enEd?sb.from("entreprises").update(o).eq("id",enEd):sb.from("entreprises").insert(o);enReset();adm(q)};
+$("en_x").onclick=enReset;
+$("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)return;
+ if(a.dataset.en){if(confirm("Supprimer cette entreprise de l'annuaire ?"))adm(sb.from("entreprises").delete().eq("id",a.dataset.en));return}
+ const x=ents.find(v=>v.id==a.dataset.ee);if(!x)return;enEd=x.id;
+ document.querySelectorAll("#en_k [data-ec]").forEach(b=>b.checked=!(x.categorie_ids||[]).length||x.categorie_ids.includes(+b.dataset.ec));fillCorpsAnn();
+ $("en_c").value=x.corps_etat_id||"";$("en_e").value=x.entreprise;$("en_n").value=x.contact||"";$("en_m").value=x.email||"";$("en_t").value=fmtTel(x.mobile);
+ $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
+const NOTICE={demandeur:"notice_demandeur.html",responsable_batiments:"notice_responsable.html",responsable_exploitation:"notice_responsable.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
+$("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
+$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");$("dS").showModal()};
+$("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
+ const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
+ if(error){$("sugm").textContent="Envoi impossible : "+error.message;return}
+ $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
+async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});
+ $("sug_l").innerHTML=(data||[]).map(x=>`<div class="suivi"><b>${x.traitee?"✔ ":""}${esc(x.type)}</b> – ${esc(x.titre)} <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}<br><a class="lnk" data-sv="${x.id}" data-v="${!x.traitee}">${x.traitee?"Marquer non traitée":"Marquer traitée"}</a> · <a class="lnk" data-sd="${x.id}">supprimer</a></div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
+$("sug_l").onclick=async e=>{const a=e.target.closest("[data-sv],[data-sd]");if(!a)return;
+ const q=a.dataset.sd?(confirm("Supprimer cette suggestion ?")?sb.from("suggestions").delete().eq("id",a.dataset.sd):null):sb.from("suggestions").update({traitee:a.dataset.v==="true"}).eq("id",a.dataset.sv);
+ if(q){await q;renderSug()}};
+$("irows2").onclick=$("irows").onclick;
+// ===== Fenêtres : fermeture au clic à côté =====
+document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
+
+const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
+const corpsOpts=cid=>corps.filter(x=>x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
+$("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
+$("acb").onclick=()=>{if($("acn").value.trim()&&$("ac").value){adm(sb.from("corps_etat").insert({categorie_id:$("ac").value,nom:$("acn").value.trim()}));$("acn").value=""}};
+$("clists").onclick=e=>{const a=e.target.closest("[data-del]");if(a&&confirm("Supprimer ce corps d'état ? Les tickets concernés gardent leur catégorie."))adm(sb.from("corps_etat").delete().eq("id",a.dataset.id))};
+start();
+</script></body></html>
