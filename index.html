@@ -4,7 +4,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
 <style>
-:root{--bg:#eef1f3;--ink:#1c2b33;--mute:#5d6e77;--line:#d3dadf;--accent:#0d5c63;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
+:root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
 header h1{font-size:18px;margin:0}header div{display:flex;gap:8px;align-items:center}
@@ -41,7 +41,7 @@ header h1 small{font-size:12px;font-weight:400;opacity:.85;margin-left:8px}.gh{m
 #dDet,#dIv{width:min(640px,94vw)}.dh{display:flex;justify-content:space-between;align-items:start;gap:10px}.dh h2{margin:0}.sub{color:var(--mute)}
 button.ic{background:none;color:var(--accent);border:1px solid var(--line);padding:3px 9px;font-size:17px}
 .big{font-size:17px;margin:10px 0 4px}.meta{color:var(--mute);font-size:13px;margin:4px 0}
-.desc{white-space:pre-wrap;background:#f4f7f8;border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;font-size:16px}
+.desc{white-space:pre-wrap;background:#f2f5fb;border-left:4px solid var(--accent);padding:10px 12px;margin:8px 0;font-size:16px}
 .btns{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ep{border:1px dashed var(--line);padding:4px 10px 10px;margin:8px 0}
 .tl{font-size:13px;padding:3px 0;border-bottom:1px solid var(--line)}.tl span{color:var(--mute);margin-right:6px}.tl.nt{background:#f7fafb}
 header button#out,header button#sug{padding:6px 9px;line-height:0}header button#hlp{padding:6px 12px;font-weight:700;font-size:16px}
@@ -53,11 +53,21 @@ button.hb:hover,button.hf:hover{color:var(--accent)}button.hf.on{color:var(--acc
 .ck{display:flex;gap:6px;align-items:center;margin:2px 0;color:var(--ink);font-size:14px}.ck input{width:auto}
 button.pb{text-align:left;padding:6px 8px;font-size:13px}
 .hide{display:none!important}a.lnk{color:var(--accent);cursor:pointer;text-decoration:underline}
+header button#adm,header button#sug,header button#hlp,header button#out{height:36px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:16px;font-weight:700}
+header button#sug,header button#hlp,header button#out{width:36px;padding:0}header button#adm{padding:0 14px}
+details.panel>summary{cursor:pointer;font-size:17px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px;color:var(--accent)}
+details.panel>summary::-webkit-details-marker{display:none}details.panel>summary::before{content:"▸";transition:transform .15s}details.panel[open]>summary::before{transform:rotate(90deg)}
+.grid{display:grid;gap:14px;align-items:start}.gc{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
+.gc h4{margin:0;padding:8px 10px;background:var(--accent);color:#fff;display:flex;justify-content:space-between;align-items:center;gap:6px}
+.gr,.gadd{display:flex;justify-content:space-between;align-items:center;gap:6px;padding:5px 10px;border-top:1px solid var(--line)}.gr.off span:first-child{opacity:.5;text-decoration:line-through}
+.gc button.ic{padding:1px 7px;font-size:14px;margin-left:3px}.gc h4 button.ic{background:#fff}.gadd button{padding:5px 12px}
+header button#bell{height:36px;width:36px;padding:0;position:relative;display:inline-flex;align-items:center;justify-content:center}
+#bn{position:absolute;top:-6px;right:-6px;background:#c8641b;color:#fff;border-radius:9px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;padding:0 4px;box-sizing:border-box}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v2.9</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.0</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
- <button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
+ <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
 <div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable_batiments">Voir en tant que Responsable bâtiments</option><option value="responsable_exploitation">Voir en tant que Responsable exploitation</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
 
 <section id="login">
@@ -67,7 +77,7 @@ button.pb{text-align:left;padding:6px 8px;font-size:13px}
  <label for="em">Adresse e-mail</label><input id="em" type="email" autocomplete="username">
  <div id="pwb"><label for="pw">Mot de passe</label><input id="pw" type="password" autocomplete="current-password"></div>
  <p class="msg" id="lmsg"></p>
- <button id="go">Se connecter</button> <a class="lnk" id="tog">Demander un compte</a>
+ <button id="go">Se connecter</button> <a class="lnk" id="tog">Demander un compte</a> · <a class="lnk" id="fgt">Mot de passe oublié</a>
 </section>
 
 <main id="app" class="hide">
@@ -84,18 +94,16 @@ button.pb{text-align:left;padding:6px 8px;font-size:13px}
   <p class="empty hide" id="agentmsg">Les interventions arriveront à l'étape suivante : cet espace est réservé aux agents.</p>
  </div>
  <div id="ad" class="hide">
-  <div class="panel"><h3 style="margin-top:0">Demandes de compte</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></div>
-  <div class="panel"><h3 style="margin-top:0">Catégories et corps d'état</h3>
-   <div class="row"><select id="ac" aria-label="Catégorie"></select><input id="acn" placeholder="Nouveau corps d'état"><button id="acb">Ajouter</button></div><div id="clists" style="margin-top:12px"></div></div>
-  <div class="panel"><h3 style="margin-top:0">Suggestions des utilisateurs</h3><div id="sug_l"></div></div>
-  <div class="panel"><h3 style="margin-top:0">Annuaire des entreprises</h3>
+<div class="panel"><h3 style="margin-top:0">Demandes de compte</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></div>
+<div class="panel"><h3 style="margin-top:0">Utilisateurs</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></div>
+<div class="panel"><h3 style="margin-top:0">Suggestions des utilisateurs</h3><div id="sug_l"></div></div>
+<details class="panel"><summary>Catégories et corps d'état</summary><div id="clists" style="margin-top:12px"></div></details>
+<details class="panel"><summary>Annuaire des entreprises</summary>
    <div class="row"><select id="en_c" aria-label="Corps d'état"></select><input id="en_e" placeholder="Entreprise"></div>
-   <div id="en_k" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><input id="en_n" placeholder="Chargé d'affaires"><input id="en_m" type="email" placeholder="E-mail"><input id="en_t" placeholder="Mobile"><button id="en_b">Ajouter</button><button class="sec hide" id="en_x">Annuler</button></div><div id="en_l" style="margin-top:12px"></div></div>
-  <div class="panel"><h3 style="margin-top:0">Utilisateurs</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></div>
-  <div class="panel"><h3 style="margin-top:0">Sites et zones/tribunes</h3>
-   <div class="row"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div>
-   <div class="row" style="margin-top:8px"><select id="at"></select><input id="atn" placeholder="Nom de la nouvelle zone/tribune"><button id="atb">Ajouter la zone/tribune</button></div>
-   <div id="lists" style="margin-top:12px"></div><p class="msg" id="amsg"></p></div>
+   <div id="en_k" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><input id="en_n" placeholder="Chargé d'affaires"><input id="en_m" type="email" placeholder="E-mail"><input id="en_t" placeholder="Mobile"><button id="en_b">Ajouter</button><button class="sec hide" id="en_x">Annuler</button></div><div id="en_l" style="margin-top:12px"></div></details>
+<details class="panel"><summary>Sites et zones/tribunes</summary><div id="lists" style="margin-top:12px"></div><div class="row" style="margin-top:12px"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div></details>
+<details class="panel"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
+<p class="msg" id="amsg"></p>
  </div>
 </main>
 
@@ -115,14 +123,15 @@ button.pb{text-align:left;padding:6px 8px;font-size:13px}
  <label for="sugt">Type</label><select id="sugt"><option>Idée</option><option>Amélioration</option><option>Problème rencontré</option></select>
  <label for="sugti">Titre (obligatoire)</label><input id="sugti"><label for="sugtx">Détail</label><textarea id="sugtx" rows="4"></textarea>
  <p class="msg" id="sugm"></p><div class="row"><button id="sugb">Envoyer la suggestion</button><button class="sec" data-close>Fermer</button></div></dialog>
-<footer id="ver" aria-hidden="true">Version 2.9 – 30/10/2026</footer>
+<dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
+<footer id="ver" aria-hidden="true">Version 3.0 – 01/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
-<dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (8 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
+<dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
 
 <script>
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
-const SUPABASE_URL = 'https://xiljtqitrormxdyzgote.supabase.co/';
+const SUPABASE_URL = 'https://xiljtqitrormxdyzgote.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_pURiKZr-53--jTGNIq7Vvg_6kCcthWZ';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
@@ -132,8 +141,8 @@ const ROLES = {demandeur:"Demandeur",responsable_batiments:"Responsable bâtimen
 let me, sites=[], trib=[], tk=[], cur, signup=false, view="";
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const opts = (o,all)=>(all?`<option value="">${all}</option>`:"")+Object.entries(o).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
-const sOpts = (all)=>(all?`<option value="">${all}</option>`:"")+sites.map(s=>`<option value="${s.id}">${esc(s.nom)}</option>`).join("");
-const tOpts = (sid,all)=>(all?`<option value="">${all}</option>`:"")+trib.filter(t=>!sid||t.site_id==sid).map(t=>`<option value="${t.id}">${esc(t.nom)}</option>`).join("");
+const sOpts = (all)=>(all?`<option value="">${all}</option>`:"")+sites.filter(s=>s.actif!==false).map(s=>`<option value="${s.id}">${esc(s.nom)}</option>`).join("");
+const tOpts = (sid,all)=>(all?`<option value="">${all}</option>`:"")+trib.filter(t=>t.actif!==false&&(!sid||t.site_id==sid)).map(t=>`<option value="${t.id}">${esc(t.nom)}</option>`).join("");
 const siteN = id=>(sites.find(s=>s.id==id)||{}).nom||"?", tribN = id=>(trib.find(t=>t.id==id)||{}).nom||"?";
 const role = ()=> me.role==="admin" && view ? view : me.role;
 $("np").innerHTML=opts(PR); $("np").value="normale";
@@ -146,32 +155,83 @@ $("go").onclick=async()=>{$("lmsg").style.color="";
  if(signup){
   if(![$("sn"),$("sp"),$("ss"),$("sf"),$("em")].every(i=>i.value.trim())){$("lmsg").textContent="Renseignez tous les champs.";return}
   const {error}=await sb.from("demandes_compte").insert({nom:$("sn").value.trim(),prenom:$("sp").value.trim(),societe:$("ss").value.trim(),fonction:$("sf").value.trim(),email:email.trim()});
-  if(error){$("lmsg").textContent="Demande impossible : "+error.message;return}
+  if(error){$("lmsg").textContent="Demande impossible : "+errMsg(error);return}
   $("lmsg").style.color="var(--ok)";$("lmsg").textContent="Demande envoyée. L'administrateur l'examinera puis vous invitera par e-mail à choisir votre mot de passe.";return}
  const {error}=await sb.auth.signInWithPassword({email,password});
  if(error)$("lmsg").textContent="Connexion impossible : vérifiez l'e-mail et le mot de passe.";else start()};
 $("out").onclick=async()=>{await sb.auth.signOut();location.reload()};
 
+
+const ERRS={interv_bc_coherent:"Renseignez d'abord le numéro de bon de commande.",interv_facture_coherent:"La facture ne peut pas être « payée » sans être « reçue ».",interv_bc_longueur:"Le numéro de bon de commande doit comporter au moins 12 caractères.",interv_devis_coherent:"La date de réception du devis précède celle de la demande."};
+function errMsg(e){const m=(e&&e.message)||String(e);if(/JWT expired|invalid JWT/i.test(m))return "Votre session a expiré : reconnectez-vous.";for(const k in ERRS)if(m.includes(k))return ERRS[k];
+ if(e.code==="23505")return "Cet élément existe déjà.";if(e.code==="23503")return "Cet élément est utilisé ailleurs : suppression impossible.";
+ if(e.code==="42501"||/row-level security|permission denied/i.test(m))return "Action non autorisée pour votre profil.";if(/Failed to fetch|NetworkError/i.test(m))return "Connexion impossible : vérifiez votre réseau.";return m}
+async function allRows(t){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order("created_at",{ascending:false}).order("id",{ascending:false}).range(i,i+999);if(error)return{error};r=r.concat(data);if(data.length<1000)return{data:r}}}
+let MM={};
+const MB="Bonjour,\n\n{INTRO}\nObjet : {titre}\nConsignes : {consignes}\nLieu : {site}\nZone : {zone}\nLocal : {local}\nCorps d'état : {corps_etat}\nPriorité : {priorite}\nDate de finalisation demandée : {echeance}\n";
+const MD={regie:{objet:"{SITE} - Intervention {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous confions l'intervention ci-dessous :")+"\n(Fiche d'intervention à joindre : bouton « Fiche PDF »)\n\nCordialement,\n{signataire}"},
+ entreprise:{objet:"{SITE} - Intervention {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous confions l'intervention ci-dessous :")+"\nCordialement,\n{signataire}"},
+ devis:{objet:"{SITE} - Demande de devis {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous remercions de nous adresser un devis pour l'intervention ci-dessous :")+"\nCordialement,\n{signataire}"}};
+const MLAB={regie:"Régie – envoi aux agents",entreprise:"Entreprise – envoi de l'intervention",devis:"Entreprise – demande de devis"},mdl=k=>MM[k]||MD[k];
+function fill(t,v){return t.split("\n").map(l=>{let h=0,f=0;const r=l.replace(/\{(\w+)\}/g,(_,n)=>{h=1;const x=v[n]||"";if(x)f=1;return x});return h&&!f?null:r}).filter(l=>l!==null).join("\r\n")}
+function renderMM(){$("mmods").innerHTML=Object.keys(MLAB).map(k=>{const m=mdl(k);return `<h4 style="margin:16px 0 0">${MLAB[k]}</h4><label>Objet</label><input data-mm="${k}" data-f="objet" value="${esc(m.objet)}"><label>Corps du message</label><textarea data-mm="${k}" data-f="corps" rows="10">${esc(m.corps)}</textarea><div class="row" style="margin-top:8px"><button data-k="${k}">Enregistrer</button><button class="sec" data-r="${k}">Rétablir le modèle d'origine</button></div>`}).join("")+`<p class="msg">Variables : {ref} {titre} {consignes} {site} {SITE} {zone} {local} {corps_etat} {priorite} {echeance} {signataire}. Une ligne dont toutes les variables sont vides est supprimée automatiquement.</p>`}
+$("mmods").onclick=async e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k||b.dataset.r,q=f=>document.querySelector(`[data-mm="${k}"][data-f="${f}"]`).value;
+ const row=b.dataset.k?{cle:k,objet:q("objet"),corps:q("corps")}:{cle:k,...MD[k]};if(!row.objet.trim()||!row.corps.trim()){$("mmmsg").style.color="";$("mmmsg").textContent="L'objet et le corps sont obligatoires.";return}
+ const {error}=await sb.from("modeles_mail").upsert({...row,updated_at:new Date().toISOString()});$("mmmsg").style.color=error?"":"var(--ok)";$("mmmsg").textContent=error?errMsg(error):"Modèle enregistré.";if(!error){MM[k]=row;renderMM()}};
+const IC=(a,i,t)=>{const m={e:["✎","Renommer"],x:["✕","Supprimer"],r:["↺","Réactiver"]}[a];return `<button class="ic" title="${m[1]}" aria-label="${m[1]}" data-a="${a}" data-t="${t}" data-i="${i}">${m[0]}</button>`};
+function renderGrids(){const row=(t,x)=>`<div class="gr${x.actif===false?" off":""}"><span>${esc(x.nom)}</span><span>${x.actif===false?IC("r",x.id,t):IC("e",x.id,t)}${IC("x",x.id,t)}</span></div>`,
+ add=(ph,t,p)=>`<div class="gadd"><input placeholder="${ph}" data-n aria-label="${ph}"><button data-add="${t}" data-p="${p}" aria-label="${ph}">+</button></div>`;
+ $("clists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cats.length||1},minmax(0,1fr))">`+cats.map(c=>`<div class="gc"><h4>${esc(c.nom)}</h4>${corps.filter(x=>x.categorie_id===c.id).map(x=>row("corps_etat",x)).join("")}${add("Nouveau lot","corps_etat",c.id)}</div>`).join("")+`</div>`;
+ $("lists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">`+sites.map(s=>`<div class="gc"><h4><span>${esc(s.nom)}${s.actif===false?" (désactivé)":""}</span><span>${s.actif===false?IC("r",s.id,"sites"):IC("e",s.id,"sites")}${IC("x",s.id,"sites")}</span></h4>${trib.filter(t=>t.site_id===s.id).map(t=>row("tribunes",t)).join("")}${add("Nouvelle zone/tribune","tribunes",s.id)}</div>`).join("")+`</div>`}
+async function gridClick(e){const b=e.target.closest("button");if(!b)return;const d=b.dataset;
+ if(d.add){const n=b.previousElementSibling.value.trim();if(n)adm(sb.from(d.add).insert({[d.add==="corps_etat"?"categorie_id":"site_id"]:+d.p,nom:n}));return}
+ if(d.a==="e"){const o=(d.t==="sites"?sites:d.t==="tribunes"?trib:corps).find(x=>x.id==d.i),n=(prompt("Nouveau nom :",o.nom)||"").trim();if(n&&n!==o.nom)adm(sb.from(d.t).update({nom:n}).eq("id",d.i))}
+ else if(d.a==="r")adm(sb.from(d.t).update({actif:true}).eq("id",d.i));
+ else if(d.a==="x"){if(!confirm("Supprimer cet élément ?"))return;const {error}=await sb.from(d.t).delete().eq("id",d.i);
+  if(error&&error.code==="23503"){if(confirm("Cet élément est utilisé par des tickets ou des interventions : il ne peut pas être supprimé.\nLe désactiver à la place (il disparaîtra des listes de choix) ?"))adm(sb.from(d.t).update({actif:false}).eq("id",d.i));return}
+  adm(Promise.resolve({error}))}}
+$("clists").onclick=$("lists").onclick=gridClick;
+$("ad").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.n!==undefined){e.preventDefault();e.target.nextElementSibling.click()}});
+$("dPw").addEventListener("cancel",e=>e.preventDefault());
+sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"&&me)location.reload()});
+$("fgt").onclick=async()=>{const m=$("em").value.trim();$("lmsg").style.color="";if(!m){$("lmsg").textContent="Saisissez d'abord votre adresse e-mail.";return}
+ const {error}=await sb.auth.resetPasswordForEmail(m,{redirectTo:location.origin+location.pathname});$("lmsg").style.color=error?"":"var(--ok)";$("lmsg").textContent=error?errMsg(error):"Si cette adresse correspond à un compte, un lien de réinitialisation vient d'être envoyé."};
+
+let NT=[],dtm;
+async function loadNot(){const {data,error}=await sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(50);if(error)return;NT=data;const n=NT.filter(x=>!x.lu).length;$("bn").textContent=n>99?"99+":n;$("bn").classList.toggle("hide",!n)}
+function drawNot(){$("dNb").innerHTML=NT.map(x=>`<div class="tl${x.lu?"":" nt"}" data-n="${x.id}" data-t="${x.ticket_id||""}" data-i="${x.intervention_id||""}" style="cursor:pointer"><span>${tlTime(x.created_at)}</span><b>${esc(x.titre)}</b>${x.message?" – "+esc(x.message):""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune notification.</p>`}
+$("bell").onclick=()=>{drawNot();$("dNot").showModal()};
+$("dNa").onclick=async()=>{await sb.rpc("notif_lire");await loadNot();drawNot()};
+$("dNb").onclick=e=>{const r=e.target.closest("[data-n]");if(!r)return;const d=r.dataset;sb.rpc("notif_lire",{p_id:+d.n}).then(loadNot);$("dNot").close();
+ const i=d.i&&ints.find(x=>x.id==d.i),t=d.t&&tk.find(x=>x.id==d.t);if(i)openIv(i);else if(t)openDet(t.id)};
+const dirty=()=>{clearTimeout(dtm);dtm=setTimeout(()=>{if(!document.querySelector("dialog[open]"))load()},1500)};
+function live(){setInterval(loadNot,60000);sb.channel("stades").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`user_id=eq.${me.id}`},()=>{loadNot();dirty()})
+ .on("postgres_changes",{event:"*",schema:"public",table:"tickets"},dirty).on("postgres_changes",{event:"*",schema:"public",table:"interventions"},dirty).subscribe()}
+const AL={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Échéance",etat:"État",local:"Local",site_id:"Site",tribune_id:"Zone",agent_ids:"Intervenants",entreprise_id:"Entreprise",prestataire:"Prestataire",prestataire_email:"E-mail entreprise",devis_demande_at:"Devis demandé",devis_recu_at:"Devis reçu",bc_numero:"N° bon de commande",bc_envoye_at:"BC envoyé",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Devis HT",montant_bc_ht:"BC HT",montant_facture_ht:"Facture HT"};
+const vv=(k,v)=>v==null||v===""?"—":k==="etat"?ET[v]||v:k==="priorite"?PR[v]||v:/_at$|echeance/.test(k)?fdate(v):k.startsWith("montant")?eur(v):k==="entreprise_id"?((ents.find(e=>e.id==v)||{}).entreprise||"?"):k==="site_id"?siteN(v):k==="tribune_id"?tribN(v):k==="agent_ids"?(v.map(i=>{const p=agents.find(a=>a.id===i);return p?(p.prenom+" "+p.nom).trim():"?"}).join(", ")||"—"):String(v);
+async function loadH(){const {data}=await sb.from("audit_log").select("*").eq("table_name","interventions").eq("num_id",curI.id).order("created_at",{ascending:false}).limit(60);if(!$("ih"))return;
+ $("ih").innerHTML=(data||[]).map(a=>{const ch=a.action==="INSERT"?["Intervention créée"]:Object.entries(a.changes||{}).filter(([k])=>AL[k]).map(([k,v])=>`${AL[k]} : ${vv(k,v[0])} → ${vv(k,v[1])}`);
+  return ch.length?`<div class="tl"><span>${tlTime(a.created_at)}</span><b>${esc(a.par_nom||"Système")}</b> : ${esc(ch.join(" ; "))}</div>`:""}).join("")||`<p class="empty" style="padding:8px">Aucune modification enregistrée.</p>`}
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
- const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;
+ const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
  $("login").classList.add("hide");$("app").classList.remove("hide");$("hd").classList.remove("hide");
  $("who").textContent=`${me.prenom||""} ${me.nom||""} · ${ROLES[me.role]}`;
  $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",me.role!=="admin");
  if(!me.actif){$("pending").classList.remove("hide");return}sb.rpc("marquer_connexion").then(()=>{});
- await load();
+ await load();loadNot();live();
 }
 $("vas").onchange=()=>{view=$("vas").value;$("ad").classList.add("hide");render()};
 $("adm").onclick=()=>{$("ad").classList.toggle("hide");render();if(!$("ad").classList.contains("hide"))loadAdmin()};
 
 async function load(){
- const [s,t,k]=await Promise.all([sb.from("sites").select("*").order("nom"),sb.from("tribunes").select("*").order("nom"),sb.from("tickets").select("*").order("created_at",{ascending:false})]);
+ const [s,t,k]=await Promise.all([sb.from("sites").select("*").order("nom"),sb.from("tribunes").select("*").order("nom"),allRows("tickets")]);
  if(s.error||t.error||k.error){alert("Erreur de chargement : "+(s.error||t.error||k.error).message);return}
  sites=s.data;trib=t.data;tk=k.data;
  const [c1,c2]=await Promise.all([sb.from("categories").select("*").order("id"),sb.from("corps_etat").select("*").order("id")]);
- cats=c1.data||[];corps=c2.data||[];
- const [iv,ag]=await Promise.all([sb.from("interventions").select("*").order("created_at",{ascending:false}),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable_batiments","responsable_exploitation","admin"]).eq("actif",true)]);
- ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
+ if(c1.error||c2.error){alert("Erreur de chargement : "+errMsg(c1.error||c2.error));return}cats=c1.data||[];corps=c2.data||[];
+ const [iv,ag]=await Promise.all([allRows("interventions"),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable_batiments","responsable_exploitation","admin"]).eq("actif",true)]);
+ if(iv.error||ag.error){alert("Erreur de chargement : "+errMsg(iv.error||ag.error));return}ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];{const mm=await sb.from("modeles_mail").select("*");MM=Object.fromEntries((mm.data||[]).map(m=>[m.cle,m]))}$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
  
  $("ns").innerHTML=sOpts();$("nt2").innerHTML=tOpts($("ns").value);
  render();
@@ -194,7 +254,7 @@ $("new").onclick=()=>{$("fNew").reset();$("np").value="normale";if(me.site_defau
 $("fNew").onsubmit=async e=>{e.preventDefault();
  if(!$("ns").value||!$("nt2").value){$("nmsg").textContent="Site et zone/tribune sont obligatoires.";return}
  const {error}=await sb.from("tickets").insert({site_id:$("ns").value,tribune_id:$("nt2").value,local:$("nl").value||null,titre:$("nt").value,description:$("nd").value,priorite:$("np").value,categorie_id:$("ncat").value,corps_etat_id:$("ncorps").value});
- if(error){$("nmsg").textContent="Enregistrement impossible : "+error.message;return}
+ if(error){$("nmsg").textContent="Enregistrement impossible : "+errMsg(error);return}
  $("dNew").close();load()};
 
 async function loadAdmin(){
@@ -210,28 +270,24 @@ async function loadAdmin(){
   <td><select data-u="${u.id}" data-f="role">${opts(ROLES)}</select></td><td><select data-u="${u.id}" data-f="site_defaut_id" aria-label="Site par défaut">${O([["","— Aucun —"],...sites.map(x=>[x.id,x.nom])],u.site_defaut_id)}</select></td>
   <td><button class="sec" data-u="${u.id}" data-f="actif" data-v="${!u.actif}"><span class="${u.actif?"on":"off"}">${u.actif?"Actif – désactiver":"Inactif – activer"}</span></button></td></tr>`).join("");
  (data||[]).forEach(u=>{const s=document.querySelector(`select[data-u="${u.id}"]`);if(s)s.value=u.role});
- $("at").innerHTML=sOpts();$("ac").innerHTML=catOpts();renderAnn();renderSug();
- $("clists").innerHTML=cats.map(c=>`<p><b>${esc(c.nom)}</b><br>${corps.filter(x=>x.categorie_id===c.id).map(x=>`${esc(x.nom)} <a class="lnk" data-del="corps_etat" data-id="${x.id}">supprimer</a>`).join(" · ")}</p>`).join("");
- $("lists").innerHTML=sites.map(s=>`<p><b>${esc(s.nom)}</b> <a class="lnk" data-del="sites" data-id="${s.id}">supprimer</a><br>${trib.filter(t=>t.site_id===s.id).map(t=>`${esc(t.nom)} <a class="lnk" data-del="tribunes" data-id="${t.id}">supprimer</a>`).join(" · ")||"Aucune zone/tribune"}</p>`).join("");
+ renderAnn();renderSug();renderGrids();renderMM();
 }
-async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+error.message:"";await load();loadAdmin()}
+async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";await load();loadAdmin()}
 $("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
 $("urows").onclick=e=>{const b=e.target.closest("button");if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
 $("asb").onclick=()=>{if($("as").value.trim()){adm(sb.from("sites").insert({nom:$("as").value.trim()}));$("as").value=""}};
-$("atb").onclick=()=>{if($("atn").value.trim()&&$("at").value){adm(sb.from("tribunes").insert({site_id:$("at").value,nom:$("atn").value.trim()}));$("atn").value=""}};
-$("lists").onclick=e=>{const a=e.target.closest("[data-del]");if(a&&confirm("Supprimer cet élément ? Les tickets liés bloqueront la suppression."))adm(sb.from(a.dataset.del).delete().eq("id",a.dataset.id))};
 $("drows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
  if(b.dataset.a==="suppr"){if(!confirm("Supprimer cette demande ? Le compte éventuellement déjà créé n'est pas touché."))return;
   const {error}=await sb.from("demandes_compte").delete().eq("id",b.dataset.d);
-  $("cmsg").style.color=error?"":"var(--ok)";$("cmsg").textContent=error?"Suppression impossible : "+error.message:"Demande supprimée.";loadAdmin();return}
+  $("cmsg").style.color=error?"":"var(--ok)";$("cmsg").textContent=error?"Suppression impossible : "+errMsg(error):"Demande supprimée.";loadAdmin();return}
  const sel=document.querySelector(`select[data-d="${b.dataset.d}"]`);
  const {error}=await sb.from("demandes_compte").update({statut:b.dataset.a,role_prevu:sel.value}).eq("id",b.dataset.d);
  $("cmsg").style.color=error?"":"var(--ok)";
- $("cmsg").textContent=error?"Action impossible : "+error.message:(b.dataset.a==="approuvee"?`Demande approuvée. Invitez maintenant ${b.dataset.e} dans Supabase (Authentication > Users > Invite user).`:"Demande refusée.");
+ $("cmsg").textContent=error?"Action impossible : "+errMsg(error):(b.dataset.a==="approuvee"?`Demande approuvée. Invitez maintenant ${b.dataset.e} dans Supabase (Authentication > Users > Invite user).`:"Demande refusée.");
  loadAdmin()};
-$("pwok").onclick=async()=>{if($("np1").value.length<8){$("pmsg").textContent="8 caractères minimum.";return}
+$("pwok").onclick=async()=>{if($("np1").value.length<12){$("pmsg").textContent="12 caractères minimum.";return}
  const {error}=await sb.auth.updateUser({password:$("np1").value});
- if(error){$("pmsg").textContent="Enregistrement impossible : "+error.message;return}
+ if(error){$("pmsg").textContent="Enregistrement impossible : "+errMsg(error);return}
  $("dPw").close();history.replaceState(null,"",location.pathname)};
 const TB={t:{f:{},s:{k:null,d:1},base:[]},i:{f:{},s:{k:null,d:1},base:[]}};
 const ts=d=>d?+new Date(d):0,mk=(l,v)=>({l,v,k:x=>String(v(x)).toLowerCase()});
@@ -320,10 +376,11 @@ const peutEditer=(x,r)=>r==="admin"||(isResp(r)&&(!x.categorie_id||catDom(x)===d
 const canSee=(x,r)=>peutEditer(x,r)||(["demandeur","responsable_batiments","responsable_exploitation"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
 let cats=[],corps=[];
 const ET={planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
-const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"]];
+const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"],["montant_devis_ht","Devis HT (€)","m"],["montant_bc_ht","Bon de commande HT (€)","m"],["montant_facture_ht","Facture HT (€)","m"]];
+const eur=v=>Number(v).toLocaleString("fr-FR",{style:"currency",currency:"EUR"});
 const NPO=[["non","Non"],["partiel","Partiel"],["oui","Oui"]];
-const suIn=(k,l,t,c)=>`<div style="flex:1 1 45%"><label>${l}</label>${t==="d"?`<input type="date" data-f="${k}" value="${c[k]||""}">`:t==="t"?`<input data-f="${k}" value="${esc(c[k]||"")}">`:`<select data-f="${k}">${O(NPO,c[k]||"non")}</select>`}</div>`;
-const suVw=(k,l,t,c)=>t==="d"?(c[k]?`✔ ${l} (${fdate(c[k])})`:`○ ${l}`):t==="t"?(c[k]?`✔ BC n° ${esc(c[k])}`:"○ N° de bon de commande"):`${l} : ${(NPO.find(x=>x[0]===(c[k]||"non"))||[])[1]}`;
+const suIn=(k,l,t,c)=>`<div style="flex:1 1 45%"><label>${l}</label>${t==="d"?`<input type="date" data-f="${k}" value="${c[k]||""}">`:t==="m"?`<input type="number" min="0" step="0.01" data-f="${k}" value="${c[k]??""}">`:t==="t"?`<input data-f="${k}" value="${esc(c[k]||"")}">`:`<select data-f="${k}">${O(NPO,c[k]||"non")}</select>`}</div>`;
+const suVw=(k,l,t,c)=>t==="d"?(c[k]?`✔ ${l} (${fdate(c[k])})`:`○ ${l}`):t==="m"?`${l} : ${c[k]!=null&&c[k]!==""?eur(c[k]):"—"}`:t==="t"?(c[k]?`✔ BC n° ${esc(c[k])}`:"○ N° de bon de commande"):`${l} : ${(NPO.find(x=>x[0]===(c[k]||"non"))||[])[1]}`;
 function fmtTel(v){if(!v)return"";const s=String(v).trim(),d=s.replace(/\D/g,"");let m=d.match(/^(?:0033|33)0?(\d{9})$/);
  if(m)return"+33 "+m[1][0]+" "+m[1].slice(1).replace(/(\d{2})(?=\d)/g,"$1 ");m=d.match(/^0(\d{9})$/);
  if(m)return"0"+m[1][0]+" "+m[1].slice(1).replace(/(\d{2})(?=\d)/g,"$1 ");
@@ -336,7 +393,7 @@ const dv=()=>`<label class="ck"><input type="checkbox" data-dv${devisMail?" chec
 let ints=[],agents=[],ents=[],curI=null,pendingTicket=null,tab="t",ed=false,imode="a",devisMail=false;
 const fdate=d=>d?new Date(d).toLocaleDateString("fr-FR"):"—",nm=()=>`${me.prenom} ${me.nom}`,isAg=()=>role().startsWith("agent"),today=()=>new Date().toLocaleDateString("sv-SE");
 const O=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${esc(l)}</option>`).join("");
-const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.filter(c=>!mine||!isResp(role())||c.domaine===dom(role())).map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
+const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.filter(c=>!mine||!isResp(role())||c.domaine===dom(role())).map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
 const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
 function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
  $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
@@ -360,25 +417,24 @@ function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  <p><span class="tag s-${c.statut}">${ST[c.statut]}</span>${c.fin_prevue?` &nbsp;Fin d'intervention prévue : <b>${fdate(c.fin_prevue)}</b>`:""}</p>
  ${c.en_charge_nom||cn?`<p>En charge : <b>${esc(c.en_charge_nom||"personne pour l'instant")}</b>${cn&&c.en_charge_id!==me.id?` <button class="sec" data-me>Me l'attribuer</button>`:""}</p>`:""}
  ${cn?`<div class="btns">${Object.entries(ST).filter(([k])=>k!==c.statut).map(([k,v])=>`<button class="sec" data-st="${k}">${v}</button>`).join("")}</div>`:""}
- <h3>Historique</h3><div id="tl"></div>
- ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Ajouter la note</button>
+ <h3>Historique</h3><div id="tl"></div>${!cn&&c.demandeur_id===me.id?`<textarea id="nt1" rows="2" placeholder="Écrire un message à l'équipe" aria-label="Message à l'équipe" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Envoyer le message</button>`:""}
+ ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><label style="display:block;margin-top:6px"><input type="checkbox" id="nti" checked> Note interne (invisible du demandeur)</label><button data-note style="margin-top:6px">Ajouter la note</button>
  <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
  <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}`;loadTl()}
 async function loadTl(){const cn=canT();
  const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
  const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
-  ...(n.data||[]).filter(x=>!(cn&&x.message.startsWith("Statut changé"))).map(x=>({d:x.created_at,a:x.auteur,t:x.message,n:1}))].sort((a,b)=>new Date(a.d)-new Date(b.d));
- $("tl").innerHTML=L.map(x=>`<div class="tl${x.n?" nt":""}"><span>${tlTime(x.d)}</span>${x.a?"<b>"+esc(x.a)+"</b> : ":""}${esc(x.t)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucun historique.</p>`}
+  ...(n.data||[]).filter(x=>!(cn&&x.message.startsWith("Statut changé"))).map(x=>({d:x.created_at,a:x.auteur,t:x.message,n:1,i:x.interne}))].sort((a,b)=>new Date(a.d)-new Date(b.d));
+ $("tl").innerHTML=L.map(x=>`<div class="tl${x.n?" nt":""}"><span>${tlTime(x.d)}</span>${x.a?"<b>"+esc(x.a)+"</b> : ":""}${x.i?'<span class="tag">interne</span> ':""}${esc(x.t)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucun historique.</p>`}
 async function reloadT(){await load();const n=tk.find(x=>x.id===cur.id);
  if(!n){$("dDet").close();alert("Le ticket a été transféré vers l'autre catégorie : il n'apparaît plus dans votre liste.");return}cur=n;drawT()}
 async function setSt(k){let j=null;if(k==="resolue"||k==="refusee"){j=await askJust((k==="refusee"?"Refus du ticket ":"Clôture du ticket ")+cur.ref);if(!j)return}
- const {error}=await sb.from("tickets").update({statut:k}).eq("id",cur.id);if(error){alert("Modification impossible : "+error.message);return}
- if(j)await sb.from("ticket_suivi").insert({ticket_id:cur.id,auteur:nm(),message:(k==="refusee"?"Refus : ":"Clôture : ")+j});reloadT()}
+ const {error}=await sb.rpc("ticket_changer_statut",{p_id:cur.id,p_statut:k,p_justif:j});if(error){alert("Modification impossible : "+errMsg(error));return}reloadT()}
 $("tbody").onchange=async e=>{if(!e.target.dataset.f)return;const u=norm(e.target);if(u.titre===null){alert("Le titre est obligatoire.");drawT();return}
- const {error}=await sb.from("tickets").update(u).eq("id",cur.id);if(error){alert("Modification impossible : "+error.message);drawT();return}reloadT()};
+ const {error}=await sb.from("tickets").update(u).eq("id",cur.id);if(error){alert("Modification impossible : "+errMsg(error));drawT();return}reloadT()};
 $("tbody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-st],[data-note],[data-newint],[data-i],[data-me]");if(!b)return;const d=b.dataset;
- if("edit" in d){ed=!ed;drawT()}else if("me" in d){const {error}=await sb.from("tickets").update({en_charge_id:me.id}).eq("id",cur.id);if(error)alert("Modification impossible : "+error.message);else reloadT()}else if(d.st)setSt(d.st)
- else if("note" in d){const m=$("nt1").value.trim();if(!m)return;const {error}=await sb.from("ticket_suivi").insert({ticket_id:cur.id,auteur:nm(),message:m});if(error)alert(error.message);else loadTl();$("nt1").value=""}
+ if("edit" in d){ed=!ed;drawT()}else if("me" in d){const {error}=await sb.from("tickets").update({en_charge_id:me.id}).eq("id",cur.id);if(error)alert("Modification impossible : "+errMsg(error));else reloadT()}else if(d.st)setSt(d.st)
+ else if("note" in d){const m=$("nt1").value.trim();if(!m)return;const {error}=await sb.from("ticket_suivi").insert({ticket_id:cur.id,auteur:nm(),message:m,interne:$("nti")?$("nti").checked:false});if(error)alert(errMsg(error));else loadTl();$("nt1").value=""}
  else if("newint" in d){$("dDet").close();pendingTicket=cur;openIv(null,cur)}
  else if(d.i){$("dDet").close();pendingTicket=null;openIv(ints.find(x=>x.id==d.i))}};
 // ===== INTERVENTIONS =====
@@ -417,11 +473,11 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
  ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
  ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
- ${saved?`<h3>Notes</h3><div id="inl"></div><textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`
- :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button>`}`;if(saved)loadN()}
+ ${saved?`<h3>Notes</h3><div id="inl"></div><textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>${canE?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button>`}`;if(saved){loadN();if(canE)loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
-async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+error.message);drawI();return}
+async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
  await load();curI=ints.find(x=>x.id===curI.id)||{...curI,...u}}else Object.assign(curI,u);drawI()}
 $("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
  if(d.agent!==undefined){const ch=[...document.querySelectorAll("#ibody [data-agent]:checked")];return upd({agent_ids:ch.map(b=>b.dataset.agent),agents_noms:ch.map(b=>b.dataset.n).join(", ")})}
@@ -432,17 +488,15 @@ $("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
  if(d.f==="titre"&&!u.titre){alert("Le titre est obligatoire.");drawI();return}
  if(d.f==="bc_numero"&&u.bc_numero){u.bc_numero=u.bc_numero.trim();if(u.bc_numero.length<12){alert("Le numéro de bon de commande doit comporter au moins 12 caractères.");drawI();return}}upd(u)};
 async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture de l'intervention "+curI.ref);if(!j)return}
- const {error}=isAg()?await sb.rpc("agent_maj_etat",{p_id:curI.id,p_etat:k}):await sb.from("interventions").update({etat:k}).eq("id",curI.id);
- if(error){alert("Modification impossible : "+error.message);return}
- if(j)await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:"Clôture : "+j});
+ const {error}=await sb.rpc("intervention_etat",{p_id:curI.id,p_etat:k,p_justif:j});if(error){alert("Modification impossible : "+errMsg(error));return}
  const tid=curI.ticket_id,t=tid&&tk.find(x=>x.id===tid);
  if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)){const au=ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length;
-  if(confirm(`Passer aussi le ticket ${t.ref} en « Résolu » ?`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){await sb.from("tickets").update({statut:"resolue"}).eq("id",tid);await sb.from("ticket_suivi").insert({ticket_id:tid,auteur:nm(),message:`Clôture (intervention ${curI.ref}) : ${j}`})}}
+  if(confirm(`Passer aussi le ticket ${t.ref} en « Résolu » ?`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:`(intervention ${curI.ref}) : ${j}`})}}
  await load();curI=ints.find(x=>x.id===curI.id)||curI;drawI()}
 async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
  if(!o.titre||!o.site_id||!o.tribune_id||!o.categorie_id){$("imsg").textContent="Titre, site, zone/tribune et catégorie sont obligatoires.";return}
  const tid=pendingTicket?pendingTicket.id:null,{data,error}=await sb.from("interventions").insert({...o,ticket_id:tid}).select().single();
- if(error){$("imsg").textContent="Création impossible : "+error.message;return}
+ if(error){$("imsg").textContent="Création impossible : "+errMsg(error);return}
  const t=tid&&tk.find(x=>x.id===tid);if(t&&["nouvelle","resolue"].includes(t.statut)){await sb.from("tickets").update({statut:"en_cours"}).eq("id",tid);if(t.statut==="resolue")await sb.from("ticket_suivi").insert({ticket_id:tid,auteur:nm(),message:`Ticket rouvert : nouvelle intervention ${data.ref}`})}
  await load();curI=ints.find(x=>x.id===data.id)||data;ed=false;drawI()}
 function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
@@ -452,14 +506,11 @@ function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
  y+=3;T("Consignes",1);T(c.consignes||"Aucune consigne particulière.");y+=6;T(`Fiche émise le ${fdate(new Date())} par ${nm()}`,0,9);d.save(`fiche-${c.ref}.pdf`)}
 function mailI(){const c=curI,e=c.entreprise_id?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
  const to=e==="e"?(ent?ent.email:c.prestataire_email)||"":agents.filter(a=>(c.agent_ids||[]).includes(a.id)).map(a=>a.email).join(",");
- const L=["Bonjour,","",dv?"Nous vous remercions de nous adresser un devis pour l'intervention ci-dessous :":"Nous vous confions l'intervention ci-dessous :",
-  `Objet : ${c.titre}${c.consignes?" : "+c.consignes:""}`,`Lieu : ${siteN(c.site_id)}`,`Zone : ${tribN(c.tribune_id)}`,...(c.local?[`Local : ${c.local}`]:[]),
-  ...(ce?[`Corps d'état : ${ce}`]:[]),`Priorité : ${PR[c.priorite]}`,...(c.echeance?[`Demande finalisation intervention pour le : ${fdate(c.echeance)}`]:[]),
-  ...(e==="a"?["","(Fiche d'intervention à joindre : bouton « Fiche PDF »)"]:[]),"","Cordialement,",nm()];
- location.href="mailto:"+to+"?subject="+encodeURIComponent(`${siteN(c.site_id).toUpperCase()} - ${dv?"Demande de devis":"Intervention"} ${c.ref} – ${c.titre}`)+"&body="+encodeURIComponent(L.join("\r\n"))}
+ const m=mdl(e==="a"?"regie":dv?"devis":"entreprise"),v={ref:c.ref,titre:c.titre,consignes:c.consignes,site:siteN(c.site_id),SITE:siteN(c.site_id).toUpperCase(),zone:tribN(c.tribune_id),local:c.local,corps_etat:ce,priorite:PR[c.priorite],echeance:c.echeance?fdate(c.echeance):"",signataire:nm()};
+ location.href="mailto:"+to+"?subject="+encodeURIComponent(fill(m.objet,v))+"&body="+encodeURIComponent(fill(m.corps,v))}
 $("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
  if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)pdfI();else if("mail" in d)mailI();
- else if("nadd" in d){const m=$("inm").value.trim();if(!m)return;const {error}=await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:m});if(error)alert(error.message);else{$("inm").value="";loadN()}}};
+ else if("nadd" in d){const m=$("inm").value.trim();if(!m)return;const {error}=await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:m});if(error)alert(errMsg(error));else{$("inm").value="";loadN()}}};
 // ===== ANNUAIRE (console admin) =====
 function fillCorpsAnn(){const ks=[...document.querySelectorAll("#en_k [data-ec]:checked")].map(b=>+b.dataset.ec),cur=$("en_c").value,seen=new Set();
  const l=corps.filter(x=>ks.includes(x.categorie_id)&&!seen.has(x.nom)&&seen.add(x.nom));
@@ -485,7 +536,7 @@ $("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank
 $("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");$("dS").showModal()};
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
  const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
- if(error){$("sugm").textContent="Envoi impossible : "+error.message;return}
+ if(error){$("sugm").textContent="Envoi impossible : "+errMsg(error);return}
  $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
 async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});
  $("sug_l").innerHTML=(data||[]).map(x=>`<div class="suivi"><b>${x.traitee?"✔ ":""}${esc(x.type)}</b> – ${esc(x.titre)} <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}<br><a class="lnk" data-sv="${x.id}" data-v="${!x.traitee}">${x.traitee?"Marquer non traitée":"Marquer traitée"}</a> · <a class="lnk" data-sd="${x.id}">supprimer</a></div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
@@ -497,9 +548,7 @@ $("irows2").onclick=$("irows").onclick;
 document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d)return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
 
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
-const corpsOpts=cid=>corps.filter(x=>x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
+const corpsOpts=cid=>corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-$("acb").onclick=()=>{if($("acn").value.trim()&&$("ac").value){adm(sb.from("corps_etat").insert({categorie_id:$("ac").value,nom:$("acn").value.trim()}));$("acn").value=""}};
-$("clists").onclick=e=>{const a=e.target.closest("[data-del]");if(a&&confirm("Supprimer ce corps d'état ? Les tickets concernés gardent leur catégorie."))adm(sb.from("corps_etat").delete().eq("id",a.dataset.id))};
 start();
 </script></body></html>
