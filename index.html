@@ -64,6 +64,7 @@ details.panel>summary::-webkit-details-marker{display:none}details.panel>summary
 .gc button.ic{padding:1px 7px;font-size:14px;margin-left:3px}.gc h4 button.ic{background:#fff}.gadd button{padding:5px 12px}
 header button#bell{height:36px;width:36px;padding:0;position:relative;display:inline-flex;align-items:center;justify-content:center}
 #bn{position:absolute;top:-6px;right:-6px;background:#c8641b;color:#fff;border-radius:9px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;padding:0 4px;box-sizing:border-box}
+.rf{max-width:150px;padding:2px;font-size:12px}
 </style></head><body>
 <header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.0</small></h1><div id="hd" class="hide">
  <span id="who"></span>
@@ -98,14 +99,14 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <div class="panel"><h3 style="margin-top:0">Demandes de compte</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></div>
 <div class="panel"><h3 style="margin-top:0">Utilisateurs</h3><div class="table"><table><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></div>
 <div class="panel"><h3 style="margin-top:0">Suggestions des utilisateurs</h3><div id="sug_l"></div></div>
-<details class="panel"><summary>Catégories et corps d'état</summary><div id="clists" style="margin-top:12px"></div></details>
+<details class="panel"><summary>Catégories et corps d'état</summary><p class="meta" style="margin:10px 0 0">La liste déroulante de chaque lot désigne son référent par défaut : les nouveaux tickets de ce corps d'état lui sont attribués.</p><div id="clists" style="margin-top:12px"></div></details>
 <details class="panel"><summary>Annuaire des entreprises</summary>
    <div class="row"><select id="en_c" aria-label="Corps d'état"></select><input id="en_e" placeholder="Entreprise"></div>
    <div id="en_k" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><input id="en_n" placeholder="Chargé d'affaires"><input id="en_m" type="email" placeholder="E-mail"><input id="en_t" placeholder="Mobile"><button id="en_b">Ajouter</button><button class="sec hide" id="en_x">Annuler</button></div><div id="en_l" style="margin-top:12px"></div></details>
 <details class="panel"><summary>Sites et zones/tribunes</summary><div id="lists" style="margin-top:12px"></div><div class="row" style="margin-top:12px"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div></details>
 <details class="panel"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
-<details class="panel"><summary>Affectations par site</summary><p class="meta" style="margin:10px 0">Les nouveaux tickets d'un site sont attribués à la personne choisie ; sans choix, au responsable du domaine.</p><div class="table" id="affb"></div></details>
-<details class="panel" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
+<details class="panel"><summary>Affectations par site (si le corps d'état n'a pas de référent)</summary><p class="meta" style="margin:10px 0">Ordre d'attribution d'un nouveau ticket : 1) référent du corps d'état, 2) affectation du site ci-dessous, 3) responsable du domaine.</p><div class="table" id="affb"></div></details>
+<details class="panel" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option><option value="corps_etat">Corps d'état</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
 <details class="panel" id="ddet"><summary>Données : sauvegarde et archivage</summary><div id="dvol" style="margin:10px 0"></div>
 <h4>Sauvegarde</h4><p class="meta">Télécharge toutes les données (configuration, utilisateurs, tickets, interventions, notes, historique, journal) dans un fichier.</p><button id="bkp">Télécharger la sauvegarde complète</button>
 <h4>Archivage et suppression</h4><p class="meta">Tickets et interventions clos depuis plus de <input id="amt" type="number" min="6" value="24" style="width:70px"> mois, et journal d'audit de plus de <input id="ama" type="number" min="6" value="12" style="width:70px"> mois. L'archive est téléchargée avant toute suppression, qui est définitive.</p>
@@ -131,6 +132,9 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
  <label for="sugti">Titre (obligatoire)</label><input id="sugti"><label for="sugtx">Détail</label><textarea id="sugtx" rows="4"></textarea>
  <p class="msg" id="sugm"></p><div class="row"><button id="sugb">Envoyer la suggestion</button><button class="sec" data-close>Fermer</button></div></dialog>
 <dialog id="dDash" style="min-width:min(760px,92vw)"><h2 style="margin-top:0">Tableau de bord</h2><div id="dDb"></div></dialog>
+<dialog id="dUsr"><h2 style="margin-top:0">Modifier l'utilisateur</h2><p class="meta" id="uem"></p>
+<label>Prénom</label><input id="u_prenom"><label>Nom</label><input id="u_nom"><label>Société</label><input id="u_societe"><label>Fonction</label><input id="u_fonction"><label>Rôle</label><select id="u_role"></select><label>Site par défaut</label><select id="u_site"></select>
+<div class="row" style="margin-top:12px"><button id="u_ok">Enregistrer</button><button class="sec" id="u_ko">Annuler</button></div><p class="msg" id="u_msg"></p></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
 <footer id="ver" aria-hidden="true">Version 3.0 – 01/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
@@ -187,9 +191,9 @@ $("mmods").onclick=async e=>{const b=e.target.closest("button");if(!b)return;con
  const row=b.dataset.k?{cle:k,objet:q("objet"),corps:q("corps")}:{cle:k,...MD[k]};if(!row.objet.trim()||!row.corps.trim()){$("mmmsg").style.color="";$("mmmsg").textContent="L'objet et le corps sont obligatoires.";return}
  const {error}=await sb.from("modeles_mail").upsert({...row,updated_at:new Date().toISOString()});$("mmmsg").style.color=error?"":"var(--ok)";$("mmmsg").textContent=error?errMsg(error):"Modèle enregistré.";if(!error){MM[k]=row;renderMM()}};
 const IC=(a,i,t)=>{const m={e:["✎","Renommer"],x:["✕","Supprimer"],r:["↺","Réactiver"]}[a];return `<button class="ic" title="${m[1]}" aria-label="${m[1]}" data-a="${a}" data-t="${t}" data-i="${i}">${m[0]}</button>`};
-function renderGrids(){const row=(t,x)=>`<div class="gr${x.actif===false?" off":""}"><span>${esc(x.nom)}</span><span>${x.actif===false?IC("r",x.id,t):IC("e",x.id,t)}${IC("x",x.id,t)}</span></div>`,
+function renderGrids(){const row=(t,x,d)=>`<div class="gr${x.actif===false?" off":""}"><span>${esc(x.nom)}</span><span>${t==="corps_etat"?refSel(x,d):""}${x.actif===false?IC("r",x.id,t):IC("e",x.id,t)}${IC("x",x.id,t)}</span></div>`,
  add=(ph,t,p)=>`<div class="gadd"><input placeholder="${ph}" data-n aria-label="${ph}"><button data-add="${t}" data-p="${p}" aria-label="${ph}">+</button></div>`;
- $("clists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cats.length||1},minmax(0,1fr))">`+cats.map(c=>`<div class="gc"><h4>${esc(c.nom)}</h4>${corps.filter(x=>x.categorie_id===c.id).map(x=>row("corps_etat",x)).join("")}${add("Nouveau lot","corps_etat",c.id)}</div>`).join("")+`</div>`;
+ $("clists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cats.length||1},minmax(0,1fr))">`+cats.map(c=>`<div class="gc"><h4>${esc(c.nom)}</h4>${corps.filter(x=>x.categorie_id===c.id).map(x=>row("corps_etat",x,c.domaine)).join("")}${add("Nouveau lot","corps_etat",c.id)}</div>`).join("")+`</div>`;
  $("lists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">`+sites.map(s=>`<div class="gc"><h4><span>${esc(s.nom)}${s.actif===false?" (désactivé)":""}</span><span>${s.actif===false?IC("r",s.id,"sites"):IC("e",s.id,"sites")}${IC("x",s.id,"sites")}</span></h4>${trib.filter(t=>t.site_id===s.id).map(t=>row("tribunes",t)).join("")}${add("Nouvelle zone/tribune","tribunes",s.id)}</div>`).join("")+`</div>`}
 async function gridClick(e){const b=e.target.closest("button");if(!b)return;const d=b.dataset;
  if(d.add){const n=b.previousElementSibling.value.trim();if(n)adm(sb.from(d.add).insert({[d.add==="corps_etat"?"categorie_id":"site_id"]:+d.p,nom:n}));return}
@@ -199,6 +203,7 @@ async function gridClick(e){const b=e.target.closest("button");if(!b)return;cons
   if(error&&error.code==="23503"){if(confirm("Cet élément est utilisé par des tickets ou des interventions : il ne peut pas être supprimé.\nLe désactiver à la place (il disparaîtra des listes de choix) ?"))adm(sb.from(d.t).update({actif:false}).eq("id",d.i));return}
   adm(Promise.resolve({error}))}}
 $("clists").onclick=$("lists").onclick=gridClick;
+$("clists").onchange=e=>{const t=e.target;if(t.dataset.ref)adm(sb.from("corps_etat").update({referent_id:t.value||null}).eq("id",t.dataset.ref))};
 $("ad").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.dataset.n!==undefined){e.preventDefault();e.target.nextElementSibling.click()}});
 $("dPw").addEventListener("cancel",e=>e.preventDefault());
 sb.auth.onAuthStateChange(ev=>{if(ev==="SIGNED_OUT"&&me)location.reload()});
@@ -223,14 +228,14 @@ async function loadH(){const {data}=await sb.from("audit_log").select("*").eq("t
 
 async function renderAff(){const [a,p]=await Promise.all([sb.from("affectations").select("*"),sb.from("profiles").select("id,prenom,nom,role").eq("actif",true).in("role",["admin","responsable_batiments","responsable_exploitation"])]);
  const A=a.data||[],Pf=p.data||[],D={batiments:"responsable_batiments",exploitation:"responsable_exploitation"};
- $("affb").innerHTML=`<table><thead><tr><th>Site</th><th>Travaux/maintenance</th><th>Exploitation</th></tr></thead><tbody>`+sites.filter(s=>s.actif!==false).map(s=>`<tr><td>${esc(s.nom)}</td>`+["batiments","exploitation"].map(d=>{const c=(A.find(x=>x.site_id===s.id&&x.domaine===d)||{}).profile_id;
+ RF=Pf;renderGrids();$("affb").innerHTML=`<table><thead><tr><th>Site</th><th>Travaux/maintenance</th><th>Exploitation</th></tr></thead><tbody>`+sites.filter(s=>s.actif!==false).map(s=>`<tr><td>${esc(s.nom)}</td>`+["batiments","exploitation"].map(d=>{const c=(A.find(x=>x.site_id===s.id&&x.domaine===d)||{}).profile_id;
   return `<td><select data-s="${s.id}" data-d="${d}" aria-label="${esc(s.nom)} – ${d}"><option value="">Responsable du domaine (par défaut)</option>${Pf.filter(x=>x.role==="admin"||x.role===D[d]).map(x=>`<option value="${x.id}"${x.id===c?" selected":""}>${esc((x.prenom+" "+x.nom).trim())}</option>`).join("")}</select></td>`}).join("")+`</tr>`).join("")+`</tbody></table>`}
 $("affb").onchange=e=>{const t=e.target,s=+t.dataset.s,d=t.dataset.d;adm(t.value?sb.from("affectations").upsert({site_id:s,domaine:d,profile_id:t.value}):sb.from("affectations").delete().eq("site_id",s).eq("domaine",d))};
-const LB={...AL,role:"Rôle",actif:"Actif",nom:"Nom",prenom:"Prénom",email:"E-mail",societe:"Société",fonction:"Fonction",entreprise:"Entreprise",contact:"Contact",mobile:"Mobile",profile_id:"Responsable",domaine:"Domaine",site_defaut_id:"Site par défaut",ref:"N°"};
-const av=(k,v)=>k==="role"?(ROLES[v]||v||"—"):k==="actif"?(v?"oui":"non"):k==="profile_id"?((p=>p?(p.prenom+" "+p.nom).trim():"?")(agents.find(a=>a.id===v))):k==="site_defaut_id"?(v?siteN(v):"—"):typeof v==="object"&&v!==null?"…":vv(k,v);
+const LB={...AL,role:"Rôle",actif:"Actif",nom:"Nom",prenom:"Prénom",email:"E-mail",societe:"Société",fonction:"Fonction",entreprise:"Entreprise",contact:"Contact",mobile:"Mobile",profile_id:"Responsable",referent_id:"Référent",domaine:"Domaine",site_defaut_id:"Site par défaut",ref:"N°"};
+const av=(k,v)=>k==="role"?(ROLES[v]||v||"—"):k==="actif"?(v?"oui":"non"):(k==="profile_id"||k==="referent_id")?((p=>p?(p.prenom+" "+p.nom).trim():"?")(agents.find(a=>a.id===v))):k==="site_defaut_id"?(v?siteN(v):"—"):typeof v==="object"&&v!==null?"…":vv(k,v);
 async function renderAud(){let q=sb.from("audit_log").select("*").order("created_at",{ascending:false}).limit(150);if($("afl").value)q=q.eq("table_name",$("afl").value);const {data,error}=await q;
  if(error){$("arows").innerHTML=`<tr><td colspan="5">${esc(errMsg(error))}</td></tr>`;return}
- const TN={interventions:"Intervention",profiles:"Utilisateur",entreprises:"Entreprise",affectations:"Affectation"},AC={INSERT:"Création",UPDATE:"Modification",DELETE:"Suppression"},HID=["id","created_at","updated_at","prefs","terminee_at","cree_par","agents_noms"];
+ const TN={interventions:"Intervention",profiles:"Utilisateur",entreprises:"Entreprise",affectations:"Affectation",corps_etat:"Corps d'état"},AC={INSERT:"Création",UPDATE:"Modification",DELETE:"Suppression"},HID=["id","created_at","updated_at","prefs","terminee_at","cree_par","agents_noms"];
  $("arows").innerHTML=(data||[]).map(a=>{const c=a.changes||{},d=a.action==="UPDATE"?Object.entries(c).map(([k,v])=>`${LB[k]||k} : ${av(k,v[0])} → ${av(k,v[1])}`):Object.entries(c).filter(([k,v])=>v!=null&&v!==""&&!HID.includes(k)).slice(0,5).map(([k,v])=>`${LB[k]||k} : ${av(k,v)}`);
   return `<tr><td>${tlTime(a.created_at)}</td><td>${esc(a.par_nom||"Système")}</td><td>${TN[a.table_name]||esc(a.table_name)}${a.table_name==="interventions"?" n°"+esc(a.row_id):""}</td><td>${AC[a.action]||a.action}</td><td>${esc(d.join(" ; ").slice(0,240))}</td></tr>`}).join("")||`<tr><td colspan="5" class="empty">Aucune entrée.</td></tr>`}
 $("afl").onchange=$("abtn").onclick=renderAud;$("adet").addEventListener("toggle",()=>{if($("adet").open)renderAud()});
@@ -260,6 +265,15 @@ $("apur").onclick=async()=>{const c=CAND,m=$("dmsg");if(!c||!confirm("Téléchar
  dl(o,`stades3m_archive_${today()}.json`);
  const {data,error}=await sb.rpc("archive_purger",{p_tickets:c.tickets,p_interventions:c.interventions,p_audit:c.audit,p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error)throw error;
  CAND=null;$("apur").classList.add("hide");$("acs").textContent="";m.style.color="var(--ok)";m.textContent=`Supprimé : ${data.tickets} ticket(s), ${data.interventions} intervention(s), ${data.audit} ligne(s) d'audit. Relancez la recherche pour le lot suivant.`;renderVol();load()}catch(e){m.textContent=errMsg(e)}};
+
+let RF=[],UL=[],UE=null;
+const refSel=(x,d)=>`<select class="rf" data-ref="${x.id}" title="Référent par défaut" aria-label="Référent par défaut – ${esc(x.nom)}"><option value="">Référent : règle par défaut</option>${RF.filter(p=>p.role==="admin"||p.role===(d==="batiments"?"responsable_batiments":"responsable_exploitation")).map(p=>`<option value="${p.id}"${p.id===x.referent_id?" selected":""}>${esc((p.prenom+" "+p.nom).trim())}</option>`).join("")}</select>`;
+function editU(id){const u=UL.find(x=>x.id===id);if(!u)return;UE=id;$("uem").textContent=u.email||"";["prenom","nom","societe","fonction"].forEach(k=>$("u_"+k).value=u[k]||"");
+ $("u_role").innerHTML=O(Object.entries(ROLES),u.role);$("u_site").innerHTML=O([["","— Aucun —"],...sites.filter(x=>x.actif!==false||x.id===u.site_defaut_id).map(x=>[x.id,x.nom])],u.site_defaut_id);$("u_msg").textContent="";$("dUsr").showModal()}
+$("u_ko").onclick=()=>$("dUsr").close();
+$("u_ok").onclick=async()=>{const v=k=>$("u_"+k).value.trim();if(!v("nom")||!v("prenom")){$("u_msg").textContent="Le nom et le prénom sont obligatoires.";return}
+ const {error}=await sb.from("profiles").update({prenom:v("prenom"),nom:v("nom"),societe:v("societe"),fonction:v("fonction"),role:$("u_role").value,site_defaut_id:$("u_site").value?+$("u_site").value:null}).eq("id",UE);
+ if(error){$("u_msg").textContent=errMsg(error);return}$("dUsr").close();await load();loadAdmin()};
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
@@ -314,15 +328,15 @@ async function loadAdmin(){
   <td>${a?`<select data-d="${d.id}" aria-label="Rôle à attribuer">${opts(ROLES)}</select>`:(d.statut==="approuvee"?"Approuvée : "+ROLES[d.role_prevu]:"Refusée")}</td>
   <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec" data-d="${d.id}" data-a="suppr">Supprimer</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
  const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false});
- $("urows").innerHTML=(data||[]).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
+ UL=data||[];$("urows").innerHTML=(data||[]).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
   <td><select data-u="${u.id}" data-f="role">${opts(ROLES)}</select></td><td><select data-u="${u.id}" data-f="site_defaut_id" aria-label="Site par défaut">${O([["","— Aucun —"],...sites.map(x=>[x.id,x.nom])],u.site_defaut_id)}</select></td>
-  <td><button class="sec" data-u="${u.id}" data-f="actif" data-v="${!u.actif}"><span class="${u.actif?"on":"off"}">${u.actif?"Actif – désactiver":"Inactif – activer"}</span></button></td></tr>`).join("");
+  <td><button class="sec" data-u="${u.id}" data-e="1">Éditer</button> <button class="sec" data-u="${u.id}" data-f="actif" data-v="${!u.actif}"><span class="${u.actif?"on":"off"}">${u.actif?"Actif – désactiver":"Inactif – activer"}</span></button></td></tr>`).join("");
  (data||[]).forEach(u=>{const s=document.querySelector(`select[data-u="${u.id}"]`);if(s)s.value=u.role});
  renderAnn();renderSug();renderGrids();renderMM();renderAff();
 }
 async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";await load();loadAdmin()}
 $("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
-$("urows").onclick=e=>{const b=e.target.closest("button");if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
+$("urows").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.e)editU(b.dataset.u);else if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
 $("asb").onclick=()=>{if($("as").value.trim()){adm(sb.from("sites").insert({nom:$("as").value.trim()}));$("as").value=""}};
 $("drows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
  if(b.dataset.a==="suppr"){if(!confirm("Supprimer cette demande ? Le compte éventuellement déjà créé n'est pas touché."))return;
