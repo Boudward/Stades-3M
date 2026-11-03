@@ -106,6 +106,10 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <details class="panel"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
 <details class="panel"><summary>Affectations par site</summary><p class="meta" style="margin:10px 0">Les nouveaux tickets d'un site sont attribués à la personne choisie ; sans choix, au responsable du domaine.</p><div class="table" id="affb"></div></details>
 <details class="panel" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
+<details class="panel" id="ddet"><summary>Données : sauvegarde et archivage</summary><div id="dvol" style="margin:10px 0"></div>
+<h4>Sauvegarde</h4><p class="meta">Télécharge toutes les données (configuration, utilisateurs, tickets, interventions, notes, historique, journal) dans un fichier.</p><button id="bkp">Télécharger la sauvegarde complète</button>
+<h4>Archivage et suppression</h4><p class="meta">Tickets et interventions clos depuis plus de <input id="amt" type="number" min="6" value="24" style="width:70px"> mois, et journal d'audit de plus de <input id="ama" type="number" min="6" value="12" style="width:70px"> mois. L'archive est téléchargée avant toute suppression, qui est définitive.</p>
+<div class="row"><button class="sec" id="acand">Rechercher</button><button class="hide" id="apur">Exporter puis supprimer ce lot</button></div><p class="meta" id="acs"></p><p class="msg" id="dmsg"></p></details>
 <p class="msg" id="amsg"></p>
  </div>
 </main>
@@ -236,6 +240,26 @@ $("dash").onclick=async()=>{$("dDb").innerHTML='<p class="empty">Chargement…</
  <h3>Interventions</h3>${g}${Object.keys(ET).map(k=>tile(I[k]||0,ET[k])).join("")}${tile(d.interventions_en_retard,"En retard",d.interventions_en_retard>0)}</div>
  <h3>Tickets ouverts par site</h3>${(d.tickets_par_site||[]).map(x=>`<div class="tl"><b>${esc(x.site)}</b> : ${x.ouverts}</div>`).join("")||'<p class="empty">Aucun ticket ouvert.</p>'}
  <h3>Montants HT sur 90 jours</h3><p class="meta">Devis ${eur(m.devis_ht||0)} · Bons de commande ${eur(m.bc_ht||0)} · Factures ${eur(m.facture_ht||0)}</p>`};
+
+const dl=(o,n)=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:"application/json"}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4e3)};
+async function tbl(t,ord){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order(ord).range(i,i+999);if(error)throw error;r=r.concat(data);if(data.length<1000)return r}}
+const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectations","modeles_mail","profiles","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","suggestions","demandes_compte","audit_log"],OB={affectations:"site_id",modeles_mail:"cle"};
+async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
+ $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
+$("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.2",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+ dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
+let CAND=null;
+$("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
+ CAND=data;$("acs").textContent=`${data.tickets_total} ticket(s) et ${data.audit_total} ligne(s) d'audit concernés. Lot proposé : ${data.tickets.length} ticket(s), ${data.interventions.length} intervention(s), ${data.audit.length} ligne(s) d'audit.`;$("apur").classList.toggle("hide",!(data.tickets.length||data.interventions.length||data.audit.length))};
+$("apur").onclick=async()=>{const c=CAND,m=$("dmsg");if(!c||!confirm("Télécharger l'archive puis SUPPRIMER DÉFINITIVEMENT ce lot de la base ?"))return;m.style.color="";try{
+ const ch=a=>{const r=[];for(let i=0;i<a.length;i+=100)r.push(a.slice(i,i+100));return r},get=async(t,col,ids)=>(await Promise.all(ch(ids).map(x=>sb.from(t).select("*").in(col,x).then(r=>{if(r.error)throw r.error;return r.data})))).flat();
+ m.textContent="Préparation de l'archive…";
+ const o={application:"STADES 3M",type:"archive",date:new Date().toISOString(),tickets:await get("tickets","id",c.tickets),ticket_suivi:await get("ticket_suivi","ticket_id",c.tickets),ticket_events:await get("ticket_events","ticket_id",c.tickets),interventions:await get("interventions","id",c.interventions),intervention_notes:await get("intervention_notes","intervention_id",c.interventions),audit_log:await get("audit_log","id",c.audit)};
+ if(o.tickets.length!==c.tickets.length||o.interventions.length!==c.interventions.length||o.audit_log.length!==c.audit.length)throw new Error("Export incomplet : suppression annulée.");
+ dl(o,`stades3m_archive_${today()}.json`);
+ const {data,error}=await sb.rpc("archive_purger",{p_tickets:c.tickets,p_interventions:c.interventions,p_audit:c.audit,p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error)throw error;
+ CAND=null;$("apur").classList.add("hide");$("acs").textContent="";m.style.color="var(--ok)";m.textContent=`Supprimé : ${data.tickets} ticket(s), ${data.interventions} intervention(s), ${data.audit} ligne(s) d'audit. Relancez la recherche pour le lot suivant.`;renderVol();load()}catch(e){m.textContent=errMsg(e)}};
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
