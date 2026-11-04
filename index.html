@@ -66,11 +66,11 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 #bn{position:absolute;top:-6px;right:-6px;background:#c8641b;color:#fff;border-radius:9px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;padding:0 4px;box-sizing:border-box}
 .rf{max-width:150px;padding:2px;font-size:12px}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.3.1</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.4</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
  <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
-<div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable_batiments">Voir en tant que Responsable bâtiments</option><option value="responsable_exploitation">Voir en tant que Responsable exploitation</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
+<div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable">Voir en tant que Responsable</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
 
 <section id="login">
  <h2 id="lt" style="margin-top:0">Connexion</h2>
@@ -136,7 +136,7 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <label>Prénom</label><input id="u_prenom"><label>Nom</label><input id="u_nom"><label>Société</label><input id="u_societe"><label>Fonction</label><input id="u_fonction"><label>Rôle</label><select id="u_role"></select><label>Site par défaut</label><select id="u_site"></select>
 <div class="row" style="margin-top:12px"><button id="u_ok">Enregistrer</button><button class="sec" id="u_ko">Annuler</button></div><p class="msg" id="u_msg"></p></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
-<footer id="ver" aria-hidden="true">Version 3.3.1 – 04/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 3.4 – 04/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
@@ -149,7 +149,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const ST = {nouvelle:"Nouveau",en_cours:"En cours",en_attente:"En attente",resolue:"Résolu",refusee:"Refusé",archivee:"Archivé"};
 const PR = {basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"};
-const ROLES = {demandeur:"Demandeur",responsable_batiments:"Responsable bâtiments",responsable_exploitation:"Responsable exploitation",agent_travaux:"Agent bâtiment",agent_exploitation:"Agent exploitation",admin:"Admin"};
+const ROLES = {demandeur:"Demandeur",responsable:"Responsable",agent_travaux:"Agent bâtiment",agent_exploitation:"Agent exploitation",admin:"Admin"};
 let me, sites=[], trib=[], tk=[], cur, signup=false, view="";
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const opts = (o,all)=>(all?`<option value="">${all}</option>`:"")+Object.entries(o).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
@@ -226,8 +226,8 @@ async function loadH(){const {data}=await sb.from("audit_log").select("*").eq("t
  $("ih").innerHTML=(data||[]).map(a=>{const ch=a.action==="INSERT"?["Intervention créée"]:Object.entries(a.changes||{}).filter(([k])=>AL[k]).map(([k,v])=>`${AL[k]} : ${vv(k,v[0])} → ${vv(k,v[1])}`);
   return ch.length?`<div class="tl"><span>${tlTime(a.created_at)}</span><b>${esc(a.par_nom||"Système")}</b> : ${esc(ch.join(" ; "))}</div>`:""}).join("")||`<p class="empty" style="padding:8px">Aucune modification enregistrée.</p>`}
 
-async function renderAff(){const [a,p]=await Promise.all([sb.from("affectations").select("*"),sb.from("profiles").select("id,prenom,nom,role").eq("actif",true).in("role",["admin","responsable_batiments","responsable_exploitation"])]);
- const A=a.data||[],Pf=p.data||[],D={batiments:"responsable_batiments",exploitation:"responsable_exploitation"};
+async function renderAff(){const [a,p]=await Promise.all([sb.from("affectations").select("*"),sb.from("profiles").select("id,prenom,nom,role").eq("actif",true).in("role",["admin","responsable"])]);
+ const A=a.data||[],Pf=p.data||[],D={batiments:"responsable",exploitation:"responsable"};
  RF=Pf;renderGrids();$("affb").innerHTML=`<table><thead><tr><th>Site</th><th>Travaux/maintenance</th><th>Exploitation</th></tr></thead><tbody>`+sites.filter(s=>s.actif!==false).map(s=>`<tr><td>${esc(s.nom)}</td>`+["batiments","exploitation"].map(d=>{const c=(A.find(x=>x.site_id===s.id&&x.domaine===d)||{}).profile_id;
   return `<td><select data-s="${s.id}" data-d="${d}" aria-label="${esc(s.nom)} – ${d}"><option value="">Responsable du domaine (par défaut)</option>${Pf.filter(x=>x.role==="admin"||x.role===D[d]).map(x=>`<option value="${x.id}"${x.id===c?" selected":""}>${esc((x.prenom+" "+x.nom).trim())}</option>`).join("")}</select></td>`}).join("")+`</tr>`).join("")+`</tbody></table>`}
 $("affb").onchange=e=>{const t=e.target,s=+t.dataset.s,d=t.dataset.d;adm(t.value?sb.from("affectations").upsert({site_id:s,domaine:d,profile_id:t.value}):sb.from("affectations").delete().eq("site_id",s).eq("domaine",d))};
@@ -252,7 +252,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.3.1",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.4",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -267,7 +267,7 @@ $("apur").onclick=async()=>{const c=CAND,m=$("dmsg");if(!c||!confirm("Téléchar
  CAND=null;$("apur").classList.add("hide");$("acs").textContent="";m.style.color="var(--ok)";m.textContent=`Supprimé : ${data.tickets} ticket(s), ${data.interventions} intervention(s), ${data.audit} ligne(s) d'audit. Relancez la recherche pour le lot suivant.`;renderVol();load()}catch(e){m.textContent=errMsg(e)}};
 
 let RF=[],UL=[],UE=null;
-const refSel=(x,d)=>`<select class="rf" data-ref="${x.id}" title="Référent par défaut" aria-label="Référent par défaut – ${esc(x.nom)}"><option value="">Référent : règle par défaut</option>${RF.filter(p=>p.role==="admin"||p.role===(d==="batiments"?"responsable_batiments":"responsable_exploitation")).map(p=>`<option value="${p.id}"${p.id===x.referent_id?" selected":""}>${esc((p.prenom+" "+p.nom).trim())}</option>`).join("")}</select>`;
+const refSel=(x,d)=>`<select class="rf" data-ref="${x.id}" title="Référent par défaut" aria-label="Référent par défaut – ${esc(x.nom)}"><option value="">Référent : règle par défaut</option>${RF.filter(p=>p.role==="admin"||p.role==="responsable").map(p=>`<option value="${p.id}"${p.id===x.referent_id?" selected":""}>${esc((p.prenom+" "+p.nom).trim())}</option>`).join("")}</select>`;
 function editU(id){const u=UL.find(x=>x.id===id);if(!u)return;UE=id;$("uem").textContent=u.email||"";["prenom","nom","societe","fonction"].forEach(k=>$("u_"+k).value=u[k]||"");
  $("u_role").innerHTML=O(Object.entries(ROLES),u.role);$("u_site").innerHTML=O([["","— Aucun —"],...sites.filter(x=>x.actif!==false||x.id===u.site_defaut_id).map(x=>[x.id,x.nom])],u.site_defaut_id);$("u_msg").textContent="";$("dUsr").showModal()}
 $("u_ko").onclick=()=>$("dUsr").close();
@@ -292,7 +292,7 @@ async function load(){
  sites=s.data;trib=t.data;tk=k.data;
  const [c1,c2]=await Promise.all([sb.from("categories").select("*").order("id"),sb.from("corps_etat").select("*").order("id")]);
  if(c1.error||c2.error){alert("Erreur de chargement : "+errMsg(c1.error||c2.error));return}cats=c1.data||[];corps=c2.data||[];
- const [iv,ag]=await Promise.all([allRows("interventions"),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable_batiments","responsable_exploitation","admin"]).eq("actif",true)]);
+ const [iv,ag]=await Promise.all([allRows("interventions"),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable","admin"]).eq("actif",true)]);
  if(iv.error||ag.error){alert("Erreur de chargement : "+errMsg(iv.error||ag.error));return}ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];{const mm=await sb.from("modeles_mail").select("*");MM=Object.fromEntries((mm.data||[]).map(m=>[m.cle,m]))}$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
  
  $("ns").innerHTML=sOpts();$("nt2").innerHTML=tOpts($("ns").value);
@@ -431,11 +431,11 @@ $("pop").onchange=e=>{const tb=$("pop").dataset.tb,k=$("pop").dataset.k,T=TB[tb]
 $("pop").oninput=e=>{if(e.target.id!=="pq")return;const q=e.target.value.toLowerCase();
  document.querySelectorAll("#pl label").forEach(l=>l.classList.toggle("hide",!l.textContent.toLowerCase().includes(q)))};
 document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli"))$("cpop").classList.add("hide")});
-const isResp=r=>r==="responsable_batiments"||r==="responsable_exploitation";
-const dom=r=>({responsable_batiments:"batiments",agent_travaux:"batiments",responsable_exploitation:"exploitation",agent_exploitation:"exploitation"})[r];
+const isResp=r=>r==="responsable";
+const dom=r=>({agent_travaux:"batiments",agent_exploitation:"exploitation"})[r];
 const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
-const peutEditer=(x,r)=>r==="admin"||(isResp(r)&&(!x.categorie_id||catDom(x)===dom(r)));
-const canSee=(x,r)=>peutEditer(x,r)||(["demandeur","responsable_batiments","responsable_exploitation"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
+const peutEditer=(x,r)=>r==="admin"||isResp(r);
+const canSee=(x,r)=>peutEditer(x,r)||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
 let cats=[],corps=[];
 const ET={planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
 const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"],["montant_devis_ht","Devis HT (€)","m"],["montant_bc_ht","Bon de commande HT (€)","m"],["montant_facture_ht","Facture HT (€)","m"]];
@@ -455,7 +455,7 @@ const dv=()=>`<label class="ck"><input type="checkbox" data-dv${devisMail?" chec
 let ints=[],agents=[],ents=[],curI=null,pendingTicket=null,tab="t",ed=false,imode="a",devisMail=false;
 const fdate=d=>d?new Date(d).toLocaleDateString("fr-FR"):"—",nm=()=>`${me.prenom} ${me.nom}`,isAg=()=>role().startsWith("agent"),today=()=>new Date().toLocaleDateString("sv-SE");
 const O=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${esc(l)}</option>`).join("");
-const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.filter(c=>!mine||!isResp(role())||c.domaine===dom(role())).map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
+const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
 const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
 function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
  $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
@@ -466,10 +466,10 @@ const baseF=(c,mine)=>`<div class="row"><div><label>Site</label><select data-f="
 <label>Local</label><input data-f="local" value="${esc(c.local||"")}">
 <div class="row"><div><label>Catégorie</label><select data-f="categorie_id">${catsO(c.categorie_id,mine)}</select></div><div><label>Corps d'état</label><select data-f="corps_etat_id">${corpsO(c.categorie_id,c.corps_etat_id)}</select></div></div>
 <label>Titre</label><input data-f="titre" value="${esc(c.titre)}">`;
-const chargeO=c=>{const d=catDom(c);return O([...agents.filter(a=>a.role==="admin"||(isResp(a.role)&&(!d||dom(a.role)===d))).map(a=>[a.id,`${((a.prenom||"")+" "+(a.nom||"")).trim()} (${ROLES[a.role]})`])],c.en_charge_id)};
+const chargeO=c=>{const d=catDom(c);return O([...agents.filter(a=>a.role==="admin"||isResp(a.role)).map(a=>[a.id,`${((a.prenom||"")+" "+(a.nom||"")).trim()} (${ROLES[a.role]})`])],c.en_charge_id)};
 const hdr=c=>`<div class="dh"><div><h2>${esc(siteN(c.site_id))}</h2><div class="sub">${esc(tribN(c.tribune_id))}${c.local?" · "+esc(c.local):""}</div></div>`;
 // ===== TICKET =====
-const canT=()=>peutEditer(cur,role()),canF=()=>canT()||(cur.demandeur_id===me.id&&cur.statut==="nouvelle"&&["demandeur","responsable_batiments","responsable_exploitation"].includes(role()));
+const canT=()=>peutEditer(cur,role()),canF=()=>canT()||(cur.demandeur_id===me.id&&cur.statut==="nouvelle"&&["demandeur","responsable"].includes(role()));
 function openDet(id){cur=tk.find(x=>x.id===id);ed=false;drawT();$("dDet").showModal()}
 function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  $("tbody").innerHTML=`${hdr(c)}${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
@@ -526,7 +526,7 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
   <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date de fin d'intervention (prévision)</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div></div>
   <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
-  ${mode==="a"?agents.filter(a=>!cd||dom(a.role)===cd).map(a=>`<label class="ck"><input type="checkbox" data-agent="${a.id}" data-n="${esc(((a.prenom||"")+" "+(a.nom||"")).trim())}"${(c.agent_ids||[]).includes(a.id)?" checked":""}> ${esc(a.prenom||"")} ${esc(a.nom||"")} <small>(${ROLES[a.role]})</small></label>`).join("")||`<span class="empty" style="padding:4px">Aucun agent actif dans ce domaine.</span>`
+  ${mode==="a"?agents.filter(a=>a.role==="responsable"||!cd||dom(a.role)===cd).map(a=>`<label class="ck"><input type="checkbox" data-agent="${a.id}" data-n="${esc(((a.prenom||"")+" "+(a.nom||"")).trim())}"${(c.agent_ids||[]).includes(a.id)?" checked":""}> ${esc(a.prenom||"")} ${esc(a.nom||"")} <small>(${ROLES[a.role]})</small></label>`).join("")||`<span class="empty" style="padding:4px">Aucun agent actif dans ce domaine.</span>`
   :`<label>Interlocuteur (entreprises de la catégorie, celles du corps d'état en tête)</label><select data-f="entreprise_id"><option value="">— Choisir —</option>${entOpts(c)}</select>${dv()}
   <div class="row" style="flex-wrap:wrap">${SU.map(([k,l,t])=>suIn(k,l,t,c)).join("")}</div>`}</div>`:""}
  <p class="meta">${t?"Ticket "+esc(t.ref)+" · ":"Sans ticket · "}${esc(catLab(c))} · Priorité ${PR[c.priorite]} · Fin prévue : <b>${fdate(c.echeance)}</b></p>
@@ -593,7 +593,7 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  document.querySelectorAll("#en_k [data-ec]").forEach(b=>b.checked=!(x.categorie_ids||[]).length||x.categorie_ids.includes(+b.dataset.ec));fillCorpsAnn();
  $("en_c").value=x.corps_etat_id||"";$("en_e").value=x.entreprise;$("en_n").value=x.contact||"";$("en_m").value=x.email||"";$("en_t").value=fmtTel(x.mobile);
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
-const NOTICE={demandeur:"notice_demandeur.html",responsable_batiments:"notice_responsable.html",responsable_exploitation:"notice_responsable.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
+const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
 $("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
 $("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");$("dS").showModal()};
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
