@@ -54,8 +54,8 @@ button.hb:hover,button.hf:hover{color:var(--accent)}button.hf.on{color:var(--acc
 .ck{display:flex;gap:6px;align-items:center;margin:2px 0;color:var(--ink);font-size:14px}.ck input{width:auto}
 button.pb{text-align:left;padding:6px 8px;font-size:13px}
 .hide{display:none!important}a.lnk{color:var(--accent);cursor:pointer;text-decoration:underline}
-header button#adm,header button#sug,header button#hlp,header button#out{height:36px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:16px;font-weight:700}
-header button#sug,header button#hlp,header button#out{width:36px;padding:0}header button#adm{padding:0 14px}
+header button#adm,header button#sug,header button#hlp,header button#tourb,header button#out{height:36px;display:inline-flex;align-items:center;justify-content:center;line-height:1;font-size:16px;font-weight:700}
+header button#sug,header button#hlp,header button#tourb,header button#out{width:36px;padding:0}header button#adm{padding:0 14px}
 details.panel>summary{cursor:pointer;font-size:17px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px;color:var(--accent)}
 details.panel>summary::-webkit-details-marker{display:none}details.panel>summary::before{content:"▸";transition:transform .15s}details.panel[open]>summary::before{transform:rotate(90deg)}
 .grid{display:grid;gap:14px;align-items:start}.gc{border:1px solid var(--line);border-radius:4px;overflow:hidden;background:#fff}
@@ -69,11 +69,11 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 #tour .tc{pointer-events:auto;background:#fff;border:2px solid var(--accent);border-radius:8px;padding:14px 16px;max-width:520px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
 #tour .tc b{font-size:16px;color:var(--accent)}#tour p{margin:6px 0 10px}.tour-hl{outline:3px solid var(--warn)!important;outline-offset:3px;border-radius:4px}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.5</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.6</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
- <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
-<div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable">Voir en tant que Responsable</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
+ <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></button><button id="tourb" title="Visite guidée" aria-label="Visite guidée">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
+<div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable">Voir en tant que Responsable</option><option value="supervision">Voir en tant que Supervision</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
 
 <section id="login">
  <h2 id="lt" style="margin-top:0">Connexion</h2>
@@ -141,7 +141,7 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
 <div id="tour" class="hide" role="dialog" aria-label="Visite guidée"><div class="tc"><b id="tt"></b><p id="tx"></p><div class="row"><button class="sec" id="tp">Précédent</button><span id="tn" class="meta"></span><button id="tnx">Suivant</button><button class="sec" id="tsk">Passer</button></div></div></div>
 <p style="text-align:center;margin:8px"><a class="lnk" id="tourl" href="#" hidden>Revoir la visite guidée</a></p>
-<footer id="ver" aria-hidden="true">Version 3.5 – 04/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 3.6 – 04/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
@@ -154,7 +154,7 @@ const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 const $ = id => document.getElementById(id);
 const ST = {nouvelle:"Nouveau",en_cours:"En cours",en_attente:"En attente",resolue:"Résolu",refusee:"Refusé",archivee:"Archivé"};
 const PR = {basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"};
-const ROLES = {demandeur:"Demandeur",responsable:"Responsable",agent_travaux:"Agent bâtiment",agent_exploitation:"Agent exploitation",admin:"Admin"};
+const ROLES = {demandeur:"Demandeur",responsable:"Responsable",supervision:"Supervision",agent_travaux:"Agent bâtiment",agent_exploitation:"Agent exploitation",admin:"Admin"};
 let me, sites=[], trib=[], tk=[], cur, signup=false, view="";
 const esc = s => String(s??"").replace(/[&<>"]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const opts = (o,all)=>(all?`<option value="">${all}</option>`:"")+Object.entries(o).map(([k,v])=>`<option value="${k}">${v}</option>`).join("");
@@ -257,7 +257,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.5",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.6",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -291,13 +291,14 @@ const VS=[{t:"Bienvenue dans STADES 3M",x:"Cette visite d'une minute présente l
  {s:"sug",t:"Idées et suggestions",x:"Proposez une amélioration ou signalez un problème à l'administrateur."},
  {s:"hlp",t:"Notice d'utilisation",x:"Ouvre la notice complète de votre profil."},
  {s:"adm",t:"Console admin",x:"Réservée à l'administrateur : comptes, listes, référents, modèles d'e-mails, journal d'audit, sauvegardes."},
+ {s:"tourb",t:"Visite guidée",x:"Relance cette visite à tout moment."},
  {s:"out",t:"Déconnexion",x:"Ferme votre session. Bon travail !"}];
 let VL=[],VI=0;
 function visite(){VL=VS.filter(x=>!x.s||($(x.s)&&$(x.s).offsetParent));VI=0;showV()}
 function showV(){document.querySelectorAll(".tour-hl").forEach(e=>e.classList.remove("tour-hl"));const x=VL[VI];if(!x){$("tour").classList.add("hide");return}
  $("tt").textContent=x.t;$("tx").textContent=x.x;$("tn").textContent=`${VI+1} / ${VL.length}`;$("tp").disabled=VI===0;$("tnx").textContent=VI===VL.length-1?"Terminer":"Suivant";$("tour").classList.remove("hide");
  if(x.s){const e=$(x.s);e.classList.add("tour-hl");e.scrollIntoView({block:"nearest",behavior:"smooth"})}}
-$("tnx").onclick=()=>{VI++;showV()};$("tp").onclick=()=>{VI--;showV()};$("tsk").onclick=()=>{VI=VL.length;showV()};$("tourl").onclick=e=>{e.preventDefault();visite()};
+$("tnx").onclick=()=>{VI++;showV()};$("tp").onclick=()=>{VI--;showV()};$("tsk").onclick=()=>{VI=VL.length;showV()};$("tourl").onclick=e=>{e.preventDefault();visite()};$("tourb").onclick=visite;
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
@@ -459,7 +460,7 @@ const isResp=r=>r==="responsable";
 const dom=r=>({agent_travaux:"batiments",agent_exploitation:"exploitation"})[r];
 const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
 const peutEditer=(x,r)=>r==="admin"||isResp(r);
-const canSee=(x,r)=>peutEditer(x,r)||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
+const canSee=(x,r)=>peutEditer(x,r)||r==="supervision"||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
 let cats=[],corps=[];
 const ET={planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
 const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"],["montant_devis_ht","Devis HT (€)","m"],["montant_bc_ht","Bon de commande HT (€)","m"],["montant_facture_ht","Facture HT (€)","m"]];
@@ -506,8 +507,8 @@ function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  <h3>Historique</h3><div id="tl"></div>${!cn&&c.demandeur_id===me.id?`<textarea id="nt1" rows="2" placeholder="Écrire un message à l'équipe" aria-label="Message à l'équipe" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Envoyer le message</button>`:""}
  ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><label style="display:block;margin-top:6px"><input type="checkbox" id="nti" checked> Note interne (invisible du demandeur)</label><button data-note style="margin-top:6px">Ajouter la note</button>
  <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
- <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}`;loadTl()}
-async function loadTl(){const cn=canT();
+ <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`;loadTl()}
+async function loadTl(){const cn=canT()||role()==="supervision";
  const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
  const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
   ...(n.data||[]).filter(x=>!(cn&&x.message.startsWith("Statut changé"))).map(x=>({d:x.created_at,a:x.auteur,t:x.message,n:1,i:x.interne}))].sort((a,b)=>new Date(a.d)-new Date(b.d));
@@ -529,8 +530,8 @@ function renderIv(){const r=role(),ag=isAg(),edt=r!=="demandeur"&&!ag;
  const inAdm=!$("ad").classList.contains("hide");$("tabs").classList.toggle("hide",inAdm);
  $("tabt").classList.toggle("hide",ag||r==="demandeur");$("tabi").classList.toggle("hide",r==="demandeur");
  $("tabt").classList.toggle("sec",tab!=="t");$("tabi").classList.toggle("sec",tab!=="i");
- $("new").classList.toggle("hide",tab!=="t"||ag);$("colt").classList.toggle("hide",tab!=="t"||ag);$("dash").classList.toggle("hide",tab!=="t"||!edt);$("newint").classList.toggle("hide",tab!=="i"||!edt);$("coli").classList.toggle("hide",tab!=="i");
- const base=ints.filter(i=>ag?(i.agent_ids||[]).includes(me.id):peutEditer(i,r));TB.i.base=base;
+ $("new").classList.toggle("hide",tab!=="t"||ag||r==="supervision");$("colt").classList.toggle("hide",tab!=="t"||ag);$("dash").classList.toggle("hide",tab!=="t"||!edt);$("newint").classList.toggle("hide",tab!=="i"||!edt||r==="supervision");$("coli").classList.toggle("hide",tab!=="i");
+ const base=ints.filter(i=>ag?(i.agent_ids||[]).includes(me.id):(peutEditer(i,r)||r==="supervision"));TB.i.base=base;
  const l=sortFilt(base,"i"),cl=i=>["terminee","annulee"].includes(i.etat),act=l.filter(i=>!cl(i)),clo=l.filter(cl);head("i");
  $("iempty").classList.toggle("hide",act.length>0);$("iempty2").classList.toggle("hide",clo.length>0);$("ich").textContent=`Interventions closes – terminées, annulées (${clo.length})`;
  const row=i=>rowH("i",i,i.etat==="terminee"?"res":i.etat==="annulee"?"arc":"",`data-i="${i.id}"`);
@@ -559,8 +560,8 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
  ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
  ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
- ${saved?`<h3>Notes</h3><div id="inl"></div><textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>${canE?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
- :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button>`}`;if(saved){loadN();if(canE)loadH()}}
+ ${saved?`<h3>Notes</h3><div id="inl"></div>${r==="supervision"?"":`<textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`}${(canE||r==="supervision")?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button>`}`;if(saved){loadN();if(canE||r==="supervision")loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
 async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
@@ -617,7 +618,7 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  document.querySelectorAll("#en_k [data-ec]").forEach(b=>b.checked=!(x.categorie_ids||[]).length||x.categorie_ids.includes(+b.dataset.ec));fillCorpsAnn();
  $("en_c").value=x.corps_etat_id||"";$("en_e").value=x.entreprise;$("en_n").value=x.contact||"";$("en_m").value=x.email||"";$("en_t").value=fmtTel(x.mobile);
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
-const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
+const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.html",supervision:"notice_responsable.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
 $("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
 $("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");$("dS").showModal()};
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
