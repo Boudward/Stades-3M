@@ -66,7 +66,7 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 #bn{position:absolute;top:-6px;right:-6px;background:#c8641b;color:#fff;border-radius:9px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;padding:0 4px;box-sizing:border-box}
 .rf{max-width:150px;padding:2px;font-size:12px}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.0</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.3.1</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
  <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
@@ -136,7 +136,7 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <label>Prénom</label><input id="u_prenom"><label>Nom</label><input id="u_nom"><label>Société</label><input id="u_societe"><label>Fonction</label><input id="u_fonction"><label>Rôle</label><select id="u_role"></select><label>Site par défaut</label><select id="u_site"></select>
 <div class="row" style="margin-top:12px"><button id="u_ok">Enregistrer</button><button class="sec" id="u_ko">Annuler</button></div><p class="msg" id="u_msg"></p></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
-<footer id="ver" aria-hidden="true">Version 3.0 – 01/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 3.3.1 – 04/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
@@ -175,7 +175,7 @@ $("out").onclick=async()=>{await sb.auth.signOut();location.reload()};
 
 
 const ERRS={interv_bc_coherent:"Renseignez d'abord le numéro de bon de commande.",interv_facture_coherent:"La facture ne peut pas être « payée » sans être « reçue ».",interv_bc_longueur:"Le numéro de bon de commande doit comporter au moins 12 caractères.",interv_devis_coherent:"La date de réception du devis précède celle de la demande."};
-function errMsg(e){const m=(e&&e.message)||String(e);if(/JWT expired|invalid JWT/i.test(m))return "Votre session a expiré : reconnectez-vous.";for(const k in ERRS)if(m.includes(k))return ERRS[k];
+function errMsg(e){const m=(e&&e.message)||String(e);if(/Could not find the '[^']+' column|schema cache/i.test(m))return "La base de données n'est pas à jour : exécutez la dernière migration SQL.";if(/JWT expired|invalid JWT/i.test(m))return "Votre session a expiré : reconnectez-vous.";for(const k in ERRS)if(m.includes(k))return ERRS[k];
  if(e.code==="23505")return "Cet élément existe déjà.";if(e.code==="23503")return "Cet élément est utilisé ailleurs : suppression impossible.";
  if(e.code==="42501"||/row-level security|permission denied/i.test(m))return "Action non autorisée pour votre profil.";if(/Failed to fetch|NetworkError/i.test(m))return "Connexion impossible : vérifiez votre réseau.";return m}
 async function allRows(t){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order("created_at",{ascending:false}).order("id",{ascending:false}).range(i,i+999);if(error)return{error};r=r.concat(data);if(data.length<1000)return{data:r}}}
@@ -252,7 +252,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.2",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.3.1",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -334,7 +334,7 @@ async function loadAdmin(){
  (data||[]).forEach(u=>{const s=document.querySelector(`select[data-u="${u.id}"]`);if(s)s.value=u.role});
  renderAnn();renderSug();renderGrids();renderMM();renderAff();
 }
-async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";await load();loadAdmin()}
+async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";if(error)alert("Action impossible : "+errMsg(error));await load();loadAdmin()}
 $("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
 $("urows").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.e)editU(b.dataset.u);else if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
 $("asb").onclick=()=>{if($("as").value.trim()){adm(sb.from("sites").insert({nom:$("as").value.trim()}));$("as").value=""}};
