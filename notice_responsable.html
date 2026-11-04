@@ -8,23 +8,23 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 @media print{header,footer{display:none}body{background:#fff}main{border:0}}</style></head>
 <body><header><a href="index.html">← Retour à l'application</a></header><main>
 <h1>Notice d'utilisation – Responsables</h1>
-<p><em>Application « Travaux &amp; maintenance » · version 3.0</em></p>
+<p><em>Application « Travaux &amp; maintenance » · version 3.5</em></p>
 <h2>1. Votre rôle</h2>
-<p>Vous avez un profil lié à un domaine :</p>
-<ul><li><strong>Responsable bâtiments</strong> : domaine <em>Travaux/maintenance</em>.</li><li><strong>Responsable exploitation</strong> : domaine <em>Exploitation</em>.</li></ul>
-<p>Vous voyez et traitez les tickets de <strong>votre domaine</strong>, et vous pilotez les interventions de votre domaine. Vous pouvez aussi créer un ticket dans l'autre domaine, comme un demandeur : vous le voyez ensuite (tant qu'il n'est pas archivé), mais c'est le responsable de l'autre domaine qui le traite. La connexion et la demande de compte fonctionnent comme pour les demandeurs ; l'administrateur vous attribue votre rôle.</p>
+<p>Il n'existe qu'un seul profil <strong>Responsable</strong>, sans distinction de domaine : vous voyez et traitez <strong>tous les tickets et toutes les interventions</strong>, qu'ils relèvent de Travaux/maintenance ou d'Exploitation. La connexion et la demande de compte fonctionnent comme pour les demandeurs ; l'administrateur vous attribue votre rôle.</p>
+<p><strong>Attribution des tickets</strong> : à sa création, un ticket est attribué au <strong>référent du corps d'état</strong> concerné (défini par l'administrateur), sinon à la personne désignée pour le site, sinon à un responsable. Vous pouvez le réattribuer dans la fiche (champ « En charge »).</p>
 <h2>2. L'écran</h2>
 <p>Deux onglets en haut de page : <strong>Tickets</strong> et <strong>Interventions</strong>. Dans chacun, le tableau principal regroupe le travail en cours et un tableau <strong>clos</strong> plus bas regroupe ce qui est terminé.</p>
 <ul><li><strong>Tickets clos</strong> : résolus, refusés et archivés.</li><li><strong>Interventions closes</strong> : terminées et annulées.</li></ul>
 <p><strong>Repères visuels (tickets)</strong> : ligne en gras = nouveau ; en rouge = urgent non résolu ; atténuée = terminé.</p>
 <p><strong>Trier et filtrer</strong> (tickets et interventions) : cliquez sur le nom d'une colonne pour trier, sur la flèche ▾ pour filtrer (cases à cocher, recherche, effacement). Les filtres de plusieurs colonnes se cumulent et s'appliquent aux deux tableaux.</p>
 <p>Pour fermer une fenêtre, cliquez à côté d'elle.</p>
+<p>Le bouton <strong>Tableau de bord</strong> (à côté de « Colonnes », onglet Tickets) affiche les chiffres de l'ensemble des tickets et interventions : tickets par statut, tickets en retard, délai moyen de résolution sur 90 jours, interventions par état, tickets ouverts par site et montants HT des 90 derniers jours.</p>
 <h2>3. Créer un ticket</h2>
 <p>Le bouton <strong>Nouveau ticket</strong> fonctionne comme pour un demandeur : site, zone/tribune, catégorie et corps d'état sont obligatoires, le local est facultatif mais recommandé. Le numéro est automatique (exemple : 26-10-3).</p>
 <h2>4. Traiter un ticket</h2>
 <p>Cliquez sur une ligne pour ouvrir la fiche : site en titre, zone/tribune et local, numéro et titre, puis description mise en avant.</p>
 <p><strong>Modifier</strong> : l'icône ✎ permet de modifier à tout moment le site, la zone, le local, la catégorie, le corps d'état, le titre, la description et la priorité. Chaque changement est enregistré immédiatement, sans bouton de validation, et tracé dans l'historique.</p>
-<blockquote><strong>Attention</strong> : si vous basculez un ticket vers l'autre catégorie, il passe sous la responsabilité de l'autre domaine et disparaît de votre liste. L'application vous prévient.</blockquote>
+<blockquote><strong>À savoir</strong> : changer la catégorie ou le corps d'état d'un ticket ne change pas la personne en charge ; modifiez le champ « En charge » dans la fiche si nécessaire.</blockquote>
 <p><strong>Changer le statut</strong> : sous le statut actuel, un bouton par statut possible (Nouveau, En cours, En attente, Résolu, Refusé, Archivé). Un clic suffit, sauf pour deux statuts qui exigent une justification obligatoire :</p>
 <ul><li><strong>Résolu</strong> : justification de la clôture.</li><li><strong>Refusé</strong> : motif du refus.</li></ul>
 <p>La justification est enregistrée dans l'historique et le demandeur peut la lire. Un ticket ne peut être <strong>archivé</strong> qu'après avoir été résolu ou refusé.</p>
@@ -36,10 +36,10 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 <ul><li><strong>Depuis un ticket</strong> : bouton dans la fiche du ticket. Le lieu, la catégorie, le titre et la description sont repris. À la création de la première intervention, un ticket « Nouveau » passe automatiquement « En cours ».</li><li><strong>Sans ticket</strong> : onglet <strong>Interventions</strong>, bouton <strong>Nouvelle intervention</strong>.</li><li><strong>Pour le même ticket</strong> : dans une fiche d'intervention, bouton <strong>Nouvelle intervention pour ce ticket</strong>. Si le ticket était « Résolu », il repasse « En cours » avec une note « Ticket rouvert ».</li></ul>
 <p>Remplissez les champs puis cliquez sur <strong>Créer l'intervention</strong>. Ensuite, l'icône ✎ permet de la modifier, avec enregistrement à chaque changement.</p>
 <h3>Les informations d'une intervention</h3>
-<ul><li>Site, zone/tribune, local, catégorie (limitée à votre domaine), corps d'état, titre, <strong>consignes</strong>, priorité.</li><li><strong>Date de fin d'intervention (prévision)</strong> : visible par le demandeur sur son ticket. Si un ticket a plusieurs interventions, la date la plus éloignée s'affiche.</li></ul>
+<ul><li>Site, zone/tribune, local, catégorie, corps d'état, titre, <strong>consignes</strong>, priorité.</li><li><strong>Date de fin d'intervention (prévision)</strong> : visible par le demandeur sur son ticket. Si un ticket a plusieurs interventions, la date la plus éloignée s'affiche.</li></ul>
 <h3>À qui confier l'intervention</h3>
 <p>Dans le champ <strong>Intervenants</strong>, choisissez :</p>
-<ul><li><strong>Agents / responsables</strong> : cochez une ou plusieurs personnes. Seules les personnes de <strong>votre domaine</strong> sont proposées (agents bâtiment ou exploitation selon la catégorie), vous-même compris. Vous ne pouvez pas confier une intervention au domaine voisin.</li><li><strong>Entreprise</strong> : un interlocuteur de l'annuaire. La liste propose toutes les entreprises de la catégorie ; celles du corps d'état concerné sont <strong>en gras et en tête de liste</strong>. Choisir une entreprise retire les agents, et inversement.</li></ul>
+<ul><li><strong>Agents / responsables</strong> : cochez une ou plusieurs personnes. Sont proposés les <strong>agents du domaine de la catégorie</strong> (agents bâtiment pour Travaux/maintenance, agents exploitation pour Exploitation) et les responsables. Vous ne pouvez pas confier une intervention à un agent de l'autre domaine.</li><li><strong>Entreprise</strong> : un interlocuteur de l'annuaire. La liste propose toutes les entreprises de la catégorie ; celles du corps d'état concerné sont <strong>en gras et en tête de liste</strong>. Choisir une entreprise retire les agents, et inversement.</li></ul>
 <p>La colonne « Attribué à / entreprise » du tableau affiche la personne ou l'entreprise.</p>
 <h3>Suivi d'une entreprise</h3>
 <p>Quand l'intervention est confiée à une entreprise, la fiche suit les étapes administratives :</p>
@@ -65,4 +65,5 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 <h2>Notifications et mot de passe</h2><p>La <strong>cloche</strong> en haut à droite indique le nombre de notifications non lues : un ticket qui vous est attribué, un message du demandeur, un changement de statut par un collègue, une intervention terminée par un agent. Cliquez sur une notification pour ouvrir directement le ticket ou l'intervention concernée ; <strong>Tout marquer comme lu</strong> remet le compteur à zéro. L'écran se met à jour automatiquement quand quelqu'un modifie un ticket ou une intervention. En cas d'oubli de mot de passe, utilisez le lien <strong>Mot de passe oublié</strong> de la page de connexion : saisissez votre e-mail puis suivez le lien reçu (12 caractères minimum).</p>
 <h2>Aide et suggestions</h2>
 <p>En haut à droite de l'écran, le bouton <strong>?</strong> ouvre cette notice et le bouton <strong>ampoule</strong> permet d'envoyer une idée, une amélioration ou un problème rencontré à l'administrateur : choisissez le type, donnez un titre, détaillez, puis <strong>Envoyer la suggestion</strong>.</p>
-</main><footer>Notice – version 3.0 – 01/11/2026</footer></body></html>
+<p>Une <strong>visite guidée</strong> présente les boutons principaux à votre première connexion ; le lien <strong>Revoir la visite guidée</strong>, en bas de page, la relance à tout moment.</p>
+</main><footer>Notice – version 3.5 – 04/11/2026</footer></body></html>

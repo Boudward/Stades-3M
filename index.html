@@ -65,8 +65,11 @@ details.panel>summary::-webkit-details-marker{display:none}details.panel>summary
 header button#bell{height:36px;width:36px;padding:0;position:relative;display:inline-flex;align-items:center;justify-content:center}
 #bn{position:absolute;top:-6px;right:-6px;background:#c8641b;color:#fff;border-radius:9px;font-size:11px;font-weight:700;min-width:18px;height:18px;line-height:18px;padding:0 4px;box-sizing:border-box}
 .rf{max-width:150px;padding:2px;font-size:12px}
+#tour{position:fixed;left:0;right:0;bottom:16px;display:flex;justify-content:center;z-index:50;pointer-events:none;padding:0 10px}
+#tour .tc{pointer-events:auto;background:#fff;border:2px solid var(--accent);border-radius:8px;padding:14px 16px;max-width:520px;box-shadow:0 6px 24px rgba(0,0,0,.3)}
+#tour .tc b{font-size:16px;color:var(--accent)}#tour p{margin:6px 0 10px}.tour-hl{outline:3px solid var(--warn)!important;outline-offset:3px;border-radius:4px}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.4</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.5</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
  <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide">Console admin</button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
@@ -136,7 +139,9 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 <label>Prénom</label><input id="u_prenom"><label>Nom</label><input id="u_nom"><label>Société</label><input id="u_societe"><label>Fonction</label><input id="u_fonction"><label>Rôle</label><select id="u_role"></select><label>Site par défaut</label><select id="u_site"></select>
 <div class="row" style="margin-top:12px"><button id="u_ok">Enregistrer</button><button class="sec" id="u_ko">Annuler</button></div><p class="msg" id="u_msg"></p></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
-<footer id="ver" aria-hidden="true">Version 3.4 – 04/11/2026</footer>
+<div id="tour" class="hide" role="dialog" aria-label="Visite guidée"><div class="tc"><b id="tt"></b><p id="tx"></p><div class="row"><button class="sec" id="tp">Précédent</button><span id="tn" class="meta"></span><button id="tnx">Suivant</button><button class="sec" id="tsk">Passer</button></div></div></div>
+<p style="text-align:center;margin:8px"><a class="lnk" id="tourl" href="#" hidden>Revoir la visite guidée</a></p>
+<footer id="ver" aria-hidden="true">Version 3.5 – 04/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
@@ -252,7 +257,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.4",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.5",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -274,14 +279,33 @@ $("u_ko").onclick=()=>$("dUsr").close();
 $("u_ok").onclick=async()=>{const v=k=>$("u_"+k).value.trim();if(!v("nom")||!v("prenom")){$("u_msg").textContent="Le nom et le prénom sont obligatoires.";return}
  const {error}=await sb.from("profiles").update({prenom:v("prenom"),nom:v("nom"),societe:v("societe"),fonction:v("fonction"),role:$("u_role").value,site_defaut_id:$("u_site").value?+$("u_site").value:null}).eq("id",UE);
  if(error){$("u_msg").textContent=errMsg(error);return}$("dUsr").close();await load();loadAdmin()};
+
+const VS=[{t:"Bienvenue dans STADES 3M",x:"Cette visite d'une minute présente les boutons principaux. Vous pouvez la passer et la revoir à tout moment avec le lien « Revoir la visite guidée » en bas de page."},
+ {s:"new",t:"Nouveau ticket",x:"Signalez un problème ou un besoin : site, zone, catégorie, titre et description. Le ticket reçoit un numéro et une personne est chargée de le traiter."},
+ {s:"tabs",t:"Tickets et interventions",x:"Les tickets sont les signalements ; les interventions sont les actions confiées à des agents ou à des entreprises."},
+ {s:"newint",t:"Nouvelle intervention",x:"Confiez un travail à des agents ou à une entreprise, avec consignes, échéance et suivi (devis, bon de commande, facture)."},
+ {s:"dash",t:"Tableau de bord",x:"Les chiffres clés : tickets par statut, retards, délai moyen de résolution, interventions et montants."},
+ {s:"colt",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Dans les tableaux : cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir la fiche. Ligne en gras = nouveau, en rouge = urgent."},
+ {s:"coli",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir l'intervention et changer son état."},
+ {s:"bell",t:"Notifications",x:"Le compteur indique les nouveautés : ticket attribué, message, changement de statut, intervention. Cliquez sur une notification pour ouvrir l'élément concerné."},
+ {s:"sug",t:"Idées et suggestions",x:"Proposez une amélioration ou signalez un problème à l'administrateur."},
+ {s:"hlp",t:"Notice d'utilisation",x:"Ouvre la notice complète de votre profil."},
+ {s:"adm",t:"Console admin",x:"Réservée à l'administrateur : comptes, listes, référents, modèles d'e-mails, journal d'audit, sauvegardes."},
+ {s:"out",t:"Déconnexion",x:"Ferme votre session. Bon travail !"}];
+let VL=[],VI=0;
+function visite(){VL=VS.filter(x=>!x.s||($(x.s)&&$(x.s).offsetParent));VI=0;showV()}
+function showV(){document.querySelectorAll(".tour-hl").forEach(e=>e.classList.remove("tour-hl"));const x=VL[VI];if(!x){$("tour").classList.add("hide");return}
+ $("tt").textContent=x.t;$("tx").textContent=x.x;$("tn").textContent=`${VI+1} / ${VL.length}`;$("tp").disabled=VI===0;$("tnx").textContent=VI===VL.length-1?"Terminer":"Suivant";$("tour").classList.remove("hide");
+ if(x.s){const e=$(x.s);e.classList.add("tour-hl");e.scrollIntoView({block:"nearest",behavior:"smooth"})}}
+$("tnx").onclick=()=>{VI++;showV()};$("tp").onclick=()=>{VI--;showV()};$("tsk").onclick=()=>{VI=VL.length;showV()};$("tourl").onclick=e=>{e.preventDefault();visite()};
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
  $("login").classList.add("hide");$("app").classList.remove("hide");$("hd").classList.remove("hide");
  $("who").textContent=`${me.prenom||""} ${me.nom||""} · ${ROLES[me.role]}`;
  $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",me.role!=="admin");
- if(!me.actif){$("pending").classList.remove("hide");return}sb.rpc("marquer_connexion").then(()=>{});
- await load();loadNot();live();
+ if(!me.actif){$("pending").classList.remove("hide");return}const first=!me.premiere_connexion_at;sb.rpc("marquer_connexion").then(()=>{});
+ await load();loadNot();live();$("tourl").hidden=false;if(first)setTimeout(visite,600);
 }
 $("vas").onchange=()=>{view=$("vas").value;$("ad").classList.add("hide");render()};
 $("adm").onclick=()=>{$("ad").classList.toggle("hide");render();if(!$("ad").classList.contains("hide"))loadAdmin()};
