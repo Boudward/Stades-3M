@@ -1,12 +1,14 @@
 <!--
   STADES 3M – Travaux, Maintenance & Exploitation
-  VERSION DU PROJET : 3.0.3  (06/11/2026)
+  VERSION DU PROJET : 3.0.4  (06/11/2026)
   Nomenclature X.Y.Z : Z = modification mineure (0 à 99) · Y = changement significatif (0 à 99) · X = changement important.
 -->
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' https://*.supabase.co wss://*.supabase.co https://cdnjs.cloudflare.com; worker-src 'self' blob:; base-uri 'self'; form-action 'self'; object-src 'none'">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 100 100%27%3E%3Ctext y=%27.9em%27 font-size=%2790%27%3E%F0%9F%8F%9F%EF%B8%8F%3C/text%3E%3C/svg%3E">
+<link rel="icon" href="favicon.ico" sizes="any">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="apple-touch-icon" href="favicon.png">
 <title>Stades 3M</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js"></script>
@@ -78,11 +80,13 @@ header button#bell{height:36px;width:36px;padding:0;position:relative;display:in
 button.ic{padding:2px 8px;font-size:15px;line-height:1.2}
 .st-on,.st-off{padding:3px 12px;border-radius:12px;font-weight:600;background:#fff}.st-on{color:var(--ok);border:1px solid var(--ok)}.st-off{color:var(--warn);border:1px solid var(--warn)}
 input[type=checkbox]{width:auto;margin:0 6px 0 0}
+.nadm .adm-only{display:none!important}
+#dtab td,#dtab th{padding:3px 8px;line-height:1.25}#dtab td:last-child{white-space:nowrap}#dtab button{padding:2px 9px;font-size:13px}#dtab select{padding:2px 4px;font-size:13px;height:auto}#dtab button.ic{padding:1px 7px}
 </style></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.0.3</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.0.4</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
- <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide" title="Console admin" aria-label="Console admin"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></button><button id="tourb" title="Visite guidée" aria-label="Visite guidée">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
+ <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide" title="Paramètres" aria-label="Paramètres"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></button><button id="tourb" title="Visite guidée" aria-label="Visite guidée">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
 <div id="vasbar" class="vasbar hide"><select id="vas" class="hide" aria-label="Voir en tant que"><option value="">Vue admin</option><option value="demandeur">Voir en tant que Demandeur</option><option value="responsable">Voir en tant que Responsable</option><option value="supervision">Voir en tant que Supervision</option><option value="agent_travaux">Voir en tant que Agent bâtiment</option><option value="agent_exploitation">Voir en tant que Agent exploitation</option></select></div>
 
 <section id="login">
@@ -109,18 +113,18 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
   <p class="empty hide" id="agentmsg">Les interventions arriveront à l'étape suivante : cet espace est réservé aux agents.</p>
  </div>
  <div id="ad" class="hide">
-<details class="panel" open><summary>Demandes de compte</summary><div class="table"><table id="dtab"><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></details>
-<details class="panel" open><summary>Utilisateurs</summary><div class="table"><table id="utab"><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Dernière connexion</th><th>Connexions (30 j)</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></details>
-<details class="panel" open><summary>Suggestions des utilisateurs</summary><div id="sug_l"></div></details>
+<details class="panel adm-only" open><summary>Demandes de compte</summary><div class="table"><table id="dtab"><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Compte</th><th>Rôle à attribuer</th><th>Décision</th></tr></thead><tbody id="drows"></tbody></table></div><p class="msg" id="cmsg"></p></details>
+<details class="panel adm-only" open><summary>Utilisateurs</summary><div style="margin:10px 0"><button class="sec" id="unev"></button></div><div class="table"><table id="utab"><thead><tr><th>Nom</th><th>Société / fonction</th><th>E-mail</th><th>Rôle</th><th>Site par défaut</th><th>Dernière connexion</th><th>Connexions (30 j)</th><th>Compte</th></tr></thead><tbody id="urows"></tbody></table></div></details>
+<details class="panel adm-only" open><summary>Suggestions des utilisateurs</summary><div id="sug_l"></div></details>
 <details class="panel"><summary>Catégories et corps d'état</summary><p class="meta" style="margin:10px 0 0">La liste déroulante de chaque lot désigne son référent par défaut : les nouveaux tickets de ce corps d'état lui sont attribués, sauf si un responsable est désigné pour le site.</p><div id="clists" style="margin-top:12px"></div></details>
-<details class="panel"><summary>Affectation par site</summary><p class="meta" style="margin:10px 0">Ordre d'attribution d'un nouveau ticket : 1) responsable désigné pour le site ci-dessous, 2) référent du corps d'état, 3) premier responsable actif.</p><div class="table" id="affb"></div></details>
+<details class="panel adm-only"><summary>Affectation par site</summary><p class="meta" style="margin:10px 0">Ordre d'attribution d'un nouveau ticket : 1) responsable désigné pour le site ci-dessous, 2) référent du corps d'état, 3) premier responsable actif.</p><div class="table" id="affb"></div></details>
 <details class="panel"><summary>Annuaire des entreprises</summary>
    <div class="row"><select id="en_c" aria-label="Corps d'état"></select><input id="en_e" placeholder="Entreprise"></div>
    <div id="en_k" style="margin-top:8px"></div><div class="row" style="margin-top:8px"><input id="en_n" placeholder="Chargé d'affaires"><input id="en_m" type="email" placeholder="E-mail"><input id="en_t" placeholder="Mobile"><button id="en_b">Ajouter</button><button class="sec hide" id="en_x">Annuler</button></div><div id="en_l" style="margin-top:12px"></div></details>
 <details class="panel"><summary>Sites et zones/tribunes</summary><div id="lists" style="margin-top:12px"></div><div class="row" style="margin-top:12px"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div></details>
-<details class="panel"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
-<details class="panel" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option><option value="corps_etat">Corps d'état</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table id="atab"><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
-<details class="panel" id="ddet"><summary>Données : sauvegarde et archivage</summary><div id="dvol" style="margin:10px 0"></div>
+<details class="panel adm-only"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
+<details class="panel adm-only" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option><option value="corps_etat">Corps d'état</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table id="atab"><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
+<details class="panel adm-only" id="ddet"><summary>Données : sauvegarde et archivage</summary><div id="dvol" style="margin:10px 0"></div>
 <h4>Sauvegarde</h4><p class="meta">Télécharge toutes les données (configuration, utilisateurs, tickets, interventions, notes, historique, journal) dans un fichier.</p><button id="bkp">Télécharger la sauvegarde complète</button>
 <h4>Archivage et suppression</h4><p class="meta">Tickets et interventions clos depuis plus de <input id="amt" type="number" min="6" value="24" style="width:70px"> mois, et journal d'audit de plus de <input id="ama" type="number" min="6" value="12" style="width:70px"> mois. L'archive est téléchargée avant toute suppression, qui est définitive.</p>
 <div class="row"><button class="sec" id="acand">Rechercher</button><button class="hide" id="apur">Exporter puis supprimer ce lot</button></div><p class="meta" id="acs"></p><p class="msg" id="dmsg"></p></details>
@@ -154,7 +158,7 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
 <div id="tour" class="hide" role="dialog" aria-label="Visite guidée"><div class="tc"><b id="tt"></b><p id="tx"></p><div class="row"><button class="sec" id="tp">Précédent</button><span id="tn" class="meta"></span><button id="tnx">Suivant</button><button class="sec" id="tsk">Passer</button></div></div></div>
 <p style="text-align:center;margin:8px"><a class="lnk" id="tourl" href="#" hidden>Revoir la visite guidée</a></p>
-<footer id="ver" aria-hidden="true">Version 3.0.3 – 06/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 3.0.4 – 06/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
@@ -268,7 +272,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.0.3",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.0.4",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -301,7 +305,7 @@ const VS=[{t:"Bienvenue dans STADES 3M",x:"Cette visite d'une minute présente l
  {s:"bell",t:"Notifications",x:"Le compteur indique les nouveautés : ticket attribué, message, changement de statut, intervention. Cliquez sur une notification pour ouvrir l'élément concerné."},
  {s:"sug",t:"Idées et suggestions",x:"Proposez une amélioration ou signalez un problème à l'administrateur."},
  {s:"hlp",t:"Notice d'utilisation",x:"Ouvre la notice complète de votre profil."},
- {s:"adm",t:"Console admin",x:"Réservée à l'administrateur : comptes, listes, référents, modèles d'e-mails, journal d'audit, sauvegardes."},
+ {s:"adm",t:"Paramètres",x:"Annuaire des entreprises, corps d'état, sites et zones ; pour l'administrateur : comptes, référents, modèles d'e-mails, journal d'audit, sauvegardes."},
  {s:"tourb",t:"Visite guidée",x:"Relance cette visite à tout moment."},
  {s:"out",t:"Déconnexion",x:"Ferme votre session. Bon travail !"}];
 let VL=[],VI=0;
@@ -325,12 +329,14 @@ function colTools(tid,key){const t=$(tid),ths=[...t.querySelectorAll("thead th")
  b.onclick=()=>pop.classList.toggle("hide");const w=t.closest(".table")||t;w.parentNode.insertBefore(b,w);w.parentNode.insertBefore(pop,w);apply()}
 colTools("dtab","dem");colTools("utab","usr");colTools("atab","aud");
 const ADM_KEY=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,ADM_BACK=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
+let NEV=false;$("unev").onclick=()=>{NEV=!NEV;loadAdmin()};
+$("dS").addEventListener("cancel",e=>e.preventDefault());
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
  $("login").classList.add("hide");$("app").classList.remove("hide");$("hd").classList.remove("hide");
  $("who").textContent=`${me.prenom||""} ${me.nom||""} · ${ROLES[me.role]}`;
- $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",me.role!=="admin");
+ $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",!["admin","responsable"].includes(me.role));document.body.classList.toggle("nadm",me.role!=="admin");
  if(!me.actif){$("pending").classList.remove("hide");return}const first=!me.premiere_connexion_at;sb.rpc("marquer_connexion").then(()=>{});
  await load();loadNot();live();$("tourl").hidden=false;if(first)setTimeout(visite,600);
 }
@@ -354,7 +360,7 @@ $("ns").onchange=()=>$("nt2").innerHTML=tOpts($("ns").value);
 
 function render(){
  const r=role(),isAgent=r.startsWith("agent");
- const inAdm=!$("ad").classList.contains("hide");renderIv();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").innerHTML=inAdm?ADM_BACK:ADM_KEY;$("adm").title=$("adm").ariaLabel=inAdm?"Retour aux tickets":"Console admin";
+ const inAdm=!$("ad").classList.contains("hide");renderIv();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").innerHTML=inAdm?ADM_BACK:ADM_KEY;$("adm").title=$("adm").ariaLabel=inAdm?"Retour aux tickets":"Paramètres";
  $("tkA").classList.toggle("hide",isAgent);$("tkC").classList.toggle("hide",isAgent);$("agentmsg").classList.toggle("hide",!isAgent);
  const baseL=tk.filter(x=>canSee(x,r));TB.t.base=baseL;const list=sortFilt(baseL,"t");
  const act=list.filter(x=>!done(x)),clo=list.filter(done);
@@ -378,9 +384,9 @@ async function loadAdmin(){
  const cpt=d=>{if(d.statut==="refusee")return "—";const u=pm[d.email.toLowerCase()];return !u?`<span class="off">Pas de compte</span>`:u.premiere_connexion_at?`<span class="on">Connecté (${new Date(u.premiere_connexion_at).toLocaleDateString("fr-FR")})</span>`:`<span class="s-en_attente">Compte créé, jamais connecté</span>`};
  $("drows").innerHTML=(dc.data||[]).map(d=>{const a=d.statut==="en_attente";return `<tr><td>${esc(d.prenom)} ${esc(d.nom)}</td><td>${esc(d.societe)} – ${esc(d.fonction)}</td><td>${esc(d.email)}</td><td>${cpt(d)}</td>
   <td>${a?`<select data-d="${d.id}" aria-label="Rôle à attribuer"><option value="">— Choisir un rôle —</option>${opts(ROLES)}</select>`:(d.statut==="approuvee"?"Approuvée : "+ROLES[d.role_prevu]:"Refusée")}</td>
-  <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec" data-d="${d.id}" data-a="suppr">Supprimer</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
+  <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec ic" data-d="${d.id}" data-a="suppr" title="Supprimer cette demande" aria-label="Supprimer cette demande">✕</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
  const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false});
- const cxr=await sb.rpc("connexions_30j"),cx=cxr.data||{};UL=data||[];$("urows").innerHTML=(data||[]).filter(u=>u.premiere_connexion_at).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
+ const cxr=await sb.rpc("connexions_30j"),cx=cxr.data||{};UL=data||[];$("unev").textContent=(NEV?"Masquer":"Afficher")+" les comptes jamais connectés ("+(data||[]).filter(u=>!u.premiere_connexion_at).length+")";$("urows").innerHTML=(data||[]).filter(u=>NEV||u.premiere_connexion_at).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
   <td><select data-u="${u.id}" data-f="role">${opts(ROLES)}</select></td><td><select data-u="${u.id}" data-f="site_defaut_id" aria-label="Site par défaut">${O([["","— Aucun —"],...sites.map(x=>[x.id,x.nom])],u.site_defaut_id)}</select></td>
   <td>${u.derniere_connexion?tlTime(u.derniere_connexion):"—"}</td><td>${cxr.error?"—":(cx[u.id]||0)}</td>
   <td><button class="sec ic" data-u="${u.id}" data-e="1" title="Éditer" aria-label="Éditer">✎</button> <button class="${u.actif?"st-on":"st-off"}" data-u="${u.id}" data-f="actif" data-v="${!u.actif}" title="${u.actif?"Cliquer pour désactiver ce compte":"Cliquer pour activer ce compte"}">${u.actif?"Actif":"Inactif"}</button></td></tr>`).join("");
@@ -657,7 +663,7 @@ $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.col
  $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
 let SG=[];
 async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];
- $("sug_l").innerHTML=SG.map(x=>`<div class="suivi"><b>${esc(x.type)}</b> – ${esc(x.titre)} <label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button><br><small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
+ $("sug_l").innerHTML=SG.map(x=>`<div class="suivi"><b>${esc(x.type)}</b> – ${esc(x.titre)} <label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
 let SE=null;
 function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
@@ -666,7 +672,7 @@ $("sug_l").onclick=async e=>{const b=e.target.closest("[data-se],[data-sd]");if(
 $("sug_l").onchange=async e=>{const c=e.target;if(c.dataset.sv===undefined)return;await sb.from("suggestions").update({traitee:c.checked}).eq("id",c.dataset.sv);renderSug()};
 $("irows2").onclick=$("irows").onclick;
 // ===== Fenêtres : fermeture au clic à côté =====
-document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
+document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||d.id==="dS"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
 
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
