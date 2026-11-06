@@ -8,19 +8,19 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 @media print{header,footer{display:none}body{background:#fff}main{border:0}}</style></head>
 <body><header><a href="index.html">← Retour à l'application</a></header><main>
 <h1>Notice d'utilisation – Responsables</h1>
-<p><em>Application « Travaux &amp; maintenance » · version 3.7</em></p>
+<p><em>Application « Travaux &amp; maintenance » · version 4.0</em></p>
 <h2>1. Votre rôle</h2>
 <p>Il n'existe qu'un seul profil <strong>Responsable</strong>, sans distinction de domaine : vous voyez et traitez <strong>tous les tickets et toutes les interventions</strong>, qu'ils relèvent de Travaux/maintenance ou d'Exploitation. La connexion et la demande de compte fonctionnent comme pour les demandeurs ; l'administrateur vous attribue votre rôle.</p>
-<p><strong>Attribution des tickets</strong> : à sa création, un ticket est attribué au <strong>référent du corps d'état</strong> concerné (défini par l'administrateur), sinon à la personne désignée pour le site, sinon à un responsable. Vous pouvez le réattribuer dans la fiche (champ « En charge »).</p>
+<p><strong>Attribution des tickets</strong> : à sa création, un ticket est attribué au <strong>responsable désigné pour le site</strong> (défini par l'administrateur), sinon au <strong>référent du corps d'état</strong> concerné, sinon à un responsable. Vous pouvez le réattribuer dans la fiche (champ « En charge »).</p>
 <h2>2. L'écran</h2>
 <p>Deux onglets en haut de page : <strong>Tickets</strong> et <strong>Interventions</strong>. Dans chacun, le tableau principal regroupe le travail en cours et un tableau <strong>clos</strong> plus bas regroupe ce qui est terminé.</p>
 <ul><li><strong>Tickets clos</strong> : résolus, refusés et archivés.</li><li><strong>Interventions closes</strong> : terminées et annulées.</li></ul>
 <p><strong>Repères visuels (tickets)</strong> : ligne en gras = nouveau ; en rouge = urgent non résolu ; atténuée = terminé.</p>
 <p><strong>Trier et filtrer</strong> (tickets et interventions) : cliquez sur le nom d'une colonne pour trier, sur la flèche ▾ pour filtrer (cases à cocher, recherche, effacement). Les filtres de plusieurs colonnes se cumulent et s'appliquent aux deux tableaux.</p>
 <p>Pour fermer une fenêtre, cliquez à côté d'elle.</p>
-<p>Le bouton <strong>Tableau de bord</strong> (à côté de « Colonnes », onglet Tickets) affiche les chiffres de l'ensemble des tickets et interventions : tickets par statut, tickets en retard, délai moyen de résolution sur 90 jours, interventions par état, tickets ouverts par site et montants HT des 90 derniers jours.</p>
+<p>Le bouton <strong>Tableau de bord</strong> (à gauche, à côté des onglets Tickets et Interventions) affiche les chiffres de l'ensemble des tickets et interventions : tickets par statut, tickets en retard, délai moyen de résolution sur 90 jours, interventions par état et tickets ouverts par site.</p>
 <h2>3. Créer un ticket</h2>
-<p>Le bouton <strong>Nouveau ticket</strong> fonctionne comme pour un demandeur : site, zone/tribune, catégorie et corps d'état sont obligatoires, le local est facultatif mais recommandé. Le numéro est automatique (exemple : 26-10-3).</p>
+<p>Le bouton <strong>Nouveau ticket</strong> fonctionne comme pour un demandeur : site, zone/tribune, catégorie et corps d'état sont obligatoires, le local est facultatif mais recommandé. Le numéro est automatique (exemple : 26-10-3). Les corps d'état sont classés par ordre alphabétique, et la fenêtre de création ne se ferme que par <strong>Enregistrer le ticket</strong> ou <strong>Annuler</strong>.</p>
 <h2>4. Traiter un ticket</h2>
 <p>Cliquez sur une ligne pour ouvrir la fiche : site en titre, zone/tribune et local, numéro et titre, puis description mise en avant.</p>
 <p><strong>Modifier</strong> : l'icône ✎ permet de modifier à tout moment le site, la zone, le local, la catégorie, le corps d'état, le titre, la description et la priorité. Chaque changement est enregistré immédiatement, sans bouton de validation, et tracé dans l'historique.</p>
@@ -34,25 +34,20 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 <p>Une intervention est une action de traitement, confiée à des agents ou à une entreprise. Un ticket peut en générer <strong>plusieurs</strong>, traitées indépendamment.</p>
 <h3>Créer une intervention</h3>
 <ul><li><strong>Depuis un ticket</strong> : bouton dans la fiche du ticket. Le lieu, la catégorie, le titre et la description sont repris. À la création de la première intervention, un ticket « Nouveau » passe automatiquement « En cours ».</li><li><strong>Sans ticket</strong> : onglet <strong>Interventions</strong>, bouton <strong>Nouvelle intervention</strong>.</li><li><strong>Pour le même ticket</strong> : dans une fiche d'intervention, bouton <strong>Nouvelle intervention pour ce ticket</strong>. Si le ticket était « Résolu », il repasse « En cours » avec une note « Ticket rouvert ».</li></ul>
-<p>Remplissez les champs puis cliquez sur <strong>Créer l'intervention</strong>. Ensuite, l'icône ✎ permet de la modifier, avec enregistrement à chaque changement.</p>
+<p>Remplissez les champs puis cliquez sur <strong>Créer l'intervention</strong> (ou sur <strong>Annuler</strong> : la fenêtre de création ne se ferme pas en cliquant à côté). Ensuite, l'icône ✎ permet de la modifier, avec enregistrement à chaque changement.</p>
 <h3>Les informations d'une intervention</h3>
 <ul><li>Site, zone/tribune, local, catégorie, corps d'état, titre, <strong>consignes</strong>, priorité.</li><li><strong>Date de fin d'intervention (prévision)</strong> : visible par le demandeur sur son ticket. Si un ticket a plusieurs interventions, la date la plus éloignée s'affiche.</li></ul>
 <h3>À qui confier l'intervention</h3>
 <p>Dans le champ <strong>Intervenants</strong>, choisissez :</p>
 <ul><li><strong>Agents / responsables</strong> : cochez une ou plusieurs personnes. Sont proposés les <strong>agents du domaine de la catégorie</strong> (agents bâtiment pour Travaux/maintenance, agents exploitation pour Exploitation) et les responsables. Vous ne pouvez pas confier une intervention à un agent de l'autre domaine.</li><li><strong>Entreprise</strong> : un interlocuteur de l'annuaire. La liste propose toutes les entreprises de la catégorie ; celles du corps d'état concerné sont <strong>en gras et en tête de liste</strong>. Choisir une entreprise retire les agents, et inversement.</li></ul>
 <p>La colonne « Attribué à / entreprise » du tableau affiche la personne ou l'entreprise.</p>
-<h3>Suivi d'une entreprise</h3>
-<p>Quand l'intervention est confiée à une entreprise, la fiche suit les étapes administratives :</p>
-<ul><li><strong>Devis demandé</strong> et <strong>devis reçu</strong> (dates) ;</li><li><strong>N° de bon de commande</strong> (12 caractères minimum) et <strong>bon de commande envoyé</strong> (date) ;</li><li><strong>Facture reçue</strong> et <strong>facture payée</strong> : Non, Partiel ou Oui ;</li><li><strong>Montants HT</strong> du devis, du bon de commande et de la facture (en euros).</li></ul>
-<p>L'application contrôle la cohérence : un numéro de bon de commande est nécessaire avant d'indiquer son envoi, une facture ne peut être « payée » sans être « reçue », et la réception du devis ne peut précéder sa demande.</p>
-<p>Sous le choix de l'interlocuteur, la case <strong>Inclure une demande de devis dans le mail</strong> adapte le texte du mail et renseigne automatiquement la date du jour dans « Devis demandé ».</p>
 <h3>Les états d'une intervention</h3>
 <p>Planifiée, En attente de pièces, En cours, Terminée, Annulée. L'état actuel est affiché en texte, avec un bouton par état possible en dessous : un clic suffit. Pour passer à <strong>Terminée</strong>, une fenêtre demande la <strong>justification de la clôture</strong> (obligatoire, enregistrée dans les notes). L'application propose ensuite de passer aussi le <strong>ticket en « Résolu »</strong>, en vous avertissant s'il reste des interventions non terminées sur ce ticket. Vous restez libre de refuser.</p>
 <h3>Notes et historique</h3>
-<p>Chaque intervention a ses notes (datées et signées), visibles par les personnes qui la traitent. Au bas de la fiche, l'<strong>historique des modifications</strong> (état, intervenants, dates, montants, factures…) indique l'ancienne et la nouvelle valeur ainsi que l'auteur ; il n'est visible que des responsables et de l'administrateur.</p>
+<p>Chaque intervention a ses notes (datées et signées), visibles par les personnes qui la traitent. Au bas de la fiche, l'<strong>historique des modifications</strong> (état, intervenants, dates…) indique l'ancienne et la nouvelle valeur ainsi que l'auteur ; il n'est visible que des responsables et de l'administrateur.</p>
 <h3>Envoyer les consignes</h3>
 <ul><li><strong>Aux agents</strong> : <strong>Fiche PDF</strong> télécharge la fiche d'intervention, puis <strong>E-mail</strong> ouvre votre messagerie avec les destinataires et un texte préparé. Joignez le PDF à la main : l'application ne peut pas le faire à votre place.</li><li><strong>À une entreprise</strong> : pas de PDF, un seul bouton <strong>Envoyer le mail</strong>, qui contient toutes les informations.</li></ul>
-<p>L'objet du mail a la forme « SITE - Intervention I-26-10-5 – titre ». Le corps reprend l'objet et les consignes, le lieu, la zone, le local, le corps d'état, la priorité et la date de fin demandée. Avec la case devis, l'introduction devient une demande de devis. Le mail s'ouvre dans votre messagerie : relisez-le puis envoyez-le. Les textes des mails (régie, entreprise, demande de devis) sont modifiables par l'administrateur.</p>
+<p>L'objet du mail a la forme « SITE - Intervention I-26-10-5 – titre ». Le corps reprend l'objet et les consignes, le lieu, la zone, le local, le corps d'état, la priorité et la date de fin demandée. Le mail s'ouvre dans votre messagerie : relisez-le puis envoyez-le. Les textes des mails (régie, entreprise, demande de devis) sont modifiables par l'administrateur.</p>
 <h2>6. Ce que voient les autres profils</h2>
 <table><thead><tr><th>Profil</th><th>Ce qu'il voit et fait</th></tr></thead><tbody><tr><td>Demandeur</td><td>Ses propres tickets, le statut, la date de fin prévue et les notes. Il ne modifie son ticket que tant qu'il est « Nouveau ».</td></tr><tr><td>Agent</td><td>Uniquement les interventions où il est désigné. Il change l'état (Terminée avec justification) et ajoute des notes. Il ne clôture pas le ticket : c'est vous qui décidez.</td></tr><tr><td>Administrateur</td><td>Tous les droits, la gestion des utilisateurs, des listes (sites, zones/tribunes, corps d'état) et de l'annuaire des entreprises.</td></tr></tbody></table>
 <h2>7. Bonnes pratiques</h2>
@@ -66,4 +61,4 @@ blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--warn);back
 <h2>Aide et suggestions</h2>
 <p>En haut à droite de l'écran, le bouton <strong>livre</strong> ouvre cette notice, le bouton <strong>?</strong> relance la visite guidée et le bouton <strong>ampoule</strong> permet d'envoyer une idée, une amélioration ou un problème rencontré à l'administrateur : choisissez le type, donnez un titre, détaillez, puis <strong>Envoyer la suggestion</strong>.</p>
 <p>Une <strong>visite guidée</strong> présente les boutons principaux à votre première connexion ; le bouton <strong>?</strong> de l'en-tête ou le lien <strong>Revoir la visite guidée</strong>, en bas de page, la relance à tout moment.</p>
-</main><footer>Notice – version 3.7 – 04/11/2026</footer></body></html>
+</main><footer>Notice – version 4.0 – 05/11/2026</footer></body></html>
