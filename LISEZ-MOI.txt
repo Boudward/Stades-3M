@@ -1,0 +1,9 @@
+Bibliothèques tierces hébergées avec l'application (aucun chargement depuis un CDN).
+
+supabase.min.js     @supabase/supabase-js 2.45.0 (jsDelivr : /npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js)
+                    SHA-384 : sha384-NNePyabYRaJyedI6EQAY7SV5Z8/0sQkuQ5WVfhKm0H+j0KSugkI2ZMNzw/QtzAWz
+jspdf.umd.min.js    jsPDF 2.5.1 (cdnjs : /ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)
+                    SHA-384 du fichier d'origine : sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk
+                    Seule modification : suppression de la dernière ligne « sourceMappingURL » (évite une erreur 404 dans la console).
+
+Pour mettre à jour une bibliothèque : remplacer le fichier, puis incrémenter la version du projet.
