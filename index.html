@@ -1,6 +1,6 @@
 <!--
   STADES 3M – Travaux, Maintenance & Exploitation
-  VERSION DU PROJET : 3.1.1  (06/11/2026)
+  VERSION DU PROJET : 4.0.1  (08/11/2026)
   Nomenclature X.Y.Z : Z = modification mineure (0 à 99) · Y = changement significatif (0 à 99) · X = changement important.
 -->
 <!DOCTYPE html>
@@ -12,8 +12,10 @@
 <title>Stades 3M</title>
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/supabase.min.js"></script>
-<link rel="stylesheet" href="style.css?v=3.1.1"></head><body>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v3.1.1</small></h1><div id="hd" class="hide">
+<link rel="stylesheet" href="style.css?v=4.0.1"></head><body>
+<div id="envb" class="hide" style="position:sticky;top:0;z-index:60;background:#c8641b;color:#fff;text-align:center;font:700 14px Segoe UI,system-ui,sans-serif;padding:6px">ENVIRONNEMENT DE TEST – données fictives</div>
+<div id="boot" style="font:14px Segoe UI,system-ui,sans-serif;margin:16px;padding:14px 16px;border:2px solid #c8641b;background:#fdf6ef;border-radius:6px"><b>L'application n'a pas pu démarrer.</b><br>Vérifiez que les fichiers <b>app.js</b>, <b>style.css</b> et le dossier <b>lib</b> sont bien publiés à côté de index.html, puis actualisez avec Ctrl+F5 (ou ouvrez le site dans une fenêtre de navigation privée). Si le message persiste, ouvrez la console du navigateur (touche F12) pour lire l'erreur.</div>
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v4.0.1</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
  <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide" title="Paramètres" aria-label="Paramètres"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></button><button id="tourb" title="Visite guidée" aria-label="Visite guidée">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
@@ -31,12 +33,15 @@
 
 <main id="app" class="hide">
  <div id="pending" class="panel hide">Votre compte est en attente d'activation par l'administrateur.</div>
- <div id="tabs" class="tabrow hide"><button class="btn" id="tabt">Tickets</button><button class="btn sec" id="tabi">Interventions</button><button class="btn sec hide" id="dash">Tableau de bord</button>
- <div class="acts"><button class="cta" id="new">Nouveau ticket</button><button class="cta hide" id="newint">Nouvelle intervention</button><button class="sec" id="colt">Colonnes</button><button class="sec hide" id="coli">Colonnes</button></div></div>
+ <div id="tabs" class="tabrow hide"><button class="btn" id="tabt">Tickets</button><button class="btn sec" id="tabi">Interventions</button><button class="btn sec hide" id="tabp">Maintenance préventive</button><button class="btn sec hide" id="dash">Tableau de bord</button>
+ <div class="acts"><button class="cta" id="new">Nouveau ticket</button><button class="cta hide" id="newint">Nouvelle intervention</button><button class="cta hide" id="newpl">Nouveau plan</button><button class="sec hide" id="genpl" title="Crée les interventions des contrôles dont l'échéance approche">Générer maintenant</button><button class="sec" id="colt">Colonnes</button><button class="sec hide" id="coli">Colonnes</button></div></div>
  <div id="iv" class="hide">
   <div class="table"><table class="rt" data-tb="i"><colgroup id="icg"></colgroup><thead><tr id="ihr"></tr></thead><tbody id="irows"></tbody></table>
   <div id="iempty" class="empty hide">Aucune intervention.</div></div>
   <h3 id="ich" style="margin:24px 0 8px"></h3><div class="table"><table class="rt" data-tb="i"><colgroup id="icg2"></colgroup><thead><tr id="ihr2"></tr></thead><tbody id="irows2"></tbody></table><div id="iempty2" class="empty hide">Aucune intervention close.</div></div></div>
+ <div id="pv" class="hide">
+  <div class="row" style="margin:8px 0"><label for="pvf" style="margin:0">Statut</label><select id="pvf" style="width:auto"><option value="">Tous</option><option value="retard">En retard</option><option value="venir">À venir</option><option value="jour">À jour</option><option value="pause">En pause</option></select></div>
+  <div class="table"><table class="rt" id="ptab"><thead><tr><th>Contrôle</th><th>Lieu</th><th>Catégorie / corps d'état</th><th>Périodicité</th><th>Dernière réalisation</th><th>Prochaine échéance</th><th>Statut</th><th>Intervenants</th><th></th></tr></thead><tbody id="prows"></tbody></table></div></div>
  <div id="tk" class="hide">
   
   <div id="tkA"></div><h3 id="clh" class="hide" style="margin:30px 0 0"></h3><div id="tkC"></div>
@@ -85,12 +90,22 @@
 <dialog id="dSE"><h2 style="margin-top:0">Modifier la suggestion</h2><label for="se_t">Type</label><select id="se_t"><option>Idée</option><option>Amélioration</option><option>Problème rencontré</option></select>
 <label for="se_ti">Titre (obligatoire)</label><input id="se_ti"><label for="se_tx">Détail</label><textarea id="se_tx" rows="4"></textarea><p class="msg" id="se_m"></p>
 <div class="row"><button id="se_ok">Enregistrer</button><button class="sec" data-close>Annuler</button></div></dialog>
+<dialog id="dPl" style="min-width:min(640px,94vw)"><h2 style="margin-top:0" id="dPlT"></h2>
+<label for="pl_ti">Contrôle (obligatoire)</label><input id="pl_ti" placeholder="Ex. Vérification annuelle du SSI">
+<div class="row"><div style="flex:1"><label for="pl_s">Site</label><select id="pl_s"></select></div><div style="flex:1"><label for="pl_z">Zone/tribune</label><select id="pl_z"></select></div><div style="flex:1"><label for="pl_l">Local</label><input id="pl_l"></div></div>
+<div class="row"><div style="flex:1"><label for="pl_c">Catégorie</label><select id="pl_c"></select></div><div style="flex:1"><label for="pl_k">Corps d'état</label><select id="pl_k"></select></div><div style="flex:1"><label for="pl_p">Priorité</label><select id="pl_p"></select></div></div>
+<label for="pl_tx">Consignes</label><textarea id="pl_tx" rows="3"></textarea>
+<div class="row"><div style="flex:1"><label for="pl_m">Périodicité</label><select id="pl_m"></select></div><div style="flex:1"><label for="pl_d">Prochaine échéance</label><input type="date" id="pl_d"></div><div style="flex:1"><label for="pl_j">Prévenance (jours)</label><input type="number" id="pl_j" min="0" max="365"></div></div>
+<label for="pl_e">Entreprise</label><select id="pl_e"></select><label>Ou agents / responsables (si aucune entreprise)</label><div id="pl_a"></div>
+<label class="ck" style="margin-top:8px"><input type="checkbox" id="pl_x"> Plan actif (décocher pour le mettre en pause)</label><p class="msg" id="pl_msg"></p>
+<div class="row"><button id="pl_ok">Enregistrer</button><button class="sec" id="pl_ko">Annuler</button></div></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
 <div id="tour" class="hide" role="dialog" aria-label="Visite guidée"><div class="tc"><b id="tt"></b><p id="tx"></p><div class="row"><button class="sec" id="tp">Précédent</button><span id="tn" class="meta"></span><button id="tnx">Suivant</button><button class="sec" id="tsk">Passer</button></div></div></div>
 <p style="text-align:center;margin:8px"><a class="lnk" id="tourl" href="#" hidden>Revoir la visite guidée</a></p>
-<footer id="ver" aria-hidden="true">Version 3.1.1 – 06/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 4.0.1 – 08/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
 
-<script src="app.js?v=3.1.1"></script></body></html>
+<script src="config.js?v=4.0.1"></script>
+<script src="app.js?v=4.0.1"></script></body></html>

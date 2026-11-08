@@ -1,8 +1,11 @@
-/* STADES 3M – application – version 3.1.1 */
+/* STADES 3M – application – version 4.0.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
-const SUPABASE_URL = 'https://xiljtqitrormxdyzgote.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_pURiKZr-53--jTGNIq7Vvg_6kCcthWZ';
-const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const ENVS = window.STADES_ENVS, TITRE0 = document.title;
+function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
+ try{const t=(location.hash.match(/access_token=([^&]+)/)||[])[1];if(!t)return null;const p=JSON.parse(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));for(const k in ENVS)if(p.iss&&p.iss.indexOf(new URL(ENVS[k].url).host)>=0)return k}catch(e){}return null}
+let ENV = envDuLien() || sessionStorage.getItem("stades_env") || "prod";if(!ENVS[ENV])ENV="prod";
+let sb = supabase.createClient(ENVS[ENV].url, ENVS[ENV].key);
+function appliquerEnv(){sessionStorage.setItem("stades_env",ENV);const t=ENV==="test";document.getElementById("envb").classList.toggle("hide",!t);document.title=(t?"[TEST] ":"")+TITRE0}
 const $ = id => document.getElementById(id);
 const ST = {nouvelle:"Nouveau",en_cours:"En cours",en_attente:"En attente",resolue:"Résolu",refusee:"Refusé",archivee:"Archivé"};
 const PR = {basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"};
@@ -27,7 +30,7 @@ $("go").onclick=async()=>{$("lmsg").style.color="";
   if(error){$("lmsg").textContent="Demande impossible : "+errMsg(error);return}
   $("lmsg").style.color="var(--ok)";$("lmsg").textContent="Demande envoyée. L'administrateur l'examinera puis vous invitera par e-mail à choisir votre mot de passe.";return}
  const {error}=await sb.auth.signInWithPassword({email,password});
- if(error)$("lmsg").textContent="Connexion impossible : vérifiez l'e-mail et le mot de passe.";else start()};
+ if(error)$("lmsg").textContent=/fetch|network|NetworkError/i.test(error.message||"")?"Connexion au serveur impossible : vérifiez votre réseau et que le projet Supabase est actif.":"Connexion impossible : vérifiez l'e-mail et le mot de passe.";else start()};
 $("out").onclick=async()=>{await sb.auth.signOut();location.reload()};
 
 
@@ -103,11 +106,11 @@ $("dash").onclick=async()=>{$("dDb").innerHTML='<p class="empty">Chargement…</
 
 const dl=(o,n)=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:"application/json"}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4e3)};
 async function tbl(t,ord){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order(ord).range(i,i+999);if(error)throw error;r=r.concat(data);if(data.length<1000)return r}}
-const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectations","modeles_mail","profiles","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","suggestions","demandes_compte","audit_log"],OB={affectations:"site_id",modeles_mail:"cle"};
+const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectations","modeles_mail","profiles","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","suggestions","demandes_compte","audit_log","plans_preventifs"],OB={affectations:"site_id",modeles_mail:"cle"};
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"3.1.1",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.0.1",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -134,6 +137,7 @@ const VS=[{t:"Bienvenue dans STADES 3M",x:"Cette visite d'une minute présente l
  {s:"new",t:"Nouveau ticket",x:"Signalez un problème ou un besoin : site, zone, catégorie, titre et description. Le ticket reçoit un numéro et une personne est chargée de le traiter."},
  {s:"tabs",t:"Tickets et interventions",x:"Les tickets sont les signalements ; les interventions sont les actions confiées à des agents ou à des entreprises."},
  {s:"newint",t:"Nouvelle intervention",x:"Confiez un travail à des agents ou à une entreprise, avec consignes, échéance et suivi (devis, bon de commande, facture)."},
+ {s:"tabp",t:"Maintenance préventive",x:"Les contrôles périodiques (SSI, extincteurs, ascenseurs…) : échéances suivies et interventions créées automatiquement avant la date."},
  {s:"dash",t:"Tableau de bord",x:"Les chiffres clés : tickets par statut, retards, délai moyen de résolution et interventions."},
  {s:"colt",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Dans les tableaux : cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir la fiche. Ligne en gras = nouveau, en rouge = urgent."},
  {s:"coli",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir l'intervention et changer son état."},
@@ -166,6 +170,35 @@ colTools("dtab","dem");colTools("utab","usr");colTools("atab","aud");
 const ADM_KEY=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>`,ADM_BACK=`<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`;
 let NEV=false;$("unev").onclick=()=>{NEV=!NEV;loadAdmin()};
 $("dS").addEventListener("cancel",e=>e.preventDefault());
+
+// ===== MAINTENANCE PRÉVENTIVE =====
+let PL=[],PE=null;
+const PM={1:"1 mois",2:"2 mois",3:"3 mois",4:"4 mois",6:"6 mois",12:"1 an",24:"2 ans",36:"3 ans",48:"4 ans",60:"5 ans"},canPl=()=>["admin","responsable"].includes(role());
+function stPl(p){const d=today();if(!p.actif)return["pause","En pause"];if(p.prochaine_echeance<d)return["retard","En retard"];const l=new Date(p.prochaine_echeance+"T00:00:00");l.setDate(l.getDate()-p.prevenance_jours);return l.toLocaleDateString("sv-SE")<=d?["venir","À venir"]:["jour","À jour"]}
+function renderPl(){const r=role(),inAdm=!$("ad").classList.contains("hide"),ok=["admin","responsable","supervision"].includes(r);
+ $("tabp").classList.toggle("hide",!ok);$("tabp").classList.toggle("sec",tab!=="p");$("pv").classList.toggle("hide",inAdm||tab!=="p"||!ok);
+ $("newpl").classList.toggle("hide",tab!=="p"||!canPl());$("genpl").classList.toggle("hide",tab!=="p"||!canPl());if(tab!=="p"||!ok)return;
+ const f=$("pvf").value,rows=PL.map(p=>[p,stPl(p)]).filter(x=>!f||x[1][0]===f).sort((a,b)=>a[0].prochaine_echeance<b[0].prochaine_echeance?-1:1),
+ who=p=>p.entreprise_id?esc((ents.find(e=>e.id===p.entreprise_id)||{}).entreprise||"Entreprise"):(p.agent_ids||[]).map(i=>{const a=agents.find(x=>x.id===i);return esc(a?(a.prenom+" "+a.nom).trim():"?")}).join(", ")||"—";
+ $("prows").innerHTML=rows.map(([p,s])=>`<tr><td><b>${esc(p.titre)}</b></td><td>${esc(siteN(p.site_id))} – ${esc(tribN(p.tribune_id))}${p.local?" – "+esc(p.local):""}</td><td>${esc((cats.find(c=>c.id===p.categorie_id)||{}).nom||"")}${p.corps_etat_id?" / "+esc((corps.find(c=>c.id===p.corps_etat_id)||{}).nom||""):""}</td><td>${PM[p.periodicite_mois]||p.periodicite_mois+" mois"}</td><td>${p.derniere_realisation?fdate(p.derniere_realisation):"—"}</td><td>${fdate(p.prochaine_echeance)}</td><td><span class="pst ${s[0]}">${s[1]}</span></td><td>${who(p)}</td><td style="white-space:nowrap">${canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">✕</button>`:""}</td></tr>`).join("")||`<tr><td colspan="9" class="empty">Aucun plan de maintenance.</td></tr>`}
+const plAg=(cat,sel)=>{const d=(cats.find(c=>c.id==cat)||{}).domaine;return agents.filter(a=>a.role==="responsable"||(d&&dom(a.role)===d)).map(a=>`<label class="ck"><input type="checkbox" value="${a.id}"${(sel||[]).includes(a.id)?" checked":""}> ${esc((a.prenom+" "+a.nom).trim())}</label>`).join("")};
+function openPl(p){PE=p?p.id:null;const v=p||{site_id:me.site_defaut_id&&sites.some(x=>x.id===me.site_defaut_id)?me.site_defaut_id:(sites.find(x=>x.actif!==false)||{}).id,categorie_id:(cats[0]||{}).id,periodicite_mois:12,prevenance_jours:30,priorite:"normale",actif:true,agent_ids:[]};
+ $("dPlT").textContent=p?"Modifier le plan":"Nouveau plan de maintenance";$("pl_ti").value=v.titre||"";$("pl_s").innerHTML=sOpts();$("pl_s").value=v.site_id;$("pl_z").innerHTML=tOpts(v.site_id);if(v.tribune_id)$("pl_z").value=v.tribune_id;$("pl_l").value=v.local||"";
+ $("pl_c").innerHTML=catsO(v.categorie_id);$("pl_k").innerHTML='<option value="">— Aucun —</option>'+corpsO(v.categorie_id,v.corps_etat_id);$("pl_tx").value=v.consignes||"";$("pl_m").innerHTML=O(Object.entries(PM),v.periodicite_mois);$("pl_d").value=v.prochaine_echeance||"";$("pl_j").value=v.prevenance_jours;$("pl_p").innerHTML=prioO(v.priorite);
+ $("pl_e").innerHTML='<option value="">— Aucune (agents) —</option>'+O(ents.filter(e=>e.actif!==false).map(e=>[e.id,e.entreprise]),v.entreprise_id);$("pl_a").innerHTML=plAg(v.categorie_id,v.agent_ids);$("pl_x").checked=v.actif!==false;$("pl_msg").textContent="";$("dPl").showModal()}
+$("pvf").onchange=renderPl;$("newpl").onclick=()=>openPl(null);
+$("genpl").onclick=async()=>{const {data,error}=await sb.rpc("preventif_generer");if(error){alert(errMsg(error));return}alert(data+" intervention(s) créée(s) pour les contrôles dont l'échéance approche.");await load()};
+$("prows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.pe)openPl(PL.find(x=>x.id==b.dataset.pe));else if(b.dataset.pd&&confirm("Supprimer ce plan ? Les interventions déjà créées sont conservées.")){const {error}=await sb.from("plans_preventifs").delete().eq("id",b.dataset.pd);if(error)alert(errMsg(error));await load()}};
+$("pl_s").onchange=()=>{$("pl_z").innerHTML=tOpts($("pl_s").value)};
+$("pl_c").onchange=()=>{$("pl_k").innerHTML='<option value="">— Aucun —</option>'+corpsO($("pl_c").value);$("pl_a").innerHTML=plAg($("pl_c").value,[...$("pl_a").querySelectorAll("input:checked")].map(x=>x.value))};
+$("pl_ko").onclick=()=>$("dPl").close();$("dPl").addEventListener("cancel",e=>e.preventDefault());
+$("pl_ok").onclick=async()=>{const g=id=>$(id).value,ag=g("pl_e")?[]:[...$("pl_a").querySelectorAll("input:checked")].map(x=>x.value);
+ if(!g("pl_ti").trim()||!g("pl_s")||!g("pl_z")||!g("pl_c")||!g("pl_d")){$("pl_msg").textContent="Contrôle, site, zone, catégorie et prochaine échéance sont obligatoires.";return}
+ const row={titre:g("pl_ti").trim(),site_id:+g("pl_s"),tribune_id:+g("pl_z"),local:g("pl_l").trim()||null,categorie_id:+g("pl_c"),corps_etat_id:g("pl_k")?+g("pl_k"):null,consignes:g("pl_tx").trim()||null,periodicite_mois:+g("pl_m"),prochaine_echeance:g("pl_d"),prevenance_jours:+g("pl_j")||0,priorite:g("pl_p"),entreprise_id:g("pl_e")?+g("pl_e"):null,agent_ids:ag,actif:$("pl_x").checked};
+ const {error}=PE?await sb.from("plans_preventifs").update(row).eq("id",PE):await sb.from("plans_preventifs").insert(row);if(error){$("pl_msg").textContent=errMsg(error);return}$("dPl").close();await load()};
+appliquerEnv();
+$("lt").onclick=()=>{ENV=ENV==="test"?"prod":"test";sb=supabase.createClient(ENVS[ENV].url,ENVS[ENV].key);appliquerEnv();$("lmsg").textContent=""}; // lien invisible : bascule prod <-> test sans perdre la saisie
+$("login").addEventListener("keydown",e=>{if(e.key==="Enter"&&e.target.tagName==="INPUT"&&e.target.type!=="checkbox"){e.preventDefault();$("go").click()}});
 async function start(){
  const {data}=await sb.auth.getSession(); if(!data.session)return;if(INVITE)$("dPw").showModal();
  const p=await sb.from("profiles").select("*").eq("id",data.session.user.id).single(); me=p.data;if(p.error||!me){alert("Profil introuvable : contactez l'administrateur.");await sb.auth.signOut();return}
@@ -185,7 +218,7 @@ async function load(){
  const [c1,c2]=await Promise.all([sb.from("categories").select("*").order("id"),sb.from("corps_etat").select("*").order("id")]);
  if(c1.error||c2.error){alert("Erreur de chargement : "+errMsg(c1.error||c2.error));return}cats=c1.data||[];corps=(c2.data||[]).sort((a,b)=>a.nom.localeCompare(b.nom,"fr"));
  const [iv,ag]=await Promise.all([allRows("interventions"),sb.from("profiles").select("id,prenom,nom,role,email").in("role",["agent_travaux","agent_exploitation","responsable","admin"]).eq("actif",true)]);
- if(iv.error||ag.error){alert("Erreur de chargement : "+errMsg(iv.error||ag.error));return}ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];{const mm=await sb.from("modeles_mail").select("*");MM=Object.fromEntries((mm.data||[]).map(m=>[m.cle,m]))}$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
+ if(iv.error||ag.error){alert("Erreur de chargement : "+errMsg(iv.error||ag.error));return}ints=iv.data||[];agents=ag.data||[];const en=await sb.from("entreprises").select("*").order("entreprise");ents=en.data||[];{const mm=await sb.from("modeles_mail").select("*");MM=Object.fromEntries((mm.data||[]).map(m=>[m.cle,m]))}{const pp=await sb.from("plans_preventifs").select("*").order("prochaine_echeance");PL=pp.data||[]}$("ncat").innerHTML=catOpts();$("ncorps").innerHTML=corpsOpts($("ncat").value);
  
  $("ns").innerHTML=sOpts();$("nt2").innerHTML=tOpts($("ns").value);
  render();
@@ -195,7 +228,7 @@ $("ns").onchange=()=>$("nt2").innerHTML=tOpts($("ns").value);
 
 function render(){
  const r=role(),isAgent=r.startsWith("agent");
- const inAdm=!$("ad").classList.contains("hide");renderIv();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").innerHTML=inAdm?ADM_BACK:ADM_KEY;$("adm").title=$("adm").ariaLabel=inAdm?"Retour aux tickets":"Paramètres";
+ const inAdm=!$("ad").classList.contains("hide");renderIv();renderPl();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").innerHTML=inAdm?ADM_BACK:ADM_KEY;$("adm").title=$("adm").ariaLabel=inAdm?"Retour aux tickets":"Paramètres";
  $("tkA").classList.toggle("hide",isAgent);$("tkC").classList.toggle("hide",isAgent);$("agentmsg").classList.toggle("hide",!isAgent);
  const baseL=tk.filter(x=>canSee(x,r));TB.t.base=baseL;const list=sortFilt(baseL,"t");
  const act=list.filter(x=>!done(x)),clo=list.filter(done);
@@ -407,7 +440,7 @@ function renderIv(){const r=role(),ag=isAg(),edt=r!=="demandeur"&&!ag;
  $("iempty").classList.toggle("hide",act.length>0);$("iempty2").classList.toggle("hide",clo.length>0);$("ich").textContent=`Interventions closes – terminées, annulées (${clo.length})`;
  const row=i=>rowH("i",i,i.etat==="terminee"?"res":i.etat==="annulee"?"arc":"",`data-i="${i.id}"`);
  $("irows").innerHTML=act.map(row).join("");$("irows2").innerHTML=clo.map(row).join("")}
-$("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()};
+$("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()};$("tabp").onclick=()=>{tab="p";render()};
 $("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
 $("irows").onclick=e=>{const tr=e.target.closest("tr");if(tr){pendingTicket=null;openIv(ints.find(x=>x.id==tr.dataset.i))}};
 function openIv(i,t){const v=i?{...i}:{site_id:t?t.site_id:((sites.find(x=>x.id===me.site_defaut_id)||sites[0])||{}).id,tribune_id:t?t.tribune_id:null,local:t?t.local:null,categorie_id:t?t.categorie_id:((isResp(role())&&cats.find(x=>x.domaine===dom(role())))||cats[0]||{}).id,corps_etat_id:t?t.corps_etat_id:null,
@@ -507,9 +540,10 @@ $("sug_l").onclick=async e=>{const b=e.target.closest("[data-se],[data-sd]");if(
 $("sug_l").onchange=async e=>{const c=e.target;if(c.dataset.sv===undefined)return;await sb.from("suggestions").update({traitee:c.checked}).eq("id",c.dataset.sv);renderSug()};
 $("irows2").onclick=$("irows").onclick;
 // ===== Fenêtres : fermeture au clic à côté =====
-document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||d.id==="dS"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
+document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||d.id==="dS"||d.id==="dPl"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
 
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
 start();
+(function(){var b=document.getElementById("boot");if(b)b.remove()})();
