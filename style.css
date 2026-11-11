@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.0.3 */
+/* STADES 3M – feuille de style – version 4.0.5 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -24,7 +24,7 @@ dialog{border:0;border-radius:6px;padding:20px;width:min(560px,94vw);box-shadow:
 #login{max-width:400px;margin:40px auto;background:#fff;padding:24px;border-radius:6px;border:1px solid var(--line)}
 th{white-space:nowrap}
 td.nw{white-space:nowrap}td.tt{min-width:220px;overflow-wrap:anywhere}td.lc{min-width:180px;overflow-wrap:anywhere}
-tr.new td{font-weight:700}
+tr.new td,tr.np td{font-weight:700}
 tr.urg td,tr.urg .tag{color:var(--bad)}
 tr.res{opacity:.7}tr.arc{opacity:.5}
 .vasbar{max-width:1750px;margin:8px auto -8px;padding:0 20px;text-align:right}.vasbar select{width:auto;font-size:12px;padding:3px 6px;color:var(--mute)}
