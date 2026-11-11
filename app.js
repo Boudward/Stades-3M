@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.0.3 */
+/* STADES 3M – application – version 4.0.5 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -125,7 +125,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.0.3",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.0.5",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -309,13 +309,14 @@ const COLS={
  charge:{...mk("En charge",x=>x.en_charge_nom||"—"),c:"nw"},
  fin:{l:"Fin prévue",c:"nw",v:x=>x.fin_prevue?fdate(x.fin_prevue):"—",k:x=>ts(x.fin_prevue)},
  statut:{l:"Statut",c:"nw",v:x=>ST[x.statut],k:x=>Object.keys(ST).indexOf(x.statut),h:x=>`<span class="tag s-${x.statut}">${ST[x.statut]}</span>`}};
+const np=x=>!x.echeance&&!["terminee","annulee"].includes(x.etat);
 const attV=x=>{const en=ents.find(e=>e.id===x.entreprise_id);return [x.agents_noms,en?eLab(en):x.prestataire].filter(Boolean).join(" · ")||"—"};
 const ICOLS={
  ref:{l:"N°",c:"nw",lock:1,v:x=>x.ref,k:x=>refK(x,1)},
  titre:{...mk("Intervention",x=>x.titre),c:"tt",lock:1},
  site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone/tribune",x=>tribN(x.tribune_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
  cat:{l:"Catégorie / corps d'état",c:"lc",v:catLab,k:x=>catLab(x).toLowerCase()},
- fin:{l:"Fin prévue",c:"nw",v:x=>fdate(x.echeance),k:x=>ts(x.echeance)},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
+ fin:{l:"Fin prévue",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance)},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
  etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`}};
 Object.entries({ref:85,titre:280,date:105,priorite:105,site:130,zone:140,local:120,corps:160,par:150,charge:150,fin:105,statut:115}).forEach(([k,w])=>COLS[k].w=w);
 Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:105,att:220,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
@@ -451,9 +452,9 @@ function renderIv(){const r=role(),ag=isAg(),edt=r!=="demandeur"&&!ag;
  $("tabt").classList.toggle("sec",tab!=="t");$("tabi").classList.toggle("sec",tab!=="i");
  $("new").classList.toggle("hide",tab!=="t"||ag||r==="supervision");$("colt").classList.toggle("hide",tab!=="t"||ag);$("dash").classList.toggle("hide",!edt);$("newint").classList.toggle("hide",tab!=="i"||!edt||r==="supervision");$("coli").classList.toggle("hide",tab!=="i");
  const base=ints.filter(i=>ag?(i.agent_ids||[]).includes(me.id):(peutEditer(i,r)||r==="supervision"));TB.i.base=base;
- const l=sortFilt(base,"i"),cl=i=>["terminee","annulee"].includes(i.etat),act=l.filter(i=>!cl(i)),clo=l.filter(cl);head("i");
+ const l=sortFilt(base,"i"),cl=i=>["terminee","annulee"].includes(i.etat),ope=l.filter(i=>!cl(i)),act=[...ope.filter(np),...ope.filter(i=>!np(i))],clo=l.filter(cl);head("i");
  $("iempty").classList.toggle("hide",act.length>0);$("iempty2").classList.toggle("hide",clo.length>0);$("ich").textContent=`Interventions closes – terminées, annulées (${clo.length})`;
- const row=i=>rowH("i",i,i.etat==="terminee"?"res":i.etat==="annulee"?"arc":"",`data-i="${i.id}"`);
+ const row=i=>rowH("i",i,i.etat==="terminee"?"res":i.etat==="annulee"?"arc":np(i)?"np":"",`data-i="${i.id}"`);
  $("irows").innerHTML=act.map(row).join("");$("irows2").innerHTML=clo.map(row).join("")}
 $("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()};$("tabp").onclick=()=>{tab="p";render()};
 $("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
