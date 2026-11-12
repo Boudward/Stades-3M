@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.0.5 */
+/* STADES 3M – feuille de style – version 4.1.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -25,6 +25,12 @@ dialog{border:0;border-radius:6px;padding:20px;width:min(560px,94vw);box-shadow:
 th{white-space:nowrap}
 td.nw{white-space:nowrap}td.tt{min-width:220px;overflow-wrap:anywhere}td.lc{min-width:180px;overflow-wrap:anywhere}
 tr.new td,tr.np td{font-weight:700}
+.tag.t-np{color:var(--warn);border-color:var(--warn);background:#fdf6ef;font-weight:700}
+.plan{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;padding:10px 16px;margin:12px 0;border:1px solid var(--line);border-left:6px solid var(--accent);background:#f6f8fc;border-radius:6px}.plan.np{border-left-color:var(--warn);background:#fdf6ef}
+.plan .pl{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}.plan .pv2{font-size:22px;font-weight:700;color:var(--accent)}.plan input{width:auto;min-width:150px;margin:0}.plan input.dur{min-width:90px;width:110px}
+tbody tr.c.ro{cursor:default}tbody tr.c.ro:hover{background:none}
+.sgtabs{display:flex;gap:6px;margin:10px 0 4px;border-bottom:2px solid var(--line)}.sgtabs button{border-radius:6px 6px 0 0;margin-bottom:-2px;background:#fff;color:var(--accent);border:2px solid transparent;border-bottom:0}.sgtabs button.on{border-color:var(--line);border-bottom:2px solid #fff;font-weight:700}
+header button#sug.alert{background:var(--warn);color:#fff;box-shadow:0 0 0 3px rgba(200,100,27,.45);animation:sugp 1.6s ease-in-out infinite}@keyframes sugp{50%{box-shadow:0 0 0 7px rgba(200,100,27,.12)}}@media (prefers-reduced-motion:reduce){header button#sug.alert{animation:none}}
 tr.urg td,tr.urg .tag{color:var(--bad)}
 tr.res{opacity:.7}tr.arc{opacity:.5}
 .vasbar{max-width:1750px;margin:8px auto -8px;padding:0 20px;text-align:right}.vasbar select{width:auto;font-size:12px;padding:3px 6px;color:var(--mute)}

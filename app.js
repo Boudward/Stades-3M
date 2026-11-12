@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.0.5 */
+/* STADES 3M – application – version 4.1.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -40,7 +40,7 @@ function errMsg(e){const m=(e&&e.message)||String(e);if(/Could not find the '[^'
  if(e.code==="42501"||/row-level security|permission denied/i.test(m))return "Action non autorisée pour votre profil.";if(/Failed to fetch|NetworkError/i.test(m))return "Connexion impossible : vérifiez votre réseau.";return m}
 async function allRows(t){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order("created_at",{ascending:false}).order("id",{ascending:false}).range(i,i+999);if(error)return{error};r=r.concat(data);if(data.length<1000)return{data:r}}}
 let MM={};
-const MB="Bonjour,\n\n{INTRO}\nObjet : {titre}\nConsignes : {consignes}\nLieu : {site}\nZone : {zone}\nLocal : {local}\nCorps d'état : {corps_etat}\nPriorité : {priorite}\nDate de finalisation demandée : {echeance}\n";
+const MB="Bonjour,\n\n{INTRO}\nObjet : {titre}\nConsignes : {consignes}\nLieu : {site}\nZone : {zone}\nLocal : {local}\nCorps d'état : {corps_etat}\nPriorité : {priorite}\nDate d'intervention : {echeance}\nDurée estimée : {duree}\n";
 const MD={regie:{objet:"{SITE} - Intervention {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous confions l'intervention ci-dessous :")+"\n(Fiche d'intervention à joindre : bouton « Fiche PDF »)\n\nCordialement,\n{signataire}"},
  entreprise:{objet:"{SITE} - Intervention {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous confions l'intervention ci-dessous :")+"\nCordialement,\n{signataire}"},
  devis:{objet:"{SITE} - Demande de devis {ref} – {titre}",corps:MB.replace("{INTRO}","Nous vous remercions de nous adresser un devis pour l'intervention ci-dessous :")+"\nCordialement,\n{signataire}"}};
@@ -78,10 +78,10 @@ $("dNa").onclick=async()=>{await sb.rpc("notif_lire");await loadNot();drawNot()}
 $("dNb").onclick=e=>{const r=e.target.closest("[data-n]");if(!r)return;const d=r.dataset;sb.rpc("notif_lire",{p_id:+d.n}).then(loadNot);$("dNot").close();
  const i=d.i&&ints.find(x=>x.id==d.i),t=d.t&&tk.find(x=>x.id==d.t);if(i)openIv(i);else if(t)openDet(t.id)};
 const dirty=()=>{clearTimeout(dtm);dtm=setTimeout(()=>{if(!document.querySelector("dialog[open]"))load()},1500)};
-function live(){setInterval(loadNot,60000);sb.channel("stades").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`user_id=eq.${me.id}`},()=>{loadNot();dirty()})
+function live(){setInterval(loadNot,60000);setInterval(sugAlert,60000);sugAlert();sb.channel("stades").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`user_id=eq.${me.id}`},()=>{loadNot();dirty()})
  .on("postgres_changes",{event:"*",schema:"public",table:"tickets"},dirty).on("postgres_changes",{event:"*",schema:"public",table:"interventions"},dirty).subscribe()}
-const AL={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Échéance",etat:"État",local:"Local",site_id:"Site",tribune_id:"Zone",agent_ids:"Intervenants",entreprise_id:"Entreprise",prestataire:"Prestataire",prestataire_email:"E-mail entreprise",devis_demande_at:"Devis demandé",devis_recu_at:"Devis reçu",bc_numero:"N° bon de commande",bc_envoye_at:"BC envoyé",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Devis HT",montant_bc_ht:"BC HT",montant_facture_ht:"Facture HT"};
-const vv=(k,v)=>v==null||v===""?"—":k==="etat"?ET[v]||v:k==="priorite"?PR[v]||v:/_at$|echeance/.test(k)?fdate(v):k.startsWith("montant")?eur(v):k==="entreprise_id"?((ents.find(e=>e.id==v)||{}).entreprise||"?"):k==="site_id"?siteN(v):k==="tribune_id"?tribN(v):k==="agent_ids"?(v.map(i=>{const p=agents.find(a=>a.id===i);return p?(p.prenom+" "+p.nom).trim():"?"}).join(", ")||"—"):String(v);
+const AL={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Date d'intervention",duree_h:"Durée",etat:"État",local:"Local",site_id:"Site",tribune_id:"Zone",agent_ids:"Intervenants",entreprise_id:"Entreprise",prestataire:"Prestataire",prestataire_email:"E-mail entreprise",devis_demande_at:"Devis demandé",devis_recu_at:"Devis reçu",bc_numero:"N° bon de commande",bc_envoye_at:"BC envoyé",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Devis HT",montant_bc_ht:"BC HT",montant_facture_ht:"Facture HT"};
+const vv=(k,v)=>v==null||v===""?"—":k==="etat"?ET[v]||v:k==="priorite"?PR[v]||v:k==="duree_h"?fduree(v):/_at$|echeance/.test(k)?fdate(v):k.startsWith("montant")?eur(v):k==="entreprise_id"?((ents.find(e=>e.id==v)||{}).entreprise||"?"):k==="site_id"?siteN(v):k==="tribune_id"?tribN(v):k==="agent_ids"?(v.map(i=>{const p=agents.find(a=>a.id===i);return p?(p.prenom+" "+p.nom).trim():"?"}).join(", ")||"—"):String(v);
 async function loadH(){const {data}=await sb.from("audit_log").select("*").eq("table_name","interventions").eq("num_id",curI.id).order("created_at",{ascending:false}).limit(60);if(!$("ih"))return;
  $("ih").innerHTML=(data||[]).map(a=>{const ch=a.action==="MAIL"?["Envoi d'e-mail à "+((a.changes||{}).destinataires||"—")+" – « "+((a.changes||{}).objet||"")+" »"]:a.action==="INSERT"?["Intervention créée"]:Object.entries(a.changes||{}).filter(([k])=>AL[k]).map(([k,v])=>`${AL[k]} : ${vv(k,v[0])} → ${vv(k,v[1])}`);
   return ch.length?`<div class="tl"><span>${tlTime(a.created_at)}</span><b>${esc(a.par_nom||"Système")}</b> : ${esc(ch.join(" ; "))}</div>`:""}).join("")||`<p class="empty" style="padding:8px">Aucune modification enregistrée.</p>`}
@@ -125,7 +125,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.0.5",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.1.0",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -192,10 +192,10 @@ const PM={1:"1 mois",2:"2 mois",3:"3 mois",4:"4 mois",6:"6 mois",12:"1 an",24:"2
 function stPl(p){const d=today();if(!p.actif)return["pause","En pause"];if(p.prochaine_echeance<d)return["retard","En retard"];const l=new Date(p.prochaine_echeance+"T00:00:00");l.setDate(l.getDate()-p.prevenance_jours);return l.toLocaleDateString("sv-SE")<=d?["venir","À venir"]:["jour","À jour"]}
 function renderPl(){const r=role(),inAdm=!$("ad").classList.contains("hide"),ok=["admin","responsable","supervision"].includes(r);
  $("tabp").classList.toggle("hide",!ok);$("tabp").classList.toggle("sec",tab!=="p");$("pv").classList.toggle("hide",inAdm||tab!=="p"||!ok);
- $("newpl").classList.toggle("hide",tab!=="p"||!canPl());$("genpl").classList.toggle("hide",tab!=="p"||!canPl());if(tab!=="p"||!ok)return;
- const f=$("pvf").value,rows=PL.map(p=>[p,stPl(p)]).filter(x=>!f||x[1][0]===f).sort((a,b)=>a[0].prochaine_echeance<b[0].prochaine_echeance?-1:1),
- who=p=>p.entreprise_id?esc((ents.find(e=>e.id===p.entreprise_id)||{}).entreprise||"Entreprise"):(p.agent_ids||[]).map(i=>{const a=agents.find(x=>x.id===i);return esc(a?(a.prenom+" "+a.nom).trim():"?")}).join(", ")||"—";
- $("prows").innerHTML=rows.map(([p,s])=>`<tr class="${s[0]==="pause"?"pl-row-off":""}"><td><b>${esc(p.titre)}</b></td><td>${esc(siteN(p.site_id))} – ${esc(tribN(p.tribune_id))}${p.local?" – "+esc(p.local):""}</td><td>${esc((cats.find(c=>c.id===p.categorie_id)||{}).nom||"")}${p.corps_etat_id?" / "+esc((corps.find(c=>c.id===p.corps_etat_id)||{}).nom||""):""}</td><td>${PM[p.periodicite_mois]||p.periodicite_mois+" mois"}</td><td>${p.derniere_realisation?fdate(p.derniere_realisation):"—"}</td><td>${fdate(p.prochaine_echeance)}</td><td><span class="pst ${s[0]}">${s[1]}</span></td><td>${who(p)}</td><td style="white-space:nowrap">${canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">✕</button>`:""}</td></tr>`).join("")||`<tr><td colspan="9" class="empty">Aucun plan de maintenance.</td></tr>`}
+ $("newpl").classList.toggle("hide",tab!=="p"||!canPl());$("genpl").classList.toggle("hide",tab!=="p"||!canPl());$("colp").classList.toggle("hide",tab!=="p"||!ok||inAdm);if(tab!=="p"||!ok)return;
+ const f=$("pvf").value;TB.p.base=PL.filter(p=>!f||stPl(p)[0]===f);head("p");
+ const rows=sortFilt(TB.p.base,"p"),ro=canPl()?"":" ro";
+ $("prows").innerHTML=rows.map(p=>rowH("p",p,(stPl(p)[0]==="pause"?"pl-row-off":"")+ro,`data-pl="${p.id}"`)).join("")||`<tr><td colspan="${visCols("p").length}" class="empty">Aucun plan de maintenance.</td></tr>`}
 const plAg=(cat,sel)=>{const d=(cats.find(c=>c.id==cat)||{}).domaine;return agents.filter(a=>a.role==="responsable"||(d&&dom(a.role)===d)).map(a=>`<label class="ck"><input type="checkbox" value="${a.id}"${(sel||[]).includes(a.id)?" checked":""}> ${esc((a.prenom+" "+a.nom).trim())}</label>`).join("")};
 function openPl(p){PE=p?p.id:null;const v=p||{site_id:me.site_defaut_id&&sites.some(x=>x.id===me.site_defaut_id)?me.site_defaut_id:(sites.find(x=>x.actif!==false)||{}).id,categorie_id:(cats[0]||{}).id,periodicite_mois:12,prevenance_jours:30,priorite:"normale",actif:true,agent_ids:[]};
  $("dPlT").textContent=p?"Modifier le plan":"Nouveau plan de maintenance";$("pl_ti").value=v.titre||"";$("pl_s").innerHTML=sOpts();$("pl_s").value=v.site_id;$("pl_z").innerHTML=tOpts(v.site_id);if(v.tribune_id)$("pl_z").value=v.tribune_id;$("pl_l").value=v.local||"";
@@ -203,9 +203,10 @@ function openPl(p){PE=p?p.id:null;const v=p||{site_id:me.site_defaut_id&&sites.s
  $("pl_e").innerHTML='<option value="">— Aucune (agents) —</option>'+O(ents.filter(e=>e.actif!==false).map(e=>[e.id,e.entreprise]),v.entreprise_id);$("pl_a").innerHTML=plAg(v.categorie_id,v.agent_ids);$("pl_x").checked=v.actif===false;$("dPl").classList.toggle("pl-off",$("pl_x").checked);$("pl_msg").textContent="";$("dPl").showModal()}
 $("pvf").onchange=renderPl;$("newpl").onclick=()=>openPl(null);
 $("genpl").onclick=async()=>{const {data,error}=await sb.rpc("preventif_generer");if(error){alert(errMsg(error));return}alert(data+" intervention(s) créée(s) pour les contrôles dont l'échéance approche.");await load()};
-$("prows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;if(b.dataset.pe)openPl(PL.find(x=>x.id==b.dataset.pe));else if(b.dataset.pd&&confirm("Supprimer ce plan ? Les interventions déjà créées sont conservées.")){const {error}=await sb.from("plans_preventifs").delete().eq("id",b.dataset.pd);if(error)alert(errMsg(error));await load()}};
+$("prows").onclick=async e=>{const b=e.target.closest("button");if(!b){const tr=e.target.closest("tr[data-pl]");if(tr&&canPl())openPl(PL.find(x=>x.id==tr.dataset.pl));return}if(b.dataset.pe)openPl(PL.find(x=>x.id==b.dataset.pe));else if(b.dataset.pd&&confirm("Supprimer ce plan ? Les interventions déjà créées sont conservées.")){const {error}=await sb.from("plans_preventifs").delete().eq("id",b.dataset.pd);if(error)alert(errMsg(error));await load()}};
 $("pl_s").onchange=()=>{$("pl_z").innerHTML=tOpts($("pl_s").value)};
 $("pl_c").onchange=()=>{$("pl_k").innerHTML='<option value="">— Aucun —</option>'+corpsO($("pl_c").value);$("pl_a").innerHTML=plAg($("pl_c").value,[...$("pl_a").querySelectorAll("input:checked")].map(x=>x.value))};
+$("pl_e").onchange=()=>{if($("pl_e").value)$("pl_a").querySelectorAll("input").forEach(b=>b.checked=false)};$("pl_a").onchange=()=>{if($("pl_a").querySelector("input:checked"))$("pl_e").value=""};
 $("pl_ko").onclick=()=>$("dPl").close();$("pl_x").onchange=()=>$("dPl").classList.toggle("pl-off",$("pl_x").checked);$("dPl").addEventListener("cancel",e=>e.preventDefault());
 $("pl_ok").onclick=async()=>{const g=id=>$(id).value,ag=g("pl_e")?[]:[...$("pl_a").querySelectorAll("input:checked")].map(x=>x.value);
  if(!g("pl_ti").trim()||!g("pl_s")||!g("pl_z")||!g("pl_c")||!g("pl_d")){$("pl_msg").textContent="Contrôle, site, zone, catégorie et prochaine échéance sont obligatoires.";return}
@@ -274,7 +275,7 @@ async function loadAdmin(){
   <td>${u.derniere_connexion?tlTime(u.derniere_connexion):"—"}</td><td>${cxr.error?"—":(cx[u.id]||0)}</td>
   <td><button class="sec ic" data-u="${u.id}" data-e="1" title="Éditer" aria-label="Éditer">✎</button> <button class="${u.actif?"st-on":"st-off"}" data-u="${u.id}" data-f="actif" data-v="${!u.actif}" title="${u.actif?"Cliquer pour désactiver ce compte":"Cliquer pour activer ce compte"}">${u.actif?"Actif":"Inactif"}</button></td></tr>`).join("");
  (data||[]).forEach(u=>{const s=document.querySelector(`select[data-u="${u.id}"]`);if(s)s.value=u.role});
- renderAnn();renderSug();renderGrids();renderMM();renderAff();
+ renderAnn();renderGrids();renderMM();renderAff();
 }
 async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";if(error)alert("Action impossible : "+errMsg(error));await load();loadAdmin()}
 $("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
@@ -294,7 +295,7 @@ $("pwok").onclick=async()=>{if($("np1").value.length<12){$("pmsg").textContent="
  const {error}=await sb.auth.updateUser({password:$("np1").value});
  if(error){$("pmsg").textContent="Enregistrement impossible : "+errMsg(error);return}
  $("dPw").close();history.replaceState(null,"",location.pathname)};
-const TB={t:{f:{},s:{k:null,d:1},base:[]},i:{f:{},s:{k:null,d:1},base:[]}};
+const TB={t:{f:{},s:{k:null,d:1},base:[]},i:{f:{},s:{k:null,d:1},base:[]},p:{f:{},s:{k:"pro",d:1},base:[]}};
 const ts=d=>d?+new Date(d):0,mk=(l,v)=>({l,v,k:x=>String(v(x)).toLowerCase()});
 const catLab=x=>x.categorie_id?`${(cats.find(c=>c.id===x.categorie_id)||{}).nom||"?"} / ${(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—"}`:"—";
 const refK=(x,o)=>{const [a,b,c]=x.ref.split("-").slice(o).map(Number);return a*1e8+b*1e6+c};
@@ -316,11 +317,23 @@ const ICOLS={
  titre:{...mk("Intervention",x=>x.titre),c:"tt",lock:1},
  site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone/tribune",x=>tribN(x.tribune_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
  cat:{l:"Catégorie / corps d'état",c:"lc",v:catLab,k:x=>catLab(x).toLowerCase()},
- fin:{l:"Fin prévue",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance)},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
+ fin:{l:"Date d'intervention",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance),h:x=>x.echeance?esc(fdate(x.echeance)):(np(x)?'<span class="tag t-np">À planifier</span>':"—")},duree:{l:"Durée",c:"nw",v:x=>fduree(x.duree_h),k:x=>+x.duree_h||0},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
  etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`}};
 Object.entries({ref:85,titre:280,date:105,priorite:105,site:130,zone:140,local:120,corps:160,par:150,charge:150,fin:105,statut:115}).forEach(([k,w])=>COLS[k].w=w);
-Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:105,att:220,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
-const CB={t:COLS,i:ICOLS},redraw=tb=>tb==="t"?render():renderIv();
+Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:140,duree:90,att:220,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
+const whoPl=p=>p.entreprise_id?((ents.find(e=>e.id===p.entreprise_id)||{}).entreprise||"Entreprise"):(p.agent_ids||[]).map(i=>{const a=agents.find(x=>x.id===i);return a?(a.prenom+" "+a.nom).trim():"?"}).join(", ")||"—";
+const PCOLS={
+ titre:{...mk("Contrôle",p=>p.titre),c:"tt",lock:1,h:p=>`<b>${esc(p.titre)}</b>`},
+ lieu:{...mk("Lieu",p=>`${siteN(p.site_id)} – ${tribN(p.tribune_id)}${p.local?" – "+p.local:""}`),c:"lc"},
+ cat:{...mk("Catégorie / corps d'état",p=>((cats.find(c=>c.id===p.categorie_id)||{}).nom||"")+(p.corps_etat_id?" / "+((corps.find(c=>c.id===p.corps_etat_id)||{}).nom||""):"")),c:"lc"},
+ per:{l:"Périodicité",c:"nw",v:p=>PM[p.periodicite_mois]||p.periodicite_mois+" mois",k:p=>p.periodicite_mois},
+ der:{l:"Dernière réalisation",c:"nw",v:p=>p.derniere_realisation?fdate(p.derniere_realisation):"—",k:p=>ts(p.derniere_realisation)},
+ pro:{l:"Prochaine échéance",c:"nw",v:p=>fdate(p.prochaine_echeance),k:p=>ts(p.prochaine_echeance)},
+ st:{l:"Statut",c:"nw",v:p=>stPl(p)[1],k:p=>["retard","venir","jour","pause"].indexOf(stPl(p)[0]),h:p=>{const s=stPl(p);return `<span class="pst ${s[0]}">${s[1]}</span>`}},
+ qui:{...mk("Intervenants",whoPl),c:"lc"},
+ act:{l:"",c:"nw",lock:1,nof:1,v:()=>"",k:()=>0,h:p=>canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">✕</button>`:""}};
+Object.entries({titre:260,lieu:260,cat:240,per:120,der:140,pro:140,st:110,qui:220,act:90}).forEach(([k,w])=>PCOLS[k].w=w);
+const CB={t:COLS,i:ICOLS,p:PCOLS},redraw=tb=>tb==="t"?render():tb==="p"?renderPl():renderIv();
 const done=x=>["resolue","refusee","archivee"].includes(x.statut);
 const rowCls=x=>(x.statut==="nouvelle"?"new ":"")+(x.priorite==="urgente"&&!done(x)?"urg ":"")+(["resolue","refusee"].includes(x.statut)?"res":x.statut==="archivee"?"arc":"");
 function sortFilt(l,tb){const T=TB[tb],C=CB[tb];l=l.filter(x=>Object.entries(T.f).every(([k,s])=>s.has(C[k].v(x))));
@@ -334,12 +347,12 @@ const saveW=tb=>{try{localStorage.setItem(wkey(tb),JSON.stringify(WID[tb]))}catc
 const visCols=tb=>Object.entries(CB[tb]).filter(([k,c])=>c.lock||!visOf(tb)[k]);
 const tw=tb=>visCols(tb).reduce((a,[k,c])=>a+(wOf(tb)[k]||c.w||120),0);
 const colsHtml=tb=>visCols(tb).map(([k,c])=>`<col data-tb="${tb}" data-k="${k}" style="width:${wOf(tb)[k]||c.w||120}px">`).join("");
-const thHtml=tb=>{const T=TB[tb];return visCols(tb).map(([k,c])=>`<th aria-sort="${T.s.k===k?(T.s.d>0?"ascending":"descending"):"none"}"><button class="hb" data-s="${k}">${c.l}${T.s.k===k?(T.s.d>0?" ▲":" ▼"):""}</button><button class="hf${T.f[k]?" on":""}" data-f="${k}" aria-label="Filtrer la colonne ${c.l}">${T.f[k]?"⧩":"▾"}</button><span class="rs" data-tb="${tb}" data-r="${k}" title="Glisser pour ajuster la largeur"></span></th>`).join("")};
+const thHtml=tb=>{const T=TB[tb];return visCols(tb).map(([k,c])=>c.nof?`<th></th>`:`<th aria-sort="${T.s.k===k?(T.s.d>0?"ascending":"descending"):"none"}"><button class="hb" data-s="${k}">${c.l}${T.s.k===k?(T.s.d>0?" ▲":" ▼"):""}</button><button class="hf${T.f[k]?" on":""}" data-f="${k}" aria-label="Filtrer la colonne ${c.l}">${T.f[k]?"⧩":"▾"}</button><span class="rs" data-tb="${tb}" data-r="${k}" title="Glisser pour ajuster la largeur"></span></th>`).join("")};
 const rowH=(tb,x,cls,attr)=>`<tr class="c ${cls}" ${attr}>${visCols(tb).map(([k,c])=>`<td class="${c.c||""}">${c.h?c.h(x):esc(c.v(x))}</td>`).join("")}</tr>`;
-function head(tb){if(tb==="i"){$("ihr").innerHTML=thHtml("i");$("ihr2").innerHTML=thHtml("i");$("icg").innerHTML=$("icg2").innerHTML=colsHtml("i");document.querySelectorAll('table[data-tb="i"]').forEach(t=>t.style.width=tw("i")+"px")}}
+function head(tb){if(tb==="p"){$("phr").innerHTML=thHtml("p");$("pcg").innerHTML=colsHtml("p");$("ptab").style.width=tw("p")+"px"}if(tb==="i"){$("ihr").innerHTML=thHtml("i");$("ihr2").innerHTML=thHtml("i");$("icg").innerHTML=$("icg2").innerHTML=colsHtml("i");document.querySelectorAll('table[data-tb="i"]').forEach(t=>t.style.width=tw("i")+"px")}}
 const hdClick=tb=>e=>{const b=e.target.closest("button");if(!b)return;const T=TB[tb];
  if(b.dataset.s){T.s=T.s.k===b.dataset.s?{k:T.s.k,d:-T.s.d}:{k:b.dataset.s,d:1};redraw(tb)}else openPop(tb,b.dataset.f,b)};
-$("ihr").onclick=$("ihr2").onclick=hdClick("i");
+$("ihr").onclick=$("ihr2").onclick=hdClick("i");$("phr").onclick=hdClick("p");
 const catGroups=()=>[...cats.filter(c=>c.domaine==="exploitation"),...cats.filter(c=>c.domaine==="batiments"),...cats.filter(c=>c.domaine!=="exploitation"&&c.domaine!=="batiments"),{id:null,nom:"Sans catégorie"}];
 function tkGroups(list,msg,lvl){const o=catGroups().map(g=>{const l=list.filter(x=>(x.categorie_id||null)===g.id);if(!l.length)return"";
  return `<h${lvl} class="gh">${esc(g.nom)} <small>(${l.length})</small></h${lvl}><div class="table"><table class="rt" data-tb="t" style="width:${tw("t")}px"><colgroup>${colsHtml("t")}</colgroup><thead><tr>${thHtml("t")}</tr></thead><tbody>${l.map(x=>rowH("t",x,rowCls(x),`data-id="${x.id}"`)).join("")}</tbody></table></div>`}).join("");
@@ -348,11 +361,11 @@ const tkClick=e=>{if(e.target.closest("button.hb,button.hf"))return hdClick("t")
 $("tkA").onclick=$("tkC").onclick=tkClick;
 let cpTb=null;
 function openCols(tb,btn){const p=$("cpop");if(!p.classList.contains("hide")&&cpTb===tb){p.classList.add("hide");return}
- cpTb=tb;const V=visOf(tb);p.innerHTML=`<b style="font-size:13px">Colonnes affichées</b>`+Object.entries(CB[tb]).map(([k,c])=>`<label class="ck"><input type="checkbox" data-c="${k}"${!V[k]||c.lock?" checked":""}${c.lock?" disabled":""}> ${esc(c.l)}</label>`).join("")+`<button class="sec pb" data-all>Tout afficher</button><button class="sec pb" data-rw>Réinitialiser les largeurs</button>`;
+ cpTb=tb;const V=visOf(tb);p.innerHTML=`<b style="font-size:13px">Colonnes affichées</b>`+Object.entries(CB[tb]).filter(([k,c])=>!c.nof).map(([k,c])=>`<label class="ck"><input type="checkbox" data-c="${k}"${!V[k]||c.lock?" checked":""}${c.lock?" disabled":""}> ${esc(c.l)}</label>`).join("")+`<button class="sec pb" data-all>Tout afficher</button><button class="sec pb" data-rw>Réinitialiser les largeurs</button>`;
  const r=btn.getBoundingClientRect();p.style.top=(r.bottom+scrollY+4)+"px";p.style.left=Math.max(8,Math.min(r.left+scrollX,innerWidth-275))+"px";p.classList.remove("hide")}
 $("cpop").onchange=e=>{const k=e.target.dataset.c;if(!k)return;const V=visOf(cpTb);if(e.target.checked)delete V[k];else{V[k]=true;delete TB[cpTb].f[k]}saveVis(cpTb);redraw(cpTb)};
 $("cpop").onclick=e=>{if(e.target.closest("[data-rw]")){WID[cpTb]={};saveW(cpTb);redraw(cpTb);return}if(!e.target.closest("[data-all]"))return;const V=visOf(cpTb);Object.keys(V).forEach(k=>delete V[k]);saveVis(cpTb);document.querySelectorAll("#cpop [data-c]").forEach(b=>b.checked=true);redraw(cpTb)};
-$("colt").onclick=e=>openCols("t",e.currentTarget);$("coli").onclick=e=>openCols("i",e.currentTarget);
+$("colt").onclick=e=>openCols("t",e.currentTarget);$("coli").onclick=e=>openCols("i",e.currentTarget);$("colp").onclick=e=>openCols("p",e.currentTarget);
 function setW(tb,k,w){wOf(tb)[k]=w;document.querySelectorAll(`col[data-tb="${tb}"][data-k="${k}"]`).forEach(c=>c.style.width=w+"px");document.querySelectorAll(`table[data-tb="${tb}"]`).forEach(t=>t.style.width=tw(tb)+"px")}
 document.addEventListener("pointerdown",e=>{const h=e.target.closest(".rs");if(!h)return;e.preventDefault();
  const tb=h.dataset.tb,k=h.dataset.r,x0=e.clientX,w0=h.parentElement.getBoundingClientRect().width;
@@ -374,7 +387,7 @@ $("pop").onchange=e=>{const tb=$("pop").dataset.tb,k=$("pop").dataset.k,T=TB[tb]
  $("pall").checked=bx.every(b=>b.checked);redraw(tb)};
 $("pop").oninput=e=>{if(e.target.id!=="pq")return;const q=e.target.value.toLowerCase();
  document.querySelectorAll("#pl label").forEach(l=>l.classList.toggle("hide",!l.textContent.toLowerCase().includes(q)))};
-document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli"))$("cpop").classList.add("hide")});
+document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli,#colp"))$("cpop").classList.add("hide")});
 const isResp=r=>r==="responsable";
 const dom=r=>({agent_travaux:"batiments",agent_exploitation:"exploitation"})[r];
 const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
@@ -399,12 +412,13 @@ function entOpts(c){const inC=ents.filter(e=>!(e.categorie_ids||[]).length||(e.c
 const dv=()=>!FINANCES?"":`<label class="ck"><input type="checkbox" data-dv${devisMail?" checked":""}> Inclure une demande de devis dans le mail</label>`;
 let ints=[],agents=[],ents=[],curI=null,pendingTicket=null,tab="t",ed=false,imode="a",devisMail=false;
 const fdate=d=>d?new Date(d).toLocaleDateString("fr-FR"):"—",nm=()=>`${me.prenom} ${me.nom}`,isAg=()=>role().startsWith("agent"),today=()=>new Date().toLocaleDateString("sv-SE");
+const fduree=h=>{if(h==null||h==="")return"—";h=+h;let hh=Math.floor(h+1e-9),mm=Math.round((h-hh)*60);if(mm===60){hh++;mm=0}return hh===0?mm+" min":hh+" h"+(mm?" "+String(mm).padStart(2,"0"):"")};
 const O=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${esc(l)}</option>`).join("");
 const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
 const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
 function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
  $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
-function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&v!==null)v=+v;const u={[f]:v};
+function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&v!==null)v=+v;if(f==="duree_h"&&v!==null)v=Math.round(parseFloat(String(v).replace(",","."))*100)/100;const u={[f]:v};
  if(f==="site_id")u.tribune_id=(trib.find(x=>x.site_id===v)||{}).id||null;
  if(f==="categorie_id")u.corps_etat_id=(corps.find(x=>x.categorie_id===v)||{}).id||null;return u}
 const baseF=(c,mine)=>`<div class="row"><div><label>Site</label><select data-f="site_id">${sitesO(c.site_id)}</select></div><div><label>Zone/tribune</label><select data-f="tribune_id">${tribO(c.site_id,c.tribune_id)}</select></div></div>
@@ -460,21 +474,25 @@ $("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()
 $("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
 $("irows").onclick=e=>{const tr=e.target.closest("tr");if(tr){pendingTicket=null;openIv(ints.find(x=>x.id==tr.dataset.i))}};
 function openIv(i,t){const v=i?{...i}:{site_id:t?t.site_id:((sites.find(x=>x.id===me.site_defaut_id)||sites[0])||{}).id,tribune_id:t?t.tribune_id:null,local:t?t.local:null,categorie_id:t?t.categorie_id:((isResp(role())&&cats.find(x=>x.domaine===dom(role())))||cats[0]||{}).id,corps_etat_id:t?t.corps_etat_id:null,
- titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"planifiee",agent_ids:[],echeance:null};
+ titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"planifiee",agent_ids:[],echeance:null,duree_h:null};
  if(!i&&!v.tribune_id)v.tribune_id=(trib.find(x=>x.site_id===v.site_id)||{}).id;if(!i&&!v.corps_etat_id)v.corps_etat_id=(corps.find(x=>x.categorie_id===v.categorie_id)||{}).id||null;
  curI=v;ed=false;imode=v.entreprise_id?"e":"a";devisMail=false;drawI();if(!$("dIv").open)$("dIv").showModal()}
+function planCard(c,quick){const miss=!c.echeance&&!["terminee","annulee"].includes(c.etat);
+ const d=c.echeance?`<span class="pv2">${esc(fdate(c.echeance))}</span>`:(quick?`<input type="date" data-f="echeance" aria-label="Date d'intervention"> <span class="tag t-np">À planifier</span>`:(miss?`<span class="tag t-np">À planifier</span>`:`<span class="meta">non précisée</span>`));
+ const u=c.duree_h?`<span class="pv2">${esc(fduree(c.duree_h))}</span>`:(quick?`<input type="number" class="dur" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="heures" aria-label="Durée en heures"> <small>h</small>`:`<span class="meta">non précisée</span>`);
+ return `<div class="plan${miss?" np":""}"><div><span class="pl">Date d'intervention</span>${d}</div><div><span class="pl">Durée</span>${u}</div></div>`}
 function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="demandeur"&&(!saved||peutEditer(c,r)),E=canE&&(ed||!saved),mine=ag&&(c.agent_ids||[]).includes(me.id);
  const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
  const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
  $("ibody").innerHTML=`${hdr(c)}${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
  <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
-  <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date de fin d'intervention (prévision)</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div></div>
+  <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date d'intervention</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div><div><label>Durée (heures)</label><input type="number" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="ex. 1,5" value="${c.duree_h??""}"></div></div>
   <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
   ${mode==="a"?agents.filter(a=>a.role==="responsable"||!cd||dom(a.role)===cd).map(a=>`<label class="ck"><input type="checkbox" data-agent="${a.id}" data-n="${esc(((a.prenom||"")+" "+(a.nom||"")).trim())}"${(c.agent_ids||[]).includes(a.id)?" checked":""}> ${esc(a.prenom||"")} ${esc(a.nom||"")} <small>(${ROLES[a.role]})</small></label>`).join("")||`<span class="empty" style="padding:4px">Aucun agent actif dans ce domaine.</span>`
   :`<label>Interlocuteur (entreprises de la catégorie, celles du corps d'état en tête)</label><select data-f="entreprise_id"><option value="">— Choisir —</option>${entOpts(c)}</select>${dv()}
   ${FINANCES?`<div class="row" style="flex-wrap:wrap">${SU.map(([k,l,t])=>suIn(k,l,t,c)).join("")}</div>`:""}`}</div>`:""}
- <p class="meta">${t?"Ticket "+esc(t.ref)+" · ":"Sans ticket · "}${esc(catLab(c))} · Priorité ${PR[c.priorite]} · Fin prévue : <b>${fdate(c.echeance)}</b></p>
+ ${saved?planCard(c,canE&&!E):""}<p class="meta">${t?"Ticket "+esc(t.ref)+" · ":"Sans ticket · "}${esc(catLab(c))} · Priorité ${PR[c.priorite]}</p>
  <p>${mode==="e"?`<b>${esc(ent?ent.entreprise:c.prestataire||"")}</b>${ent?`<br>${esc(ent.contact||"")} · ${esc(ent.email||"")} · ${esc(fmtTel(ent.mobile))}`:""}`:`Attribué à : ${esc(c.agents_noms||"à désigner")}`}</p>${mode==="e"&&saved&&canE&&!E?dv():""}
  ${saved&&mode==="e"&&FINANCES?`<p class="meta">${SU.map(([k,l,t])=>suVw(k,l,t,c)).join(" · ")}</p>`:""}
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
@@ -487,12 +505,15 @@ async function loadN(){const {data}=await sb.from("intervention_notes").select("
 async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
  await load();curI=ints.find(x=>x.id===curI.id)||{...curI,...u}}else Object.assign(curI,u);drawI()}
 $("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
- if(d.agent!==undefined){const ch=[...document.querySelectorAll("#ibody [data-agent]:checked")];return upd({agent_ids:ch.map(b=>b.dataset.agent),agents_noms:ch.map(b=>b.dataset.n).join(", ")})}
+ if(d.agent!==undefined){const ch=[...document.querySelectorAll("#ibody [data-agent]:checked")];return upd({agent_ids:ch.map(b=>b.dataset.agent),agents_noms:ch.map(b=>b.dataset.n).join(", "),entreprise_id:null,prestataire:null,prestataire_email:null})}
  if(d.dv!==undefined){devisMail=t.checked;return t.checked&&!curI.devis_demande_at?upd({devis_demande_at:today()}):drawI()}
  if(!d.f)return;let u=norm(t);
- if(d.f==="mode"){imode=t.value;if(t.value==="e"){drawI();return}u={entreprise_id:null,prestataire:null,prestataire_email:null}}
+ if(d.f==="mode"){const to=t.value,hasA=(curI.agent_ids||[]).length>0,hasE=!!curI.entreprise_id;
+  if(curI.id&&((to==="e"&&hasA)||(to==="a"&&hasE))&&!confirm(to==="e"?"Attribuer à une entreprise retire les agents actuellement désignés. Continuer ?":"Attribuer à des agents retire l'entreprise actuellement désignée. Continuer ?")){drawI();return}
+  imode=to;if(to==="e"){if(!hasA){drawI();return}u={agent_ids:[],agents_noms:null}}else u={entreprise_id:null,prestataire:null,prestataire_email:null}}
  if(d.f==="entreprise_id"){const en=ents.find(x=>x.id===u.entreprise_id);u=en?{entreprise_id:en.id,prestataire:en.entreprise+(en.contact?" – "+en.contact:""),prestataire_email:en.email,agent_ids:[],agents_noms:null}:{entreprise_id:null,prestataire:null,prestataire_email:null}}
  if(d.f==="titre"&&!u.titre){alert("Le titre est obligatoire.");drawI();return}
+ if(d.f==="duree_h"&&u.duree_h!==null&&!(u.duree_h>=0.25&&u.duree_h<=999)){alert("La durée doit être comprise entre 0,25 et 999 heures.");drawI();return}
  if(d.f==="bc_numero"&&u.bc_numero){u.bc_numero=u.bc_numero.trim();if(u.bc_numero.length<12){alert("Le numéro de bon de commande doit comporter au moins 12 caractères.");drawI();return}}upd(u)};
 async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture de l'intervention "+curI.ref);if(!j)return}
  const {error}=await sb.rpc("intervention_etat",{p_id:curI.id,p_etat:k,p_justif:j});if(error){alert("Modification impossible : "+errMsg(error));return}
@@ -500,7 +521,8 @@ async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture 
  if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)){const au=ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length;
   if(confirm(`Passer aussi le ticket ${t.ref} en « Résolu » ?`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:`(intervention ${curI.ref}) : ${j}`})}}
  await load();curI=ints.find(x=>x.id===curI.id)||curI;drawI()}
-async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
+async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","duree_h","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
+ if(o.entreprise_id){o.agent_ids=[];o.agents_noms=null}else if((o.agent_ids||[]).length){o.prestataire=null;o.prestataire_email=null}
  if(!o.titre||!o.site_id||!o.tribune_id||!o.categorie_id){$("imsg").textContent="Titre, site, zone/tribune et catégorie sont obligatoires.";return}
  const tid=pendingTicket?pendingTicket.id:null,{data,error}=await sb.from("interventions").insert({...o,ticket_id:tid}).select().single();
  if(error){$("imsg").textContent="Création impossible : "+errMsg(error);return}
@@ -509,11 +531,11 @@ async function createI(){const c=curI,o={};["site_id","tribune_id","local","cate
 function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
  const T=(t,b,z)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(z||11);const L=d.splitTextToSize(String(t),180);d.text(L,15,y);y+=L.length*6+2};
  T("FICHE D'INTERVENTION "+c.ref,1,16);y+=2;T(c.titre,1,13);T(`Lieu : ${siteN(c.site_id)} / ${tribN(c.tribune_id)}${c.local?" / "+c.local:""}`);T(`Catégorie : ${catLab(c)}`);
- T(`Priorité : ${PR[c.priorite]}      Fin d'intervention prévue : ${c.echeance?fdate(c.echeance):"non précisée"}`);T(`Intervenants : ${c.agents_noms||"à définir"}`);
+ T(`Priorité : ${PR[c.priorite]}      Date d'intervention : ${c.echeance?fdate(c.echeance):"à planifier"}      Durée : ${c.duree_h?fduree(c.duree_h):"non précisée"}`);T(`Intervenants : ${c.agents_noms||"à définir"}`);
  y+=3;T("Consignes",1);T(c.consignes||"Aucune consigne particulière.");y+=6;T(`Fiche émise le ${fdate(new Date())} par ${nm()}`,0,9);d.save(`fiche-${c.ref}.pdf`)}
 function mailI(){const c=curI,e=c.entreprise_id?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
  const to=e==="e"?(ent?ent.email:c.prestataire_email)||"":agents.filter(a=>(c.agent_ids||[]).includes(a.id)).map(a=>a.email).join(",");
- const m=mdl(e==="a"?"regie":dv?"devis":"entreprise"),v={ref:c.ref,titre:c.titre,consignes:c.consignes,site:siteN(c.site_id),SITE:siteN(c.site_id).toUpperCase(),zone:tribN(c.tribune_id),local:c.local,corps_etat:ce,priorite:PR[c.priorite],echeance:c.echeance?fdate(c.echeance):"",signataire:nm()};
+ const m=mdl(e==="a"?"regie":dv?"devis":"entreprise"),v={ref:c.ref,titre:c.titre,consignes:c.consignes,site:siteN(c.site_id),SITE:siteN(c.site_id).toUpperCase(),zone:tribN(c.tribune_id),local:c.local,corps_etat:ce,priorite:PR[c.priorite],echeance:c.echeance?fdate(c.echeance):"",duree:c.duree_h?fduree(c.duree_h):"",signataire:nm()};
  const obj=fill(m.objet,v);sb.rpc("intervention_mail",{p_id:c.id,p_dest:to,p_objet:obj}).then(()=>{if($("ih"))loadH()});location.href="mailto:"+to+"?subject="+encodeURIComponent(obj)+"&body="+encodeURIComponent(fill(m.corps,v))}
 $("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
  if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)pdfI();else if("mail" in d)mailI();
@@ -540,14 +562,19 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
 const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.html",supervision:"notice_supervision.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
 $("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
-$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");$("dS").showModal()};
+$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);sgTab(adm&&SGN>0?"l":"n");$("dS").showModal()};
+let SGN=0;
+function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);$("sgn").textContent=n>0?`(${n} à traiter)`:""}
+function sgTab(k){$("sg_new").classList.toggle("hide",k!=="n");$("sg_list").classList.toggle("hide",k!=="l");$("sgt_n").classList.toggle("on",k==="n");$("sgt_l").classList.toggle("on",k==="l");if(k==="l")renderSug()}
+$("sgtabs").onclick=e=>{const b=e.target.closest("[data-sgt]");if(b)sgTab(b.dataset.sgt)};
+async function sugAlert(){if(!me||me.role!=="admin")return;const {count,error}=await sb.from("suggestions").select("id",{count:"exact",head:true}).eq("type","Problème rencontré").eq("traitee",false);if(!error)setSgn(count||0)}
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
  const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
  if(error){$("sugm").textContent="Envoi impossible : "+errMsg(error);return}
  $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
 let SG=[];
-async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];
- $("sug_l").innerHTML=SG.map(x=>`<div class="suivi"><b>${esc(x.type)}</b> – ${esc(x.titre)} <label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
+async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);
+ $("sug_l").innerHTML=SG.map(x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
 let SE=null;
 function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
