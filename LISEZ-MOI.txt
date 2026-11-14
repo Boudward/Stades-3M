@@ -1,9 +1,9 @@
-Bibliothèques tierces hébergées avec l'application (aucun chargement depuis un CDN).
+STADES 3M – version 4.3.0 – ensemble des fichiers
 
-supabase.min.js     @supabase/supabase-js 2.45.0 (jsDelivr : /npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js)
-                    SHA-384 : sha384-NNePyabYRaJyedI6EQAY7SV5Z8/0sQkuQ5WVfhKm0H+j0KSugkI2ZMNzw/QtzAWz
-jspdf.umd.min.js    jsPDF 2.5.1 (cdnjs : /ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)
-                    SHA-384 du fichier d'origine : sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk
-                    Seule modification : suppression de la dernière ligne « sourceMappingURL » (évite une erreur 404 dans la console).
+site/       À déposer à la racine du dépôt GitHub Pages (index.html, config.js, app.js, style.css, icônes, notices et dossier lib/).
+            Renseignez dans config.js l'adresse et la clé publique de chaque base (production, test).
+sql/        schema_complet_4_3_0.sql : recrée toute la base depuis zéro (projet Supabase vierge). Activez pg_cron avant de l'exécuter.
+            migration_4_2_1.sql, migration_4_3_0_photos.sql : à exécuter sur chaque base (dans cet ordre, après migration_4_1_0.sql) pour la mettre à jour sans la recréer.
+optionnel/  invite-user.ts : fonction d'invitation (non utilisée par l'interface actuelle).
 
-Pour mettre à jour une bibliothèque : remplacer le fichier, puis incrémenter la version du projet.
+Une base déjà en service ne se met PAS à jour avec le script complet : utilisez les migrations fournies, une seule fois chacune.

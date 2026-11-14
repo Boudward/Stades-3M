@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.2.1 */
+/* STADES 3M – application – version 4.3.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -121,8 +121,8 @@ $("dper").onclick=e=>{const b=e.target.closest("button");if(!b)return;DP=b.datas
 
 // ===== PHOTOS (essai – activées uniquement sur la base de test, voir config.js) =====
 const PHN=10,phKo=o=>Math.round(o/1024),phStaff=()=>["admin","responsable"].includes(me.role);
-let PHMAX=409600,PHL=[],PHC=null,PHI=0,PHU={};
-function PH(){return !!(ENVS[ENV]&&ENVS[ENV].photos)}
+let PHMAX=409600,PHL=[],PHT=[],PHS=[],PHZ="o",PHC=null,PHI=0,PHU={};
+function PH(){return !(ENVS[ENV]&&ENVS[ENV].photos===false)}
 const TBX=()=>PH()?[...TBK,"parametres","photos"]:TBK;
 const dlB=(b,n)=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),6e4)};
 // archive ZIP minimale (sans compression : les photos sont déjà des JPEG)
@@ -140,14 +140,16 @@ async function phCfg(){if(!PH())return;const {data}=await sb.from("parametres").
 async function phInit(){const p=$("pdet");if(p)p.classList.toggle("hide",!PH());if(!PH())return;await phCfg();if(phStaff())phVider()}
 function phCan(k,o){if(k==="t")return phStaff()||(o.demandeur_id===me.id&&["demandeur","responsable"].includes(me.role)&&o.statut!=="archivee");return phStaff()||(["agent_travaux","agent_exploitation"].includes(me.role)&&(o.agent_ids||[]).includes(me.id)&&!["terminee","annulee"].includes(o.etat))}
 const phCanDel=p=>phStaff()||p.auteur_id===me.id;
-async function phRender(k,o){if(!PH()||!$("phz"))return;PHC={k,o};const col=k==="t"?"ticket_id":"intervention_id";
- const {data,error}=await sb.from("photos").select("*").eq(col,o.id).order("created_at");const z=$("phz");if(!z)return;
- if(error){z.innerHTML=`<h3>Photos</h3><p class="msg">${esc(errMsg(error))}</p>`;return}
- PHL=data||[];PHU={};
- if(PHL.length){const r=await sb.storage.from("photos").createSignedUrls(PHL.map(p=>p.chemin),3600);(r.data||[]).forEach(x=>{if(x.signedUrl)PHU[x.path]=x.signedUrl})}
- const z2=$("phz");if(!z2)return;const can=phCan(k,o);
- z2.innerHTML=`<h3>Photos (${PHL.length})</h3>${PHL.length?`<div class="phg">${PHL.map((p,i)=>`<button type="button" class="ph" data-ph="${i}" aria-label="Agrandir la photo ${i+1}"><img src="${esc(PHU[p.chemin]||"")}" alt="Photo ${i+1}" loading="lazy"></button>`).join("")}</div>`:`<p class="empty" style="padding:8px">Aucune photo.</p>`}
- ${can&&PHL.length<PHN?`<label class="phadd">Ajouter des photos<input type="file" id="phf" accept="image/*" multiple></label> <span class="meta">${PHN-PHL.length} restante(s) · réduites automatiquement à ${phKo(PHMAX)} Ko maximum</span>`:""}<p class="msg" id="phm"></p>`}
+async function phUrls(l){const now=Date.now(),need=l.filter(p=>!PHU[p.chemin]||PHU[p.chemin].exp<now+6e4);if(!need.length)return;const r=await sb.storage.from("photos").createSignedUrls(need.map(p=>p.chemin),3600);(r.data||[]).forEach(x=>{if(x.signedUrl)PHU[x.path]={u:x.signedUrl,exp:now+36e5}})}
+const phGrid=(l,z)=>`<div class="phg">${l.map((p,i)=>`<button type="button" class="ph" data-ph="${i}" data-pz="${z}" aria-label="Agrandir la photo ${i+1}"><img src="${esc((PHU[p.chemin]||{}).u||"")}" alt="Photo ${i+1}" loading="lazy"></button>`).join("")}</div>`;
+async function phRender(k,o,ed){if(!PH()||!$("phz"))return;PHC={k,o,ed:!!ed};const col=k==="t"?"ticket_id":"intervention_id";
+ const {data,error}=await sb.from("photos").select("*").eq(col,o.id).order("created_at");if(!$("phz"))return;
+ if(error){$("phz").innerHTML=`<h3>Photos</h3><p class="msg">${esc(errMsg(error))}</p>`;return}
+ PHL=data||[];await phUrls(PHL);const z=$("phz");if(!z)return;const can=phCan(k,o);
+ z.innerHTML=(PHL.length?`<h3>Photos (${PHL.length})</h3>${phGrid(PHL,"o")}${ed&&PHL.some(phCanDel)?`<p class="meta">Ouvrez une photo pour la supprimer.</p>`:""}`:"")
+ +(can&&PHL.length<PHN?`<label class="phadd">Ajouter des photos<input type="file" id="phf" accept="image/*" multiple></label> <span class="meta">${PHN-PHL.length} restante(s) · réduites automatiquement à ${phKo(PHMAX)} Ko maximum</span>`:"")+`<p class="msg" id="phm"></p>`}
+async function phRenderT(o){if(!PH()||!$("phzt")||!o.ticket_id)return;const {data}=await sb.from("photos").select("*").eq("ticket_id",o.ticket_id).order("created_at");PHT=data||[];await phUrls(PHT);const z=$("phzt");if(!z)return;
+ z.innerHTML=PHT.length?`<h3>Photos du ticket (${PHT.length})</h3>${phGrid(PHT,"t")}`:""}
 async function phCompress(file,max){let bmp;
  try{bmp=await createImageBitmap(file,{imageOrientation:"from-image"})}catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Format d'image non pris en charge (utilisez JPEG ou PNG)"))};im.src=u})}
  const W0=bmp.width||bmp.naturalWidth,H0=bmp.height||bmp.naturalHeight;if(!W0||!H0)throw new Error("Image illisible");
@@ -167,16 +169,16 @@ async function phSend(k,id,files,msg){const col=k==="t"?"ticket_id":"interventio
   catch(e){bad.push(`${f.name||"photo"} : ${errMsg(e)}`)}}
  return{ok,bad}}
 async function phUpload(inp){const fs=[...inp.files];inp.value="";if(!fs.length||!PHC)return;const {k,o}=PHC,room=PHN-PHL.length,sel=fs.slice(0,Math.max(room,0));
- const r=await phSend(k,o.id,sel,$("phm"));await phRender(k,o);const n=$("phm");if(!n)return;n.style.color=r.bad.length?"":"var(--ok)";
+ const r=await phSend(k,o.id,sel,$("phm"));await phRender(k,o,PHC.ed);const n=$("phm");if(!n)return;n.style.color=r.bad.length?"":"var(--ok)";
  n.textContent=(r.ok?`${r.ok} photo(s) ajoutée(s). `:"")+(fs.length>sel.length?`${fs.length-sel.length} ignorée(s) (maximum ${PHN} par fiche). `:"")+r.bad.join(" · ")}
-function phOpen(i){PHI=i;phShow();$("dPh").showModal()}
-function phShow(){const p=PHL[PHI];if(!p)return;$("phimg").src=PHU[p.chemin]||"";$("phimg").alt=`Photo ${PHI+1} sur ${PHL.length}`;$("phinfo").textContent=`Photo ${PHI+1}/${PHL.length} · ${p.auteur||"—"} · ${tlTime(p.created_at)} · ${phKo(p.taille_octets)} Ko`;$("php").disabled=PHI===0;$("phn").disabled=PHI>=PHL.length-1;$("phd").classList.toggle("hide",!phCanDel(p))}
-async function phDel(){const p=PHL[PHI];if(!p||!confirm("Supprimer définitivement cette photo ?"))return;const {data,error}=await sb.from("photos").delete().eq("id",p.id).select("id");
- if(error){alert(errMsg(error));return}if(!data||!data.length){alert("Suppression non autorisée.");return}await phVider();$("dPh").close();if(PHC)await phRender(PHC.k,PHC.o)}
+function phOpen(i,z){PHZ=z==="t"?"t":"o";PHS=PHZ==="t"?PHT:PHL;PHI=i;phShow();$("dPh").showModal()}
+function phShow(){const p=PHS[PHI];if(!p)return;$("phimg").src=(PHU[p.chemin]||{}).u||"";$("phimg").alt=`Photo ${PHI+1} sur ${PHS.length}`;$("phinfo").textContent=`${PHZ==="t"?"Photo du ticket":"Photo"} ${PHI+1}/${PHS.length} · ${p.auteur||"—"} · ${tlTime(p.created_at)} · ${phKo(p.taille_octets)} Ko`;$("php").disabled=PHI===0;$("phn").disabled=PHI>=PHS.length-1;$("phd").classList.toggle("hide",!(PHZ==="o"&&PHC&&PHC.ed&&phCanDel(p)))}
+async function phDel(){const p=PHS[PHI];if(PHZ!=="o"||!PHC||!PHC.ed||!p||!confirm("Supprimer définitivement cette photo ?"))return;const {data,error}=await sb.from("photos").delete().eq("id",p.id).select("id");
+ if(error){alert(errMsg(error));return}if(!data||!data.length){alert("Suppression non autorisée.");return}await phVider();$("dPh").close();if(PHC)await phRender(PHC.k,PHC.o,PHC.ed)}
 async function phVider(){if(!PH())return;try{for(let g=0;g<20;g++){const {data}=await sb.from("photos_supprimees").select("chemin").limit(100);if(!data||!data.length)return;const ch=data.map(x=>x.chemin),r=await sb.storage.from("photos").remove(ch);if(r.error)return;await sb.from("photos_supprimees").delete().in("chemin",ch)}}catch(_){}}
 document.addEventListener("change",e=>{if(e.target.id==="phf")phUpload(e.target)});
-document.addEventListener("click",e=>{const b=e.target.closest("[data-ph]");if(b)phOpen(+b.dataset.ph)});
-$("php").onclick=()=>{if(PHI>0){PHI--;phShow()}};$("phn").onclick=()=>{if(PHI<PHL.length-1){PHI++;phShow()}};$("phd").onclick=phDel;
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ph]");if(b)phOpen(+b.dataset.ph,b.dataset.pz)});
+$("php").onclick=()=>{if(PHI>0){PHI--;phShow()}};$("phn").onclick=()=>{if(PHI<PHS.length-1){PHI++;phShow()}};$("phd").onclick=phDel;
 $("dPh").addEventListener("keydown",e=>{if(e.key==="ArrowLeft")$("php").click();if(e.key==="ArrowRight")$("phn").click()});
 $("phko").oninput=()=>{const k=+$("phko").value;$("phinfo2").textContent=k>0?`= ${(k*1024).toLocaleString("fr-FR")} octets`:""};
 $("phsave").onclick=async()=>{const k=Math.round(+$("phko").value),m=$("phmsg");m.style.color="";if(!(k>=50&&k<=2048)){m.textContent="Indiquez une valeur comprise entre 50 et 2048 Ko.";return}
@@ -188,7 +190,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>${PH()&&data.photos_nb!=null?`<p>Photos stockées : <b>${data.photos_nb}</b> fichier(s), <b>${mo(data.photos_octets)}</b> (stockage de fichiers Supabase, à part de la base).</p>`:""}`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.2.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.3.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -509,7 +511,7 @@ function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  <h3>Historique</h3><div id="tl"></div>${!cn&&c.demandeur_id===me.id?`<textarea id="nt1" rows="2" placeholder="Écrire un message à l'équipe" aria-label="Message à l'équipe" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Envoyer le message</button>`:""}
  ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><label class="ck" style="margin-top:6px"><input type="checkbox" id="nti" checked> Note interne (invisible du demandeur)</label><button data-note style="margin-top:6px">Ajouter la note</button>
  <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
- <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`; loadTl();phRender("t",c)}
+ <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`; loadTl();phRender("t",c,E)}
 async function loadTl(){const cn=canT()||role()==="supervision";
  const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
  const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
@@ -553,7 +555,7 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
  const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
  $("ibody").innerHTML=`${hdr(c)}${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
- <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>${saved&&PH()?'<div id="phz"></div>':""}
+ <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>${c.ticket_id&&PH()?'<div id="phzt"></div>':""}${saved&&PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
   <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date d'intervention</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div><div><label>Durée (heures)</label><input type="number" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="ex. 1,5" value="${c.duree_h??""}"></div></div>
   <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
@@ -567,7 +569,7 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")&&!(k==="a_planifier"&&c.echeance)&&!(k==="planifiee"&&!c.echeance)).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
  ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
  ${saved?`<h3>Notes</h3><div id="inl"></div>${r==="supervision"?"":`<textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`}${(canE||r==="supervision")?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
- :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved){loadN();phRender("i",c);if(canE||r==="supervision")loadH()}}
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;phRenderT(c);if(saved){loadN();phRender("i",c,E);if(canE||r==="supervision")loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
 async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
