@@ -1,6 +1,6 @@
 <!--
   STADES 3M – Travaux, Maintenance & Exploitation
-  VERSION DU PROJET : 4.1.0  (11/11/2026)
+  VERSION DU PROJET : 4.2.1  (14/11/2026)
   Nomenclature X.Y.Z : Z = modification mineure (0 à 99) · Y = changement significatif (0 à 99) · X = changement important.
 -->
 <!DOCTYPE html>
@@ -12,10 +12,10 @@
 <title>Stades 3M</title>
 <script src="lib/jspdf.umd.min.js"></script>
 <script src="lib/supabase.min.js"></script>
-<link rel="stylesheet" href="style.css?v=4.1.0"></head><body>
+<link rel="stylesheet" href="style.css?v=4.2.1"></head><body>
 <div id="envb" class="hide" style="position:sticky;top:0;z-index:60;background:#c8641b;color:#fff;text-align:center;font:700 14px Segoe UI,system-ui,sans-serif;padding:6px">ENVIRONNEMENT DE TEST – données fictives</div>
 <div id="boot" style="font:14px Segoe UI,system-ui,sans-serif;margin:16px;padding:14px 16px;border:2px solid #c8641b;background:#fdf6ef;border-radius:6px"><b>L'application n'a pas pu démarrer.</b><br>Vérifiez que les fichiers <b>app.js</b>, <b>style.css</b> et le dossier <b>lib</b> sont bien publiés à côté de index.html, puis actualisez avec Ctrl+F5 (ou ouvrez le site dans une fenêtre de navigation privée). Si le message persiste, ouvrez la console du navigateur (touche F12) pour lire l'erreur.</div>
-<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v4.1.0</small></h1><div id="hd" class="hide">
+<header><h1>Stades 3M - Travaux, Maintenance & Exploitation <small id="vers">v4.2.1</small></h1><div id="hd" class="hide">
  <span id="who"></span>
  
  <button id="bell" title="Notifications" aria-label="Notifications"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 0 1-3.4 0"/></svg><span id="bn" class="hide"></span></button><button id="adm" class="hide" title="Paramètres" aria-label="Paramètres"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></button><button id="sug" title="Proposer une idée ou une amélioration" aria-label="Proposer une idée ou une amélioration"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg></button><button id="hlp" title="Notice d'utilisation" aria-label="Notice d'utilisation"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 7v14"/><path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg></button><button id="tourb" title="Visite guidée" aria-label="Visite guidée">?</button><button id="out" title="Se déconnecter" aria-label="Se déconnecter"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button></div></header>
@@ -58,6 +58,9 @@
 <details class="panel"><summary>Sites et zones/tribunes</summary><div id="lists" style="margin-top:12px"></div><div class="row" style="margin-top:12px"><input id="as" placeholder="Nom du nouveau site"><button id="asb">Ajouter le site</button></div></details>
 <details class="panel adm-only"><summary>Modèles des e-mails d'intervention</summary><div id="mmods" style="margin-top:12px"></div><p class="msg" id="mmmsg"></p></details>
 <details class="panel adm-only" id="adet"><summary>Journal d'audit</summary><div class="row" style="margin:10px 0"><select id="afl" aria-label="Filtrer le journal"><option value="">Tout</option><option value="interventions">Interventions</option><option value="profiles">Utilisateurs</option><option value="entreprises">Entreprises</option><option value="affectations">Affectations</option><option value="corps_etat">Corps d'état</option></select><button class="sec" id="abtn">Actualiser</button></div><div class="table"><table id="atab"><thead><tr><th>Date</th><th>Par</th><th>Objet</th><th>Action</th><th>Détail</th></tr></thead><tbody id="arows"></tbody></table></div></details>
+<details class="panel adm-only hide" id="pdet"><summary>Photos (essai)</summary><div style="margin:10px 0"><label for="phko">Poids maximal d'une photo (Ko)</label><input type="number" id="phko" min="50" max="2048" step="10" style="max-width:160px"> <span class="meta" id="phinfo2"></span>
+<p class="meta">Les photos sont compressées automatiquement au moment de l'envoi pour ne pas dépasser cette limite (1 Ko = 1 024 octets ; valeur initiale : 400 Ko). 10 photos maximum par ticket ou par intervention. La limite s'applique aux nouvelles photos ; celles déjà enregistrées ne sont pas modifiées.</p>
+<div class="row"><button id="phsave">Enregistrer</button></div><p class="msg" id="phmsg"></p></div></details>
 <details class="panel adm-only" id="ddet"><summary>Données : sauvegarde et archivage</summary><div id="dvol" style="margin:10px 0"></div>
 <h4>Sauvegarde</h4><p class="meta">Télécharge toutes les données (configuration, utilisateurs, tickets, interventions, notes, historique, journal) dans un fichier.</p><button id="bkp">Télécharger la sauvegarde complète</button>
 <h4>Archivage et suppression</h4><p class="meta">Tickets et interventions clos depuis plus de <input id="amt" type="number" min="6" value="24" style="width:70px"> mois, et journal d'audit de plus de <input id="ama" type="number" min="6" value="12" style="width:70px"> mois. L'archive est téléchargée avant toute suppression, qui est définitive.</p>
@@ -72,10 +75,12 @@
  <div class="row"><div><label for="ncat">Catégorie (obligatoire)</label><select id="ncat" required></select></div><div><label for="ncorps">Corps d'état (obligatoire)</label><select id="ncorps"></select></div></div>
  <label for="nt">Titre</label><input id="nt" required>
  <label for="nd">Description</label><textarea id="nd" rows="3"></textarea>
+ <div id="nphz" class="hide"><label for="nph">Photos (facultatif)</label><input type="file" id="nph" accept="image/*" multiple><p class="meta">Réduites automatiquement avant l'envoi. 10 photos maximum.</p></div>
  <label for="np">Priorité</label><select id="np"></select>
  <p class="msg" id="nmsg"></p><div class="row"><button type="submit">Enregistrer le ticket</button><button type="button" class="sec" data-close>Annuler</button></div></form></dialog>
 
 <dialog id="dIv"><div id="ibody"></div></dialog>
+<dialog id="dYN"><h3 id="ynt" style="margin-top:0"></h3><p id="ynx" style="white-space:pre-line"></p><div class="row"><button id="yny">Oui</button><button class="sec" id="ynn">Non</button></div></dialog>
 <dialog id="dJ"><h3 id="jt" style="margin-top:0"></h3><label for="jx">Justification (obligatoire)</label><textarea id="jx" rows="3"></textarea><p class="msg" id="jm"></p>
  <div class="row"><button id="jok">Valider</button><button class="sec" id="jno">Annuler</button></div></dialog>
 <dialog id="dS" style="min-width:min(760px,94vw)"><h2 style="margin-top:0">Une idée, une amélioration ?</h2>
@@ -105,11 +110,11 @@
 <div class="row"><button id="pl_ok">Enregistrer</button><button class="sec" id="pl_ko">Annuler</button></div></dialog>
 <dialog id="dNot"><h2 style="margin-top:0">Notifications</h2><div id="dNb" style="max-height:60vh;overflow:auto"></div><div class="row" style="margin-top:10px"><button class="sec" id="dNa">Tout marquer comme lu</button><button class="sec" data-close>Fermer</button></div></dialog>
 <div id="tour" class="hide" role="dialog" aria-label="Visite guidée"><div class="tc"><b id="tt"></b><p id="tx"></p><div class="row"><button class="sec" id="tp">Précédent</button><span id="tn" class="meta"></span><button id="tnx">Suivant</button><button class="sec" id="tsk">Passer</button></div></div></div>
-<p style="text-align:center;margin:8px"><a class="lnk" id="tourl" href="#" hidden>Revoir la visite guidée</a></p>
-<footer id="ver" aria-hidden="true">Version 4.1.0 – 11/11/2026</footer>
+<footer id="ver" aria-hidden="true">Version 4.2.1 – 14/11/2026</footer>
 <div id="pop" class="pop hide"></div><div id="cpop" class="pop hide"></div>
 <dialog id="dPw"><h2 style="margin-top:0">Choisissez votre mot de passe</h2><label for="np1">Mot de passe (12 caractères minimum)</label><input id="np1" type="password" autocomplete="new-password"><p class="msg" id="pmsg"></p><button id="pwok">Enregistrer le mot de passe</button></dialog>
+<dialog id="dPh" class="phv" aria-label="Photo"><div class="row" style="align-items:center"><span id="phinfo" class="meta" style="flex:1"></span><button class="sec ic" data-close aria-label="Fermer">✕</button></div><img id="phimg" alt=""><div class="row"><button class="sec" id="php" aria-label="Photo précédente">◀</button><button class="sec" id="phn" aria-label="Photo suivante">▶</button><button class="sec hide" id="phd">Supprimer cette photo</button></div></dialog>
 <dialog id="dDet"><div id="tbody"></div></dialog>
 
-<script src="config.js?v=4.1.0"></script>
-<script src="app.js?v=4.1.0"></script></body></html>
+<script src="config.js?v=4.2.1"></script>
+<script src="app.js?v=4.2.1"></script></body></html>

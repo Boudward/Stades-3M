@@ -1,11 +1,11 @@
-/* STADES 3M – application – version 4.1.0 */
+/* STADES 3M – application – version 4.2.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
  try{const t=(location.hash.match(/access_token=([^&]+)/)||[])[1];if(!t)return null;const p=JSON.parse(atob(t.split(".")[1].replace(/-/g,"+").replace(/_/g,"/")));for(const k in ENVS)if(p.iss&&p.iss.indexOf(new URL(ENVS[k].url).host)>=0)return k}catch(e){}return null}
 let ENV = envDuLien() || sessionStorage.getItem("stades_env") || "prod";if(!ENVS[ENV])ENV="prod";
 let sb = supabase.createClient(ENVS[ENV].url, ENVS[ENV].key);
-function appliquerEnv(){sessionStorage.setItem("stades_env",ENV);const t=ENV==="test";document.getElementById("envb").classList.toggle("hide",!t);document.title=(t?"[TEST] ":"")+TITRE0}
+function appliquerEnv(){sessionStorage.setItem("stades_env",ENV);const t=ENV==="test";document.getElementById("envb").classList.toggle("hide",!t);document.title=(t?"[TEST] ":"")+TITRE0;const p=document.getElementById("pdet");if(p)p.classList.toggle("hide",!PH())}
 const $ = id => document.getElementById(id);
 const ST = {nouvelle:"Nouveau",en_cours:"En cours",en_attente:"En attente",resolue:"Résolu",refusee:"Refusé",archivee:"Archivé"};
 const PR = {basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"};
@@ -99,7 +99,7 @@ async function renderAud(){let q=sb.from("audit_log").select("*").order("created
   return `<tr><td>${tlTime(a.created_at)}</td><td>${esc(a.par_nom||"Système")}</td><td>${TN[a.table_name]||esc(a.table_name)}${a.table_name==="interventions"?" n°"+esc(a.row_id):""}</td><td>${AC[a.action]||a.action}</td><td>${esc(d.join(" ; ").slice(0,240))}</td></tr>`}).join("")||`<tr><td colspan="5" class="empty">Aucune entrée.</td></tr>`}
 $("afl").onchange=$("abtn").onclick=renderAud;$("adet").addEventListener("toggle",()=>{if($("adet").open)renderAud()});
 let DP="all";
-const SC={nouvelle:"#102d69",en_cours:"#3b82c4",en_attente:"#c8641b",resolue:"#2e8b3c",refusee:"#b3261e",archivee:"#8a99a3"},EC={planifiee:"#3b82c4",en_attente_pieces:"#c8641b",en_cours:"#102d69",terminee:"#2e8b3c",annulee:"#8a99a3"};
+const SC={nouvelle:"#102d69",en_cours:"#3b82c4",en_attente:"#c8641b",resolue:"#2e8b3c",refusee:"#b3261e",archivee:"#8a99a3"},EC={a_planifier:"#b7791f",planifiee:"#3b82c4",en_attente_pieces:"#c8641b",en_cours:"#102d69",terminee:"#2e8b3c",annulee:"#8a99a3"};
 const dDeb=()=>{if(DP==="year")return new Date().getFullYear()+"-01-01";if(DP==="30"){const d=new Date();d.setDate(d.getDate()-30);return d.toLocaleDateString("sv-SE")}return null};
 function donut(items){const tot=items.reduce((a,x)=>a+x.v,0);if(!tot)return '<p class="empty">Aucune donnée.</p>';let off=0;
  const arcs=items.filter(x=>x.v).map(x=>{const p=x.v/tot*100,s=`<circle r="15.9155" cx="21" cy="21" fill="none" stroke="${x.c}" stroke-width="6" stroke-dasharray="${p} ${100-p}" stroke-dashoffset="${25-off}"><title>${esc(x.l)} : ${x.v}</title></circle>`;off+=p;return s}).join("");
@@ -119,25 +119,91 @@ async function loadDash(){$("dDb").innerHTML='<p class="empty">Chargement…</p>
 $("dash").onclick=()=>{$("dDash").showModal();setP();loadDash()};
 $("dper").onclick=e=>{const b=e.target.closest("button");if(!b)return;DP=b.dataset.p;setP();loadDash()};
 
+// ===== PHOTOS (essai – activées uniquement sur la base de test, voir config.js) =====
+const PHN=10,phKo=o=>Math.round(o/1024),phStaff=()=>["admin","responsable"].includes(me.role);
+let PHMAX=409600,PHL=[],PHC=null,PHI=0,PHU={};
+function PH(){return !!(ENVS[ENV]&&ENVS[ENV].photos)}
+const TBX=()=>PH()?[...TBK,"parametres","photos"]:TBK;
+const dlB=(b,n)=>{const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),6e4)};
+// archive ZIP minimale (sans compression : les photos sont déjà des JPEG)
+const CRCT=(()=>{const t=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c>>>0}return t})();
+const crc32=u=>{let c=0xFFFFFFFF;for(let i=0;i<u.length;i++)c=CRCT[(c^u[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function zipBlob(es){const enc=new TextEncoder(),parts=[],cen=[],d=new Date(),dt=((d.getFullYear()-1980)<<9)|((d.getMonth()+1)<<5)|d.getDate(),tm=(d.getHours()<<11)|(d.getMinutes()<<5)|(d.getSeconds()>>1);let off=0;
+ for(const e of es){const nm=enc.encode(e.name),crc=crc32(e.buf),sz=e.buf.length,h=new DataView(new ArrayBuffer(30));
+  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(10,tm,true);h.setUint16(12,dt,true);h.setUint32(14,crc,true);h.setUint32(18,sz,true);h.setUint32(22,sz,true);h.setUint16(26,nm.length,true);
+  parts.push(h.buffer,nm,e.buf);
+  const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(12,tm,true);c.setUint16(14,dt,true);c.setUint32(16,crc,true);c.setUint32(20,sz,true);c.setUint32(24,sz,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+  cen.push(c.buffer,nm);off+=30+nm.length+sz}
+ let cl=0;cen.forEach(x=>cl+=x.byteLength);const z=new DataView(new ArrayBuffer(22));z.setUint32(0,0x06054b50,true);z.setUint16(8,es.length,true);z.setUint16(10,es.length,true);z.setUint32(12,cl,true);z.setUint32(16,off,true);
+ return new Blob([...parts,...cen,z.buffer],{type:"application/zip"})}
+async function phCfg(){if(!PH())return;const {data}=await sb.from("parametres").select("valeur").eq("cle","photo_max_octets").maybeSingle();if(data&&+data.valeur>0)PHMAX=+data.valeur;if($("phko")){$("phko").value=phKo(PHMAX);$("phko").oninput()}}
+async function phInit(){const p=$("pdet");if(p)p.classList.toggle("hide",!PH());if(!PH())return;await phCfg();if(phStaff())phVider()}
+function phCan(k,o){if(k==="t")return phStaff()||(o.demandeur_id===me.id&&["demandeur","responsable"].includes(me.role)&&o.statut!=="archivee");return phStaff()||(["agent_travaux","agent_exploitation"].includes(me.role)&&(o.agent_ids||[]).includes(me.id)&&!["terminee","annulee"].includes(o.etat))}
+const phCanDel=p=>phStaff()||p.auteur_id===me.id;
+async function phRender(k,o){if(!PH()||!$("phz"))return;PHC={k,o};const col=k==="t"?"ticket_id":"intervention_id";
+ const {data,error}=await sb.from("photos").select("*").eq(col,o.id).order("created_at");const z=$("phz");if(!z)return;
+ if(error){z.innerHTML=`<h3>Photos</h3><p class="msg">${esc(errMsg(error))}</p>`;return}
+ PHL=data||[];PHU={};
+ if(PHL.length){const r=await sb.storage.from("photos").createSignedUrls(PHL.map(p=>p.chemin),3600);(r.data||[]).forEach(x=>{if(x.signedUrl)PHU[x.path]=x.signedUrl})}
+ const z2=$("phz");if(!z2)return;const can=phCan(k,o);
+ z2.innerHTML=`<h3>Photos (${PHL.length})</h3>${PHL.length?`<div class="phg">${PHL.map((p,i)=>`<button type="button" class="ph" data-ph="${i}" aria-label="Agrandir la photo ${i+1}"><img src="${esc(PHU[p.chemin]||"")}" alt="Photo ${i+1}" loading="lazy"></button>`).join("")}</div>`:`<p class="empty" style="padding:8px">Aucune photo.</p>`}
+ ${can&&PHL.length<PHN?`<label class="phadd">Ajouter des photos<input type="file" id="phf" accept="image/*" multiple></label> <span class="meta">${PHN-PHL.length} restante(s) · réduites automatiquement à ${phKo(PHMAX)} Ko maximum</span>`:""}<p class="msg" id="phm"></p>`}
+async function phCompress(file,max){let bmp;
+ try{bmp=await createImageBitmap(file,{imageOrientation:"from-image"})}catch(_){bmp=await new Promise((res,rej)=>{const u=URL.createObjectURL(file),im=new Image();im.onload=()=>{URL.revokeObjectURL(u);res(im)};im.onerror=()=>{URL.revokeObjectURL(u);rej(new Error("Format d'image non pris en charge (utilisez JPEG ou PNG)"))};im.src=u})}
+ const W0=bmp.width||bmp.naturalWidth,H0=bmp.height||bmp.naturalHeight;if(!W0||!H0)throw new Error("Image illisible");
+ const cv=document.createElement("canvas"),cx=cv.getContext("2d");let side=Math.min(2048,Math.max(W0,H0)),q=.85;
+ for(let n=0;n<40;n++){const s=Math.min(1,side/Math.max(W0,H0)),w=Math.max(1,Math.round(W0*s)),h=Math.max(1,Math.round(H0*s));cv.width=w;cv.height=h;cx.fillStyle="#fff";cx.fillRect(0,0,w,h);cx.drawImage(bmp,0,0,w,h);
+  const blob=await new Promise(r=>cv.toBlob(r,"image/jpeg",q));if(!blob)throw new Error("Compression impossible sur cet appareil");
+  if(blob.size<=max){if(bmp.close)bmp.close();return{blob,w,h}}
+  if(q>.56)q=Math.round((q-.1)*100)/100;else{side=Math.round(side*.85);q=.8;if(side<400)break}}
+ if(bmp.close)bmp.close();throw new Error(`Impossible de réduire cette photo à ${phKo(max)} Ko`)}
+async function phSend(k,id,files,msg){const col=k==="t"?"ticket_id":"intervention_id",bad=[];let ok=0;
+ for(let i=0;i<files.length;i++){const f=files[i],pre=`Photo ${i+1}/${files.length} : `;
+  try{msg.textContent=pre+"compression…";const {blob,w,h}=await phCompress(f,PHMAX);msg.textContent=pre+"envoi…";
+   const path=`${k}${id}/${crypto.randomUUID()}.jpg`;
+   const up=await sb.storage.from("photos").upload(path,blob,{contentType:"image/jpeg",upsert:false});if(up.error)throw up.error;
+   const ins=await sb.from("photos").insert({[col]:id,chemin:path,taille_octets:blob.size,largeur:w,hauteur:h});
+   if(ins.error){await sb.from("photos_supprimees").insert({chemin:path});await phVider();throw ins.error}ok++}
+  catch(e){bad.push(`${f.name||"photo"} : ${errMsg(e)}`)}}
+ return{ok,bad}}
+async function phUpload(inp){const fs=[...inp.files];inp.value="";if(!fs.length||!PHC)return;const {k,o}=PHC,room=PHN-PHL.length,sel=fs.slice(0,Math.max(room,0));
+ const r=await phSend(k,o.id,sel,$("phm"));await phRender(k,o);const n=$("phm");if(!n)return;n.style.color=r.bad.length?"":"var(--ok)";
+ n.textContent=(r.ok?`${r.ok} photo(s) ajoutée(s). `:"")+(fs.length>sel.length?`${fs.length-sel.length} ignorée(s) (maximum ${PHN} par fiche). `:"")+r.bad.join(" · ")}
+function phOpen(i){PHI=i;phShow();$("dPh").showModal()}
+function phShow(){const p=PHL[PHI];if(!p)return;$("phimg").src=PHU[p.chemin]||"";$("phimg").alt=`Photo ${PHI+1} sur ${PHL.length}`;$("phinfo").textContent=`Photo ${PHI+1}/${PHL.length} · ${p.auteur||"—"} · ${tlTime(p.created_at)} · ${phKo(p.taille_octets)} Ko`;$("php").disabled=PHI===0;$("phn").disabled=PHI>=PHL.length-1;$("phd").classList.toggle("hide",!phCanDel(p))}
+async function phDel(){const p=PHL[PHI];if(!p||!confirm("Supprimer définitivement cette photo ?"))return;const {data,error}=await sb.from("photos").delete().eq("id",p.id).select("id");
+ if(error){alert(errMsg(error));return}if(!data||!data.length){alert("Suppression non autorisée.");return}await phVider();$("dPh").close();if(PHC)await phRender(PHC.k,PHC.o)}
+async function phVider(){if(!PH())return;try{for(let g=0;g<20;g++){const {data}=await sb.from("photos_supprimees").select("chemin").limit(100);if(!data||!data.length)return;const ch=data.map(x=>x.chemin),r=await sb.storage.from("photos").remove(ch);if(r.error)return;await sb.from("photos_supprimees").delete().in("chemin",ch)}}catch(_){}}
+document.addEventListener("change",e=>{if(e.target.id==="phf")phUpload(e.target)});
+document.addEventListener("click",e=>{const b=e.target.closest("[data-ph]");if(b)phOpen(+b.dataset.ph)});
+$("php").onclick=()=>{if(PHI>0){PHI--;phShow()}};$("phn").onclick=()=>{if(PHI<PHL.length-1){PHI++;phShow()}};$("phd").onclick=phDel;
+$("dPh").addEventListener("keydown",e=>{if(e.key==="ArrowLeft")$("php").click();if(e.key==="ArrowRight")$("phn").click()});
+$("phko").oninput=()=>{const k=+$("phko").value;$("phinfo2").textContent=k>0?`= ${(k*1024).toLocaleString("fr-FR")} octets`:""};
+$("phsave").onclick=async()=>{const k=Math.round(+$("phko").value),m=$("phmsg");m.style.color="";if(!(k>=50&&k<=2048)){m.textContent="Indiquez une valeur comprise entre 50 et 2048 Ko.";return}
+ const {error}=await sb.from("parametres").upsert({cle:"photo_max_octets",valeur:k*1024,updated_by:me.id});if(error){m.textContent=errMsg(error);return}
+ PHMAX=k*1024;m.style.color="var(--ok)";m.textContent=`Enregistré : ${k} Ko (${(k*1024).toLocaleString("fr-FR")} octets). S'applique aux prochaines photos.`};
 const dl=(o,n)=>{const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(o)],{type:"application/json"}));a.download=n;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),4e3)};
 async function tbl(t,ord){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from(t).select("*").order(ord).range(i,i+999);if(error)throw error;r=r.concat(data);if(data.length<1000)return r}}
-const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectations","modeles_mail","profiles","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","suggestions","demandes_compte","audit_log","plans_preventifs"],OB={affectations:"site_id",modeles_mail:"cle"};
+const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectations","modeles_mail","profiles","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","suggestions","demandes_compte","audit_log","plans_preventifs"],OB={affectations:"site_id",modeles_mail:"cle",parametres:"cle"};
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
- $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>`}
+ $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>${PH()&&data.photos_nb!=null?`<p>Photos stockées : <b>${data.photos_nb}</b> fichier(s), <b>${mo(data.photos_octets)}</b> (stockage de fichiers Supabase, à part de la base).</p>`:""}`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.1.0",date:new Date().toISOString(),tables:{}};for(const t of TBK){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
- dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."}catch(e){m.textContent=errMsg(e)}};
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.2.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+ dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
- CAND=data;$("acs").textContent=`${data.tickets_total} ticket(s) et ${data.audit_total} ligne(s) d'audit concernés. Lot proposé : ${data.tickets.length} ticket(s), ${data.interventions.length} intervention(s), ${data.audit.length} ligne(s) d'audit.`;$("apur").classList.toggle("hide",!(data.tickets.length||data.interventions.length||data.audit.length))};
+ CAND=data;$("acs").textContent=`${data.tickets_total} ticket(s) et ${data.audit_total} ligne(s) d'audit concernés. Lot proposé : ${data.tickets.length} ticket(s), ${data.interventions.length} intervention(s), ${data.audit.length} ligne(s) d'audit.${PH()&&data.photos_nb!=null?` Photos du lot : ${data.photos_nb} (${(data.photos_octets/1048576).toFixed(1)} Mo).`:""}`;$("apur").classList.toggle("hide",!(data.tickets.length||data.interventions.length||data.audit.length))};
 $("apur").onclick=async()=>{const c=CAND,m=$("dmsg");if(!c||!confirm("Télécharger l'archive puis SUPPRIMER DÉFINITIVEMENT ce lot de la base ?"))return;m.style.color="";try{
  const ch=a=>{const r=[];for(let i=0;i<a.length;i+=100)r.push(a.slice(i,i+100));return r},get=async(t,col,ids)=>(await Promise.all(ch(ids).map(x=>sb.from(t).select("*").in(col,x).then(r=>{if(r.error)throw r.error;return r.data})))).flat();
  m.textContent="Préparation de l'archive…";
  const o={application:"STADES 3M",type:"archive",date:new Date().toISOString(),tickets:await get("tickets","id",c.tickets),ticket_suivi:await get("ticket_suivi","ticket_id",c.tickets),ticket_events:await get("ticket_events","ticket_id",c.tickets),interventions:await get("interventions","id",c.interventions),intervention_notes:await get("intervention_notes","intervention_id",c.interventions),audit_log:await get("audit_log","id",c.audit)};
  if(o.tickets.length!==c.tickets.length||o.interventions.length!==c.interventions.length||o.audit_log.length!==c.audit.length)throw new Error("Export incomplet : suppression annulée.");
- dl(o,`stades3m_archive_${today()}.json`);
+ if(PH()){const seen=new Set();o.photos=[...await get("photos","ticket_id",c.tickets),...await get("photos","intervention_id",c.interventions)].filter(p=>!seen.has(p.id)&&seen.add(p.id))}
+ if(PH()&&o.photos.length){const es=[];let n=0;for(const p of o.photos){m.textContent=`Récupération des photos ${++n}/${o.photos.length}…`;const r=await sb.storage.from("photos").download(p.chemin);if(r.error)throw r.error;es.push({name:"photos/"+p.chemin,buf:new Uint8Array(await r.data.arrayBuffer())})}
+  es.unshift({name:"archive.json",buf:new TextEncoder().encode(JSON.stringify(o))});dlB(zipBlob(es),`stades3m_archive_${today()}.zip`)}
+ else dl(o,`stades3m_archive_${today()}.json`);
  const {data,error}=await sb.rpc("archive_purger",{p_tickets:c.tickets,p_interventions:c.interventions,p_audit:c.audit,p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error)throw error;
- CAND=null;$("apur").classList.add("hide");$("acs").textContent="";m.style.color="var(--ok)";m.textContent=`Supprimé : ${data.tickets} ticket(s), ${data.interventions} intervention(s), ${data.audit} ligne(s) d'audit. Relancez la recherche pour le lot suivant.`;renderVol();load()}catch(e){m.textContent=errMsg(e)}};
+ CAND=null;$("apur").classList.add("hide");$("acs").textContent="";m.style.color="var(--ok)";m.textContent=`Supprimé : ${data.tickets} ticket(s), ${data.interventions} intervention(s), ${data.audit} ligne(s) d'audit${PH()&&o.photos.length?`, ${o.photos.length} photo(s) (archive au format ZIP : archive.json + dossier photos)`:""}. Relancez la recherche pour le lot suivant.`;await phVider();renderVol();load()}catch(e){m.textContent=errMsg(e)}};
 
 let RF=[],UL=[],UE=null;
 const refSel=(x,d)=>`<select class="rf" data-ref="${x.id}" title="Référent par défaut" aria-label="Référent par défaut – ${esc(x.nom)}"><option value="">Référent : règle par défaut</option>${RF.filter(p=>p.role==="admin"||p.role==="responsable").map(p=>`<option value="${p.id}"${p.id===x.referent_id?" selected":""}>${esc((p.prenom+" "+p.nom).trim())}</option>`).join("")}</select>`;
@@ -167,7 +233,7 @@ function visite(){VL=VS.filter(x=>!x.s||($(x.s)&&$(x.s).offsetParent));VI=0;show
 function showV(){document.querySelectorAll(".tour-hl").forEach(e=>e.classList.remove("tour-hl"));const x=VL[VI];if(!x){$("tour").classList.add("hide");return}
  $("tt").textContent=x.t;$("tx").textContent=x.x;$("tn").textContent=`${VI+1} / ${VL.length}`;$("tp").disabled=VI===0;$("tnx").textContent=VI===VL.length-1?"Terminer":"Suivant";$("tour").classList.remove("hide");
  if(x.s){const e=$(x.s);e.classList.add("tour-hl");e.scrollIntoView({block:"nearest",behavior:"smooth"})}}
-$("tnx").onclick=()=>{VI++;showV()};$("tp").onclick=()=>{VI--;showV()};$("tsk").onclick=()=>{VI=VL.length;showV()};$("tourl").onclick=e=>{e.preventDefault();visite()};$("tourb").onclick=visite;
+$("tnx").onclick=()=>{VI++;showV()};$("tp").onclick=()=>{VI--;showV()};$("tsk").onclick=()=>{VI=VL.length;showV()};$("tourb").onclick=visite;
 $("dNew").addEventListener("cancel",e=>e.preventDefault());$("dIv").addEventListener("cancel",e=>{if(curI&&!curI.id)e.preventDefault()});
 $("ibody").addEventListener("click",e=>{if(e.target.closest("[data-icancel]"))$("dIv").close()});
 
@@ -222,7 +288,7 @@ async function start(){
  $("who").textContent=`${me.prenom||""} ${me.nom||""} · ${ROLES[me.role]}`;
  $("vas").classList.toggle("hide",me.role!=="admin");$("vasbar").classList.toggle("hide",me.role!=="admin");$("adm").classList.toggle("hide",!["admin","responsable"].includes(me.role));document.body.classList.toggle("nadm",me.role!=="admin");
  if(!me.actif){$("pending").classList.remove("hide");return}const first=!me.premiere_connexion_at;sb.rpc("marquer_connexion").then(()=>{});
- await load();loadNot();live();$("tourl").hidden=false;if(first)setTimeout(visite,600);
+ await load();loadNot();live();phInit();if(first)setTimeout(visite,600);
 }
 $("vas").onchange=()=>{view=$("vas").value;$("ad").classList.add("hide");render()};
 $("adm").onclick=()=>{$("ad").classList.toggle("hide");render();if(!$("ad").classList.contains("hide"))loadAdmin()};
@@ -253,12 +319,13 @@ function render(){
  $("tkC").innerHTML=tkGroups(clo,"",4)}
 
 
-$("new").onclick=()=>{$("fNew").reset();$("np").value="normale";if(me.site_defaut_id&&sites.some(x=>x.id===me.site_defaut_id))$("ns").value=me.site_defaut_id;$("nt2").innerHTML=tOpts($("ns").value);$("ncorps").innerHTML=corpsOpts($("ncat").value);$("nmsg").textContent="";$("dNew").showModal()};
+$("new").onclick=()=>{$("fNew").reset();$("np").value="normale";if(me.site_defaut_id&&sites.some(x=>x.id===me.site_defaut_id))$("ns").value=me.site_defaut_id;$("nt2").innerHTML=tOpts($("ns").value);$("ncorps").innerHTML=corpsOpts($("ncat").value);$("nmsg").textContent="";$("nphz").classList.toggle("hide",!PH());$("dNew").showModal()};
 $("fNew").onsubmit=async e=>{e.preventDefault();
  if(!$("ns").value||!$("nt2").value){$("nmsg").textContent="Site et zone/tribune sont obligatoires.";return}
  if(!$("ncorps").value){$("nmsg").textContent="Le corps d'état est obligatoire : choisissez-en un avant d'enregistrer le ticket.";$("ncorps").focus();return}
- const {error}=await sb.from("tickets").insert({site_id:$("ns").value,tribune_id:$("nt2").value,local:$("nl").value||null,titre:$("nt").value,description:$("nd").value,priorite:$("np").value,categorie_id:$("ncat").value,corps_etat_id:$("ncorps").value});
+ const {data:nv,error}=await sb.from("tickets").insert({site_id:$("ns").value,tribune_id:$("nt2").value,local:$("nl").value||null,titre:$("nt").value,description:$("nd").value,priorite:$("np").value,categorie_id:$("ncat").value,corps_etat_id:$("ncorps").value}).select("id").single();
  if(error){$("nmsg").textContent="Enregistrement impossible : "+errMsg(error);return}
+ if(PH()&&$("nph").files.length){const r=await phSend("t",nv.id,[...$("nph").files].slice(0,PHN),$("nmsg"));if(r.bad.length)alert("Le ticket est créé, mais des photos n'ont pas pu être ajoutées :\n"+r.bad.join("\n")+"\nVous pourrez les ajouter depuis la fiche du ticket.")}
  $("dNew").close();load()};
 
 async function loadAdmin(){
@@ -394,7 +461,7 @@ const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
 const peutEditer=(x,r)=>r==="admin"||isResp(r);
 const canSee=(x,r)=>peutEditer(x,r)||r==="supervision"||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
 let cats=[],corps=[];
-const ET={planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
+const ET={a_planifier:"À planifier",planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
 const FINANCES=false;   // passer à true pour réactiver le suivi financier (devis, bon de commande, factures, montants)
 const SU=[["devis_demande_at","Devis demandé","d"],["devis_recu_at","Devis reçu","d"],["bc_numero","N° de bon de commande (12 caractères min.)","t"],["bc_envoye_at","Bon de commande envoyé","d"],["facture_recue","Facture reçue","n"],["facture_payee","Facture payée","n"],["montant_devis_ht","Devis HT (€)","m"],["montant_bc_ht","Bon de commande HT (€)","m"],["montant_facture_ht","Facture HT (€)","m"]];
 const eur=v=>Number(v).toLocaleString("fr-FR",{style:"currency",currency:"EUR"});
@@ -416,6 +483,7 @@ const fduree=h=>{if(h==null||h==="")return"—";h=+h;let hh=Math.floor(h+1e-9),m
 const O=(a,v)=>a.map(([k,l])=>`<option value="${k}"${String(k)===String(v)?" selected":""}>${esc(l)}</option>`).join("");
 const sitesO=v=>O(sites.map(x=>[x.id,x.nom]),v),tribO=(sid,v)=>O(trib.filter(t=>t.site_id==sid).map(t=>[t.id,t.nom]),v),catsO=(v,mine)=>O(cats.map(c=>[c.id,c.nom]),v),corpsO=(cid,v)=>O(corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>[x.id,x.nom]),v),prioO=v=>O(Object.entries(PR),v);
 const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"});
+function askYN(t,x){return new Promise(res=>{const d=$("dYN");let r=false;$("ynt").textContent=t;$("ynx").textContent=x||"";$("yny").onclick=()=>{r=true;d.close()};$("ynn").onclick=()=>d.close();d.onclose=()=>res(r);d.showModal()})}
 function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
  $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
 function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&v!==null)v=+v;if(f==="duree_h"&&v!==null)v=Math.round(parseFloat(String(v).replace(",","."))*100)/100;const u={[f]:v};
@@ -432,7 +500,7 @@ const canT=()=>peutEditer(cur,role()),canF=()=>canT()||(cur.demandeur_id===me.id
 function openDet(id){cur=tk.find(x=>x.id===id);ed=false;drawT();$("dDet").showModal()}
 function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  $("tbody").innerHTML=`${hdr(c)}${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
- <p class="big"><b>${c.ref}</b> – ${esc(c.titre)}</p><div class="desc">${esc(c.description||"Aucune description.")}</div>
+ <p class="big"><b>${c.ref}</b> – ${esc(c.titre)}</p><div class="desc">${esc(c.description||"Aucune description.")}</div>${PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c)}<label>Description</label><textarea data-f="description" rows="3">${esc(c.description||"")}</textarea><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select>${cn?`<label>En charge</label><select data-f="en_charge_id">${chargeO(c)}</select>`:""}</div>`:""}
  <p class="meta">${esc(catLab(c))} · demandé par ${esc(c.demandeur_nom||"—")} le ${fdate(c.created_at)} · Priorité ${PR[c.priorite]}</p>
  <p><span class="tag s-${c.statut}">${ST[c.statut]}</span>${c.fin_prevue?` &nbsp;Fin d'intervention prévue : <b>${fdate(c.fin_prevue)}</b>`:""}</p>
@@ -441,7 +509,7 @@ function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  <h3>Historique</h3><div id="tl"></div>${!cn&&c.demandeur_id===me.id?`<textarea id="nt1" rows="2" placeholder="Écrire un message à l'équipe" aria-label="Message à l'équipe" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Envoyer le message</button>`:""}
  ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><label class="ck" style="margin-top:6px"><input type="checkbox" id="nti" checked> Note interne (invisible du demandeur)</label><button data-note style="margin-top:6px">Ajouter la note</button>
  <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
- <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`;loadTl()}
+ <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`; loadTl();phRender("t",c)}
 async function loadTl(){const cn=canT()||role()==="supervision";
  const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
  const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
@@ -474,7 +542,7 @@ $("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()
 $("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
 $("irows").onclick=e=>{const tr=e.target.closest("tr");if(tr){pendingTicket=null;openIv(ints.find(x=>x.id==tr.dataset.i))}};
 function openIv(i,t){const v=i?{...i}:{site_id:t?t.site_id:((sites.find(x=>x.id===me.site_defaut_id)||sites[0])||{}).id,tribune_id:t?t.tribune_id:null,local:t?t.local:null,categorie_id:t?t.categorie_id:((isResp(role())&&cats.find(x=>x.domaine===dom(role())))||cats[0]||{}).id,corps_etat_id:t?t.corps_etat_id:null,
- titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"planifiee",agent_ids:[],echeance:null,duree_h:null};
+ titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"a_planifier",agent_ids:[],echeance:null,duree_h:null};
  if(!i&&!v.tribune_id)v.tribune_id=(trib.find(x=>x.site_id===v.site_id)||{}).id;if(!i&&!v.corps_etat_id)v.corps_etat_id=(corps.find(x=>x.categorie_id===v.categorie_id)||{}).id||null;
  curI=v;ed=false;imode=v.entreprise_id?"e":"a";devisMail=false;drawI();if(!$("dIv").open)$("dIv").showModal()}
 function planCard(c,quick){const miss=!c.echeance&&!["terminee","annulee"].includes(c.etat);
@@ -485,7 +553,7 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
  const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
  $("ibody").innerHTML=`${hdr(c)}${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
- <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>
+ <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>${saved&&PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
   <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date d'intervention</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div><div><label>Durée (heures)</label><input type="number" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="ex. 1,5" value="${c.duree_h??""}"></div></div>
   <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
@@ -496,10 +564,10 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  <p>${mode==="e"?`<b>${esc(ent?ent.entreprise:c.prestataire||"")}</b>${ent?`<br>${esc(ent.contact||"")} · ${esc(ent.email||"")} · ${esc(fmtTel(ent.mobile))}`:""}`:`Attribué à : ${esc(c.agents_noms||"à désigner")}`}</p>${mode==="e"&&saved&&canE&&!E?dv():""}
  ${saved&&mode==="e"&&FINANCES?`<p class="meta">${SU.map(([k,l,t])=>suVw(k,l,t,c)).join(" · ")}</p>`:""}
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
- ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
+ ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")&&!(k==="a_planifier"&&c.echeance)&&!(k==="planifiee"&&!c.echeance)).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
  ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
  ${saved?`<h3>Notes</h3><div id="inl"></div>${r==="supervision"?"":`<textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`}${(canE||r==="supervision")?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
- :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved){loadN();if(canE||r==="supervision")loadH()}}
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved){loadN();phRender("i",c);if(canE||r==="supervision")loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
 async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
@@ -519,7 +587,10 @@ async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture 
  const {error}=await sb.rpc("intervention_etat",{p_id:curI.id,p_etat:k,p_justif:j});if(error){alert("Modification impossible : "+errMsg(error));return}
  const tid=curI.ticket_id,t=tid&&tk.find(x=>x.id===tid);
  if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)){const au=ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length;
-  if(confirm(`Passer aussi le ticket ${t.ref} en « Résolu » ?`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:`(intervention ${curI.ref}) : ${j}`})}}
+  if(await askYN(`Souhaitez-vous clôturer le ticket ${t.ref} en cours ?`,`L'intervention ${curI.ref} est terminée. Le ticket passerait en « Résolu ».`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){
+   const j2=await askJust("Clôture du ticket "+t.ref);
+   if(j2){const r=await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:j2});if(r.error)alert("Le ticket n'a pas pu être clôturé : "+errMsg(r.error))}
+   else alert(`Le ticket ${t.ref} n'a pas été clôturé : une justification est obligatoire. Vous pouvez le clôturer depuis sa fiche.`)}}
  await load();curI=ints.find(x=>x.id===curI.id)||curI;drawI()}
 async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","duree_h","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
  if(o.entreprise_id){o.agent_ids=[];o.agents_noms=null}else if((o.agent_ids||[]).length){o.prestataire=null;o.prestataire_email=null}
@@ -574,13 +645,14 @@ $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.col
  $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
 let SG=[];
 async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);
- $("sug_l").innerHTML=SG.map(x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
+ const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
+ $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=SG.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
 let SE=null;
 function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
  const {error}=await sb.from("suggestions").update({type:$("se_t").value,titre:$("se_ti").value.trim(),texte:$("se_tx").value.trim()||null}).eq("id",SE);if(error){$("se_m").textContent=errMsg(error);return}$("dSE").close();renderSug()};
 $("sug_l").onclick=async e=>{const b=e.target.closest("[data-se],[data-sd]");if(!b)return;if(b.dataset.sd){if(!confirm("Supprimer cette suggestion ?"))return;await sb.from("suggestions").delete().eq("id",b.dataset.sd);renderSug()}else editSug(b.dataset.se)};
-$("sug_l").onchange=async e=>{const c=e.target;if(c.dataset.sv===undefined)return;await sb.from("suggestions").update({traitee:c.checked}).eq("id",c.dataset.sv);renderSug()};
+$("sug_l").onchange=async e=>{const c=e.target;if(c.dataset.sp!==undefined){const {error}=await sb.from("suggestions").update({priorite:c.value}).eq("id",c.dataset.sp);if(error)alert(errMsg(error));renderSug();return}if(c.dataset.sv===undefined)return;await sb.from("suggestions").update({traitee:c.checked}).eq("id",c.dataset.sv);renderSug()};
 $("irows2").onclick=$("irows").onclick;
 // ===== Fenêtres : fermeture au clic à côté =====
 document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||d.id==="dS"||d.id==="dPl"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
