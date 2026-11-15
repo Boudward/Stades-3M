@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.3.0 */
+/* STADES 3M – application – version 4.4.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -50,7 +50,9 @@ function renderMM(){$("mmods").innerHTML=Object.keys(MLAB).filter(k=>FINANCES||k
 $("mmods").onclick=async e=>{const b=e.target.closest("button");if(!b)return;const k=b.dataset.k||b.dataset.r,q=f=>document.querySelector(`[data-mm="${k}"][data-f="${f}"]`).value;
  const row=b.dataset.k?{cle:k,objet:q("objet"),corps:q("corps")}:{cle:k,...MD[k]};if(!row.objet.trim()||!row.corps.trim()){$("mmmsg").style.color="";$("mmmsg").textContent="L'objet et le corps sont obligatoires.";return}
  const {error}=await sb.from("modeles_mail").upsert({...row,updated_at:new Date().toISOString()});$("mmmsg").style.color=error?"":"var(--ok)";$("mmmsg").textContent=error?errMsg(error):"Modèle enregistré.";if(!error){MM[k]=row;renderMM()}};
-const IC=(a,i,t)=>{const m={e:["✎","Renommer"],x:["✕","Supprimer"],r:["↺","Réactiver"]}[a];return `<button class="ic" title="${m[1]}" aria-label="${m[1]}" data-a="${a}" data-t="${t}" data-i="${i}">${m[0]}</button>`};
+const TRASH='<svg class="ico" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>';
+const XCL='<button type="button" class="ic" data-close title="Fermer" aria-label="Fermer">✕</button>',XFOOT='<div class="row xfoot"><button type="button" class="sec" data-close>Fermer</button></div>';
+const IC=(a,i,t)=>{const m={e:["✎","Renommer"],x:[TRASH,"Supprimer"],r:["↺","Réactiver"]}[a];return `<button class="ic" title="${m[1]}" aria-label="${m[1]}" data-a="${a}" data-t="${t}" data-i="${i}">${m[0]}</button>`};
 function renderGrids(){const row=(t,x,d)=>`<div class="gr${x.actif===false?" off":""}"><span>${esc(x.nom)}</span><span>${t==="corps_etat"?refSel(x,d):""}${x.actif===false?IC("r",x.id,t):IC("e",x.id,t)}${IC("x",x.id,t)}</span></div>`,
  add=(ph,t,p)=>`<div class="gadd"><input placeholder="${ph}" data-n aria-label="${ph}"><button data-add="${t}" data-p="${p}" aria-label="${ph}">+</button></div>`;
  $("clists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cats.length||1},minmax(0,1fr))">`+cats.map(c=>`<div class="gc"><h4>${esc(c.nom)}</h4>${corps.filter(x=>x.categorie_id===c.id).map(x=>row("corps_etat",x,c.domaine)).join("")}${add("Nouveau lot","corps_etat",c.id)}</div>`).join("")+`</div>`;
@@ -72,15 +74,16 @@ $("fgt").onclick=async()=>{const m=$("em").value.trim();$("lmsg").style.color=""
 
 let NT=[],dtm;
 async function loadNot(){const {data,error}=await sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(50);if(error)return;NT=data;const n=NT.filter(x=>!x.lu).length;$("bn").textContent=n>99?"99+":n;$("bn").classList.toggle("hide",!n)}
-function drawNot(){$("dNb").innerHTML=NT.map(x=>`<div class="tl${x.lu?"":" nt"}" data-n="${x.id}" data-t="${x.ticket_id||""}" data-i="${x.intervention_id||""}" style="cursor:pointer"><span>${tlTime(x.created_at)}</span><b>${esc(x.titre)}</b>${x.message?" – "+esc(x.message):""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune notification.</p>`}
+function drawNot(){$("dNb").innerHTML=NT.map(x=>`<div class="tl${x.lu?"":" nt"}" data-n="${x.id}" data-y="${x.type||""}" data-t="${x.ticket_id||""}" data-i="${x.intervention_id||""}" style="cursor:pointer"><span>${tlTime(x.created_at)}</span><b>${esc(x.titre)}</b>${x.message?" – "+esc(x.message):""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune notification.</p>`}
 $("bell").onclick=()=>{drawNot();$("dNot").showModal()};
 $("dNa").onclick=async()=>{await sb.rpc("notif_lire");await loadNot();drawNot()};
 $("dNb").onclick=e=>{const r=e.target.closest("[data-n]");if(!r)return;const d=r.dataset;sb.rpc("notif_lire",{p_id:+d.n}).then(loadNot);$("dNot").close();
+ if(d.y==="demande_compte"){if(me.role==="admin"&&$("ad").classList.contains("hide"))$("adm").click();return}
  const i=d.i&&ints.find(x=>x.id==d.i),t=d.t&&tk.find(x=>x.id==d.t);if(i)openIv(i);else if(t)openDet(t.id)};
 const dirty=()=>{clearTimeout(dtm);dtm=setTimeout(()=>{if(!document.querySelector("dialog[open]"))load()},1500)};
 function live(){setInterval(loadNot,60000);setInterval(sugAlert,60000);sugAlert();sb.channel("stades").on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:`user_id=eq.${me.id}`},()=>{loadNot();dirty()})
  .on("postgres_changes",{event:"*",schema:"public",table:"tickets"},dirty).on("postgres_changes",{event:"*",schema:"public",table:"interventions"},dirty).subscribe()}
-const AL={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Date d'intervention",duree_h:"Durée",etat:"État",local:"Local",site_id:"Site",tribune_id:"Zone",agent_ids:"Intervenants",entreprise_id:"Entreprise",prestataire:"Prestataire",prestataire_email:"E-mail entreprise",devis_demande_at:"Devis demandé",devis_recu_at:"Devis reçu",bc_numero:"N° bon de commande",bc_envoye_at:"BC envoyé",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Devis HT",montant_bc_ht:"BC HT",montant_facture_ht:"Facture HT"};
+const AL={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Date d'intervention",duree_h:"Durée",etat:"État",local:"Local",site_id:"Site",tribune_id:"Zone",agent_ids:"Intervenants",responsable_nom:"Responsable",entreprise_id:"Entreprise",prestataire:"Prestataire",prestataire_email:"E-mail entreprise",devis_demande_at:"Devis demandé",devis_recu_at:"Devis reçu",bc_numero:"N° bon de commande",bc_envoye_at:"BC envoyé",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Devis HT",montant_bc_ht:"BC HT",montant_facture_ht:"Facture HT"};
 const vv=(k,v)=>v==null||v===""?"—":k==="etat"?ET[v]||v:k==="priorite"?PR[v]||v:k==="duree_h"?fduree(v):/_at$|echeance/.test(k)?fdate(v):k.startsWith("montant")?eur(v):k==="entreprise_id"?((ents.find(e=>e.id==v)||{}).entreprise||"?"):k==="site_id"?siteN(v):k==="tribune_id"?tribN(v):k==="agent_ids"?(v.map(i=>{const p=agents.find(a=>a.id===i);return p?(p.prenom+" "+p.nom).trim():"?"}).join(", ")||"—"):String(v);
 async function loadH(){const {data}=await sb.from("audit_log").select("*").eq("table_name","interventions").eq("num_id",curI.id).order("created_at",{ascending:false}).limit(60);if(!$("ih"))return;
  $("ih").innerHTML=(data||[]).map(a=>{const ch=a.action==="MAIL"?["Envoi d'e-mail à "+((a.changes||{}).destinataires||"—")+" – « "+((a.changes||{}).objet||"")+" »"]:a.action==="INSERT"?["Intervention créée"]:Object.entries(a.changes||{}).filter(([k])=>AL[k]).map(([k,v])=>`${AL[k]} : ${vv(k,v[0])} → ${vv(k,v[1])}`);
@@ -190,7 +193,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>${PH()&&data.photos_nb!=null?`<p>Photos stockées : <b>${data.photos_nb}</b> fichier(s), <b>${mo(data.photos_octets)}</b> (stockage de fichiers Supabase, à part de la base).</p>`:""}`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.3.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.4.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -337,7 +340,7 @@ async function loadAdmin(){
  const cpt=d=>{if(d.statut==="refusee")return "—";const u=pm[d.email.toLowerCase()];return !u?`<span class="off">Pas de compte</span>`:u.premiere_connexion_at?`<span class="on">Connecté (${new Date(u.premiere_connexion_at).toLocaleDateString("fr-FR")})</span>`:`<span class="s-en_attente">Compte créé, jamais connecté</span>`};
  $("drows").innerHTML=(dc.data||[]).map(d=>{const a=d.statut==="en_attente";return `<tr><td>${esc(d.prenom)} ${esc(d.nom)}</td><td>${esc(d.societe)} – ${esc(d.fonction)}</td><td>${esc(d.email)}</td><td>${cpt(d)}</td>
   <td>${a?`<select data-d="${d.id}" aria-label="Rôle à attribuer"><option value="">— Choisir un rôle —</option>${opts(ROLES)}</select>`:(d.statut==="approuvee"?"Approuvée : "+ROLES[d.role_prevu]:"Refusée")}</td>
-  <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec ic" data-d="${d.id}" data-a="suppr" title="Supprimer cette demande" aria-label="Supprimer cette demande">✕</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
+  <td>${a?`<button data-d="${d.id}" data-a="approuvee" data-e="${esc(d.email)}">Approuver</button> <button class="sec" data-d="${d.id}" data-a="refusee">Refuser</button>`:""} <button class="sec ic" data-d="${d.id}" data-a="suppr" title="Supprimer cette demande" aria-label="Supprimer cette demande">${TRASH}</button></td></tr>`}).join("")||`<tr><td colspan="6" class="empty">Aucune demande de compte.</td></tr>`;
  const {data}=await sb.from("profiles").select("*").order("created_at",{ascending:false});
  const cxr=await sb.rpc("connexions_30j"),cx=cxr.data||{};UL=data||[];$("unev").textContent=(NEV?"Masquer":"Afficher")+" les comptes jamais connectés ("+(data||[]).filter(u=>!u.premiere_connexion_at).length+")";$("urows").innerHTML=(data||[]).filter(u=>NEV||u.premiere_connexion_at).map(u=>`<tr><td>${esc(u.prenom)} ${esc(u.nom)}</td><td>${esc(u.societe)} – ${esc(u.fonction)}</td><td>${esc(u.email)}</td>
   <td><select data-u="${u.id}" data-f="role">${opts(ROLES)}</select></td><td><select data-u="${u.id}" data-f="site_defaut_id" aria-label="Site par défaut">${O([["","— Aucun —"],...sites.map(x=>[x.id,x.nom])],u.site_defaut_id)}</select></td>
@@ -386,10 +389,10 @@ const ICOLS={
  titre:{...mk("Intervention",x=>x.titre),c:"tt",lock:1},
  site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone/tribune",x=>tribN(x.tribune_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
  cat:{l:"Catégorie / corps d'état",c:"lc",v:catLab,k:x=>catLab(x).toLowerCase()},
- fin:{l:"Date d'intervention",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance),h:x=>x.echeance?esc(fdate(x.echeance)):(np(x)?'<span class="tag t-np">À planifier</span>':"—")},duree:{l:"Durée",c:"nw",v:x=>fduree(x.duree_h),k:x=>+x.duree_h||0},att:{...mk("Attribué à / entreprise",attV),c:"lc"},
+ fin:{l:"Date d'intervention",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance),h:x=>x.echeance?esc(fdate(x.echeance)):(np(x)?'<span class="tag t-np">À planifier</span>':"—")},duree:{l:"Durée",c:"nw",v:x=>fduree(x.duree_h),k:x=>+x.duree_h||0},att:{...mk("Attribué à / entreprise",attV),c:"lc"},resp:{...mk("Responsable",x=>x.responsable_nom||"—"),c:"lc"},
  etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`}};
 Object.entries({ref:85,titre:280,date:105,priorite:105,site:130,zone:140,local:120,corps:160,par:150,charge:150,fin:105,statut:115}).forEach(([k,w])=>COLS[k].w=w);
-Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:140,duree:90,att:220,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
+Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:140,duree:90,att:220,resp:150,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
 const whoPl=p=>p.entreprise_id?((ents.find(e=>e.id===p.entreprise_id)||{}).entreprise||"Entreprise"):(p.agent_ids||[]).map(i=>{const a=agents.find(x=>x.id===i);return a?(a.prenom+" "+a.nom).trim():"?"}).join(", ")||"—";
 const PCOLS={
  titre:{...mk("Contrôle",p=>p.titre),c:"tt",lock:1,h:p=>`<b>${esc(p.titre)}</b>`},
@@ -400,7 +403,7 @@ const PCOLS={
  pro:{l:"Prochaine échéance",c:"nw",v:p=>fdate(p.prochaine_echeance),k:p=>ts(p.prochaine_echeance)},
  st:{l:"Statut",c:"nw",v:p=>stPl(p)[1],k:p=>["retard","venir","jour","pause"].indexOf(stPl(p)[0]),h:p=>{const s=stPl(p);return `<span class="pst ${s[0]}">${s[1]}</span>`}},
  qui:{...mk("Intervenants",whoPl),c:"lc"},
- act:{l:"",c:"nw",lock:1,nof:1,v:()=>"",k:()=>0,h:p=>canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">✕</button>`:""}};
+ act:{l:"",c:"nw",lock:1,nof:1,v:()=>"",k:()=>0,h:p=>canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button>`:""}};
 Object.entries({titre:260,lieu:260,cat:240,per:120,der:140,pro:140,st:110,qui:220,act:90}).forEach(([k,w])=>PCOLS[k].w=w);
 const CB={t:COLS,i:ICOLS,p:PCOLS},redraw=tb=>tb==="t"?render():tb==="p"?renderPl():renderIv();
 const done=x=>["resolue","refusee","archivee"].includes(x.statut);
@@ -488,20 +491,22 @@ const tlTime=d=>new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:
 function askYN(t,x){return new Promise(res=>{const d=$("dYN");let r=false;$("ynt").textContent=t;$("ynx").textContent=x||"";$("yny").onclick=()=>{r=true;d.close()};$("ynn").onclick=()=>d.close();d.onclose=()=>res(r);d.showModal()})}
 function askJust(t){return new Promise(res=>{const d=$("dJ");$("jt").textContent=t;$("jx").value="";$("jm").textContent="";d.onclose=()=>res(null);$("jno").onclick=()=>d.close();
  $("jok").onclick=()=>{const v=$("jx").value.trim();if(!v){$("jm").textContent="La justification est obligatoire.";return}res(v);d.onclose=null;d.close()};d.showModal()})}
-function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&v!==null)v=+v;if(f==="duree_h"&&v!==null)v=Math.round(parseFloat(String(v).replace(",","."))*100)/100;const u={[f]:v};
+function norm(t){const f=t.dataset.f;let v=t.value===""?null:t.value;if(f.endsWith("_id")&&f!=="en_charge_id"&&f!=="responsable_id"&&v!==null)v=+v;if(f==="duree_h"&&v!==null)v=Math.round(parseFloat(String(v).replace(",","."))*100)/100;const u={[f]:v};
  if(f==="site_id")u.tribune_id=(trib.find(x=>x.site_id===v)||{}).id||null;
  if(f==="categorie_id")u.corps_etat_id=(corps.find(x=>x.categorie_id===v)||{}).id||null;return u}
 const baseF=(c,mine)=>`<div class="row"><div><label>Site</label><select data-f="site_id">${sitesO(c.site_id)}</select></div><div><label>Zone/tribune</label><select data-f="tribune_id">${tribO(c.site_id,c.tribune_id)}</select></div></div>
 <label>Local</label><input data-f="local" value="${esc(c.local||"")}">
 <div class="row"><div><label>Catégorie</label><select data-f="categorie_id">${catsO(c.categorie_id,mine)}</select></div><div><label>Corps d'état</label><select data-f="corps_etat_id">${corpsO(c.categorie_id,c.corps_etat_id)}</select></div></div>
 <label>Titre</label><input data-f="titre" value="${esc(c.titre)}">`;
+const respO=c=>O(agents.filter(a=>a.role==="admin"||isResp(a.role)).map(a=>[a.id,`${((a.prenom||"")+" "+(a.nom||"")).trim()} (${ROLES[a.role]})`]),c.responsable_id);
+const respN=c=>c.responsable_nom||(()=>{const a=agents.find(x=>x.id===c.responsable_id);return a?((a.prenom||"")+" "+(a.nom||"")).trim():""})()||"non désigné";
 const chargeO=c=>{const d=catDom(c);return O([...agents.filter(a=>a.role==="admin"||isResp(a.role)).map(a=>[a.id,`${((a.prenom||"")+" "+(a.nom||"")).trim()} (${ROLES[a.role]})`])],c.en_charge_id)};
 const hdr=c=>`<div class="dh"><div><h2>${esc(siteN(c.site_id))}</h2><div class="sub">${esc(tribN(c.tribune_id))}${c.local?" · "+esc(c.local):""}</div></div>`;
 // ===== TICKET =====
 const canT=()=>peutEditer(cur,role()),canF=()=>canT()||(cur.demandeur_id===me.id&&cur.statut==="nouvelle"&&["demandeur","responsable"].includes(role()));
 function openDet(id){cur=tk.find(x=>x.id===id);ed=false;drawT();$("dDet").showModal()}
 function drawT(){const c=cur,E=ed&&canF(),cn=canT();
- $("tbody").innerHTML=`${hdr(c)}${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
+ $("tbody").innerHTML=`${hdr(c)}<div class="dhb">${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}${XCL}</div></div>
  <p class="big"><b>${c.ref}</b> – ${esc(c.titre)}</p><div class="desc">${esc(c.description||"Aucune description.")}</div>${PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c)}<label>Description</label><textarea data-f="description" rows="3">${esc(c.description||"")}</textarea><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select>${cn?`<label>En charge</label><select data-f="en_charge_id">${chargeO(c)}</select>`:""}</div>`:""}
  <p class="meta">${esc(catLab(c))} · demandé par ${esc(c.demandeur_nom||"—")} le ${fdate(c.created_at)} · Priorité ${PR[c.priorite]}</p>
@@ -511,7 +516,7 @@ function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  <h3>Historique</h3><div id="tl"></div>${!cn&&c.demandeur_id===me.id?`<textarea id="nt1" rows="2" placeholder="Écrire un message à l'équipe" aria-label="Message à l'équipe" style="margin-top:8px"></textarea><button data-note style="margin-top:6px">Envoyer le message</button>`:""}
  ${cn?`<textarea id="nt1" rows="2" placeholder="Ajouter une note" aria-label="Nouvelle note" style="margin-top:8px"></textarea><label class="ck" style="margin-top:6px"><input type="checkbox" id="nti" checked> Note interne (invisible du demandeur)</label><button data-note style="margin-top:6px">Ajouter la note</button>
  <h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}
- <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`; loadTl();phRender("t",c,E)}
+ <button class="sec" data-newint>Créer une intervention depuis ce ticket</button>`:""}${role()==="supervision"?`<h3>Interventions</h3>${ints.filter(x=>x.ticket_id===c.id).map(i=>`<div class="tl"><a class="lnk" data-i="${i.id}">${esc(i.ref)}</a> – ${esc(i.titre)} (${ET[i.etat]})</div>`).join("")||`<p class="empty" style="padding:8px">Aucune intervention.</p>`}`:""}`;$("tbody").insertAdjacentHTML("beforeend",XFOOT);loadTl();phRender("t",c,E)}
 async function loadTl(){const cn=canT()||role()==="supervision";
  const [e,n]=await Promise.all([cn?sb.from("ticket_events").select("*").eq("ticket_id",cur.id):{data:[]},sb.from("ticket_suivi").select("*").eq("ticket_id",cur.id)]);
  const L=[...(e.data||[]).map(v=>({d:v.created_at,a:v.par_nom,t:v.type==="creation"?"Ticket créé":v.type==="modif"?`Modifié – ${v.ancien} : ${v.nouveau}`:`Statut : ${ST[v.ancien]||"—"} → ${ST[v.nouveau]||v.nouveau}`})),
@@ -544,7 +549,7 @@ $("tabt").onclick=()=>{tab="t";render()};$("tabi").onclick=()=>{tab="i";render()
 $("newint").onclick=()=>{pendingTicket=null;openIv(null,null)};
 $("irows").onclick=e=>{const tr=e.target.closest("tr");if(tr){pendingTicket=null;openIv(ints.find(x=>x.id==tr.dataset.i))}};
 function openIv(i,t){const v=i?{...i}:{site_id:t?t.site_id:((sites.find(x=>x.id===me.site_defaut_id)||sites[0])||{}).id,tribune_id:t?t.tribune_id:null,local:t?t.local:null,categorie_id:t?t.categorie_id:((isResp(role())&&cats.find(x=>x.domaine===dom(role())))||cats[0]||{}).id,corps_etat_id:t?t.corps_etat_id:null,
- titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"a_planifier",agent_ids:[],echeance:null,duree_h:null};
+ titre:t?t.titre:"",consignes:t&&t.description||"",priorite:t?t.priorite:"normale",etat:"a_planifier",agent_ids:[],echeance:null,duree_h:null,responsable_id:me.id};
  if(!i&&!v.tribune_id)v.tribune_id=(trib.find(x=>x.site_id===v.site_id)||{}).id;if(!i&&!v.corps_etat_id)v.corps_etat_id=(corps.find(x=>x.categorie_id===v.categorie_id)||{}).id||null;
  curI=v;ed=false;imode=v.entreprise_id?"e":"a";devisMail=false;drawI();if(!$("dIv").open)$("dIv").showModal()}
 function planCard(c,quick){const miss=!c.echeance&&!["terminee","annulee"].includes(c.etat);
@@ -554,22 +559,24 @@ function planCard(c,quick){const miss=!c.echeance&&!["terminee","annulee"].inclu
 function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="demandeur"&&(!saved||peutEditer(c,r)),E=canE&&(ed||!saved),mine=ag&&(c.agent_ids||[]).includes(me.id);
  const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
  const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
- $("ibody").innerHTML=`${hdr(c)}${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}</div>
+ $("ibody").innerHTML=`${hdr(c)}<div class="dhb">${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}${saved?XCL:""}</div></div>
  <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>${c.ticket_id&&PH()?'<div id="phzt"></div>':""}${saved&&PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
   <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date d'intervention</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div><div><label>Durée (heures)</label><input type="number" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="ex. 1,5" value="${c.duree_h??""}"></div></div>
+  <label>Responsable de l'intervention</label><select data-f="responsable_id"><option value="">— Aucun —</option>${respO(c)}</select>
   <label>Intervenants</label><select data-f="mode">${O([["a","Agents / responsables"],["e","Entreprise"]],mode)}</select>
   ${mode==="a"?agents.filter(a=>a.role==="responsable"||!cd||dom(a.role)===cd).map(a=>`<label class="ck"><input type="checkbox" data-agent="${a.id}" data-n="${esc(((a.prenom||"")+" "+(a.nom||"")).trim())}"${(c.agent_ids||[]).includes(a.id)?" checked":""}> ${esc(a.prenom||"")} ${esc(a.nom||"")} <small>(${ROLES[a.role]})</small></label>`).join("")||`<span class="empty" style="padding:4px">Aucun agent actif dans ce domaine.</span>`
   :`<label>Interlocuteur (entreprises de la catégorie, celles du corps d'état en tête)</label><select data-f="entreprise_id"><option value="">— Choisir —</option>${entOpts(c)}</select>${dv()}
   ${FINANCES?`<div class="row" style="flex-wrap:wrap">${SU.map(([k,l,t])=>suIn(k,l,t,c)).join("")}</div>`:""}`}</div>`:""}
  ${saved?planCard(c,canE&&!E):""}<p class="meta">${t?"Ticket "+esc(t.ref)+" · ":"Sans ticket · "}${esc(catLab(c))} · Priorité ${PR[c.priorite]}</p>
+ <p>Responsable : <b>${esc(respN(c))}</b></p>
  <p>${mode==="e"?`<b>${esc(ent?ent.entreprise:c.prestataire||"")}</b>${ent?`<br>${esc(ent.contact||"")} · ${esc(ent.email||"")} · ${esc(fmtTel(ent.mobile))}`:""}`:`Attribué à : ${esc(c.agents_noms||"à désigner")}`}</p>${mode==="e"&&saved&&canE&&!E?dv():""}
  ${saved&&mode==="e"&&FINANCES?`<p class="meta">${SU.map(([k,l,t])=>suVw(k,l,t,c)).join(" · ")}</p>`:""}
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
  ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")&&!(k==="a_planifier"&&c.echeance)&&!(k==="planifiee"&&!c.echeance)).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
  ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
  ${saved?`<h3>Notes</h3><div id="inl"></div>${r==="supervision"?"":`<textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`}${(canE||r==="supervision")?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
- :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;phRenderT(c);if(saved){loadN();phRender("i",c,E);if(canE||r==="supervision")loadH()}}
+ :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved)$("ibody").insertAdjacentHTML("beforeend",XFOOT);phRenderT(c);if(saved){loadN();phRender("i",c,E);if(canE||r==="supervision")loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
 async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
@@ -594,7 +601,7 @@ async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture 
    if(j2){const r=await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:j2});if(r.error)alert("Le ticket n'a pas pu être clôturé : "+errMsg(r.error))}
    else alert(`Le ticket ${t.ref} n'a pas été clôturé : une justification est obligatoire. Vous pouvez le clôturer depuis sa fiche.`)}}
  await load();curI=ints.find(x=>x.id===curI.id)||curI;drawI()}
-async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","duree_h","etat","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
+async function createI(){const c=curI,o={};["site_id","tribune_id","local","categorie_id","corps_etat_id","titre","consignes","priorite","echeance","duree_h","etat","responsable_id","agent_ids","agents_noms","prestataire","prestataire_email","entreprise_id",...SU.map(x=>x[0])].forEach(k=>{if(c[k]!==undefined)o[k]=c[k]});
  if(o.entreprise_id){o.agent_ids=[];o.agents_noms=null}else if((o.agent_ids||[]).length){o.prestataire=null;o.prestataire_email=null}
  if(!o.titre||!o.site_id||!o.tribune_id||!o.categorie_id){$("imsg").textContent="Titre, site, zone/tribune et catégorie sont obligatoires.";return}
  const tid=pendingTicket?pendingTicket.id:null,{data,error}=await sb.from("interventions").insert({...o,ticket_id:tid}).select().single();
@@ -603,7 +610,7 @@ async function createI(){const c=curI,o={};["site_id","tribune_id","local","cate
  await load();curI=ints.find(x=>x.id===data.id)||data;ed=false;drawI()}
 function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
  const T=(t,b,z)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(z||11);const L=d.splitTextToSize(String(t),180);d.text(L,15,y);y+=L.length*6+2};
- T("FICHE D'INTERVENTION "+c.ref,1,16);y+=2;T(c.titre,1,13);T(`Lieu : ${siteN(c.site_id)} / ${tribN(c.tribune_id)}${c.local?" / "+c.local:""}`);T(`Catégorie : ${catLab(c)}`);
+ T("FICHE D'INTERVENTION "+c.ref,1,16);y+=2;T(c.titre,1,13);T(`Lieu : ${siteN(c.site_id)} / ${tribN(c.tribune_id)}${c.local?" / "+c.local:""}`);T(`Catégorie : ${catLab(c)}`);T(`Responsable : ${respN(c)}`);
  T(`Priorité : ${PR[c.priorite]}      Date d'intervention : ${c.echeance?fdate(c.echeance):"à planifier"}      Durée : ${c.duree_h?fduree(c.duree_h):"non précisée"}`);T(`Intervenants : ${c.agents_noms||"à définir"}`);
  y+=3;T("Consignes",1);T(c.consignes||"Aucune consigne particulière.");y+=6;T(`Fiche émise le ${fdate(new Date())} par ${nm()}`,0,9);d.save(`fiche-${c.ref}.pdf`)}
 function mailI(){const c=curI,e=c.entreprise_id?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
@@ -637,18 +644,20 @@ const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.
 $("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
 $("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);sgTab(adm&&SGN>0?"l":"n");$("dS").showModal()};
 let SGN=0;
-function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);$("sgn").textContent=n>0?`(${n} à traiter)`:""}
-function sgTab(k){$("sg_new").classList.toggle("hide",k!=="n");$("sg_list").classList.toggle("hide",k!=="l");$("sgt_n").classList.toggle("on",k==="n");$("sgt_l").classList.toggle("on",k==="l");if(k==="l")renderSug()}
+function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);}
+let SGM="l";
+function sgTab(k){SGM=k==="v"?"v":"l";$("sg_new").classList.toggle("hide",k!=="n");$("sg_list").classList.toggle("hide",k==="n");$("sgt_n").classList.toggle("on",k==="n");$("sgt_l").classList.toggle("on",k==="l");$("sgt_v").classList.toggle("on",k==="v");if(k!=="n")renderSug()}
+function setSgc(r,v){$("sgn").textContent=`(${r})`;$("sgv").textContent=`(${v})`}
 $("sgtabs").onclick=e=>{const b=e.target.closest("[data-sgt]");if(b)sgTab(b.dataset.sgt)};
-async function sugAlert(){if(!me||me.role!=="admin")return;const {count,error}=await sb.from("suggestions").select("id",{count:"exact",head:true}).eq("type","Problème rencontré").eq("traitee",false);if(!error)setSgn(count||0)}
+async function sugAlert(){if(!me||me.role!=="admin")return;const {data,error}=await sb.from("suggestions").select("type,traitee");if(error)return;setSgn(data.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);setSgc(data.filter(x=>!x.traitee).length,data.filter(x=>x.traitee).length)}
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
  const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
  if(error){$("sugm").textContent="Envoi impossible : "+errMsg(error);return}
  $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
 let SG=[];
-async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);
- const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">✕</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
- $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=SG.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">Aucune suggestion.</p>`}
+async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);setSgc(SG.filter(x=>!x.traitee).length,SG.filter(x=>x.traitee).length);const VUE=SG.filter(x=>SGM==="v"?x.traitee:!x.traitee);
+ const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
+ $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=VUE.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">${SGM==="v"?"Aucune idée traitée.":"Aucune idée à traiter."}</p>`}
 let SE=null;
 function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
@@ -657,6 +666,7 @@ $("sug_l").onclick=async e=>{const b=e.target.closest("[data-se],[data-sd]");if(
 $("sug_l").onchange=async e=>{const c=e.target;if(c.dataset.sp!==undefined){const {error}=await sb.from("suggestions").update({priorite:c.value}).eq("id",c.dataset.sp);if(error)alert(errMsg(error));renderSug();return}if(c.dataset.sv===undefined)return;await sb.from("suggestions").update({traitee:c.checked}).eq("id",c.dataset.sv);renderSug()};
 $("irows2").onclick=$("irows").onclick;
 // ===== Fenêtres : fermeture au clic à côté =====
+document.addEventListener("click",e=>{const b=e.target.closest("[data-close]"),d=b&&b.closest("dialog");if(d&&d.open)d.close()});
 document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEventListener("click",e=>{if(e.target!==d||d.id==="dNew"||d.id==="dS"||d.id==="dPl"||(d.id==="dIv"&&curI&&!curI.id))return;const r=d.getBoundingClientRect();if(e.clientX<r.left||e.clientX>r.right||e.clientY<r.top||e.clientY>r.bottom)d.close()})});
 
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");

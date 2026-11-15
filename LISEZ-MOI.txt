@@ -1,9 +1,9 @@
-STADES 3M – version 4.3.0 – ensemble des fichiers
+STADES 3M – version 4.4.0 – ensemble des fichiers
 
 site/       À déposer à la racine du dépôt GitHub Pages (index.html, config.js, app.js, style.css, icônes, notices et dossier lib/).
             Renseignez dans config.js l'adresse et la clé publique de chaque base (production, test).
-sql/        schema_complet_4_3_0.sql : recrée toute la base depuis zéro (projet Supabase vierge). Activez pg_cron avant de l'exécuter.
-            migration_4_2_1.sql, migration_4_3_0_photos.sql : à exécuter sur chaque base (dans cet ordre, après migration_4_1_0.sql) pour la mettre à jour sans la recréer.
+sql/        schema_complet_4_4_0.sql : recrée toute la base depuis zéro (projet Supabase vierge). Activez pg_cron avant de l'exécuter.
+            migration_prod_vers_4_4_0.sql : met à jour une base existante (production ou test) jusqu'à la version 4.4.0 sans la recréer ; migration_4_4_0.sql : seulement la dernière étape (4.4.0).
 optionnel/  invite-user.ts : fonction d'invitation (non utilisée par l'interface actuelle).
 
 Une base déjà en service ne se met PAS à jour avec le script complet : utilisez les migrations fournies, une seule fois chacune.
