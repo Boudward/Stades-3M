@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.4.0 */
+/* STADES 3M – application – version 4.4.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -150,7 +150,7 @@ async function phRender(k,o,ed){if(!PH()||!$("phz"))return;PHC={k,o,ed:!!ed};con
  if(error){$("phz").innerHTML=`<h3>Photos</h3><p class="msg">${esc(errMsg(error))}</p>`;return}
  PHL=data||[];await phUrls(PHL);const z=$("phz");if(!z)return;const can=phCan(k,o);
  z.innerHTML=(PHL.length?`<h3>Photos (${PHL.length})</h3>${phGrid(PHL,"o")}${ed&&PHL.some(phCanDel)?`<p class="meta">Ouvrez une photo pour la supprimer.</p>`:""}`:"")
- +(can&&PHL.length<PHN?`<label class="phadd">Ajouter des photos<input type="file" id="phf" accept="image/*" multiple></label> <span class="meta">${PHN-PHL.length} restante(s) · réduites automatiquement à ${phKo(PHMAX)} Ko maximum</span>`:"")+`<p class="msg" id="phm"></p>`}
+ +(can&&PHL.length<PHN?`<label class="phadd">Ajouter des photos<input type="file" id="phf" accept="image/*" multiple></label>`:"")+`<p class="msg" id="phm"></p>`}
 async function phRenderT(o){if(!PH()||!$("phzt")||!o.ticket_id)return;const {data}=await sb.from("photos").select("*").eq("ticket_id",o.ticket_id).order("created_at");PHT=data||[];await phUrls(PHT);const z=$("phzt");if(!z)return;
  z.innerHTML=PHT.length?`<h3>Photos du ticket (${PHT.length})</h3>${phGrid(PHT,"t")}`:""}
 async function phCompress(file,max){let bmp;
@@ -193,7 +193,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>${PH()&&data.photos_nb!=null?`<p>Photos stockées : <b>${data.photos_nb}</b> fichier(s), <b>${mo(data.photos_octets)}</b> (stockage de fichiers Supabase, à part de la base).</p>`:""}`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.4.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.4.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -559,7 +559,7 @@ function planCard(c,quick){const miss=!c.echeance&&!["terminee","annulee"].inclu
 function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="demandeur"&&(!saved||peutEditer(c,r)),E=canE&&(ed||!saved),mine=ag&&(c.agent_ids||[]).includes(me.id);
  const mode=c.entreprise_id?"e":imode,ent=ents.find(x=>x.id===c.entreprise_id),t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),cd=catDom(c);
  const ce=corps.find(x=>x.id===c.corps_etat_id),allE=!ce||ce.nom==="Tous corps d'état";
- $("ibody").innerHTML=`${hdr(c)}<div class="dhb">${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}${saved?XCL:""}</div></div>
+ $("ibody").innerHTML=`${hdr(c)}<div class="dhb">${canE&&saved?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}${XCL}</div></div>
  <p class="big"><b>${saved?c.ref:"Nouvelle intervention"}</b> – ${esc(c.titre||"")}</p><div class="desc">${esc(c.consignes||"Aucune consigne.")}</div>${c.ticket_id&&PH()?'<div id="phzt"></div>':""}${saved&&PH()?'<div id="phz"></div>':""}
  ${E?`<div class="ep">${baseF(c,1)}<label>Consignes</label><textarea data-f="consignes" rows="3">${esc(c.consignes||"")}</textarea>
   <div class="row"><div><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select></div><div><label>Date d'intervention</label><input type="date" data-f="echeance" value="${c.echeance||""}"></div><div><label>Durée (heures)</label><input type="number" data-f="duree_h" min="0.25" max="999" step="0.25" inputmode="decimal" placeholder="ex. 1,5" value="${c.duree_h??""}"></div></div>
@@ -594,9 +594,9 @@ $("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
  if(d.f==="bc_numero"&&u.bc_numero){u.bc_numero=u.bc_numero.trim();if(u.bc_numero.length<12){alert("Le numéro de bon de commande doit comporter au moins 12 caractères.");drawI();return}}upd(u)};
 async function setEt(k){let j=null;if(k==="terminee"){j=await askJust("Clôture de l'intervention "+curI.ref);if(!j)return}
  const {error}=await sb.rpc("intervention_etat",{p_id:curI.id,p_etat:k,p_justif:j});if(error){alert("Modification impossible : "+errMsg(error));return}
- const tid=curI.ticket_id,t=tid&&tk.find(x=>x.id===tid);
- if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)){const au=ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length;
-  if(await askYN(`Souhaitez-vous clôturer le ticket ${t.ref} en cours ?`,`L'intervention ${curI.ref} est terminée. Le ticket passerait en « Résolu ».`+(au?`\nAttention : ${au} autre(s) intervention(s) de ce ticket ne sont pas terminées.`:""))){
+ const tid=curI.ticket_id,t=tid&&tk.find(x=>x.id===tid),au=t?ints.filter(x=>x.ticket_id===tid&&x.id!==curI.id&&!["terminee","annulee"].includes(x.etat)).length:0;
+ if(k==="terminee"&&t&&!isAg()&&!["resolue","refusee","archivee"].includes(t.statut)&&au===0){
+  if(await askYN(`Souhaitez-vous clôturer le ticket ${t.ref} en cours ?`,`L'intervention ${curI.ref} est terminée. Le ticket passerait en « Résolu ».`)){
    const j2=await askJust("Clôture du ticket "+t.ref);
    if(j2){const r=await sb.rpc("ticket_changer_statut",{p_id:tid,p_statut:"resolue",p_justif:j2});if(r.error)alert("Le ticket n'a pas pu être clôturé : "+errMsg(r.error))}
    else alert(`Le ticket ${t.ref} n'a pas été clôturé : une justification est obligatoire. Vous pouvez le clôturer depuis sa fiche.`)}}
