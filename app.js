@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.4.1 */
+/* STADES 3M – application – version 4.5.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -193,7 +193,7 @@ const TBK=["sites","tribunes","categories","corps_etat","entreprises","affectati
 async function renderVol(){const {data,error}=await sb.rpc("donnees_volumes");if(error){$("dvol").textContent=errMsg(error);return}const mo=n=>(n/1048576).toFixed(1)+" Mo";
  $("dvol").innerHTML=`<p>Taille de la base : <b>${mo(data.base_octets)}</b> (à comparer à la limite de votre offre Supabase). Plus grosses tables : ${data.tables.slice(0,5).map(t=>`${esc(t.table)} ${mo(t.octets)}`).join(" · ")}.</p>${PH()&&data.photos_nb!=null?`<p>Photos stockées : <b>${data.photos_nb}</b> fichier(s), <b>${mo(data.photos_octets)}</b> (stockage de fichiers Supabase, à part de la base).</p>`:""}`}
 $("ddet").addEventListener("toggle",()=>{if($("ddet").open)renderVol()});
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.4.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.5.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -574,7 +574,7 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  ${saved&&mode==="e"&&FINANCES?`<p class="meta">${SU.map(([k,l,t])=>suVw(k,l,t,c)).join(" · ")}</p>`:""}
  ${saved?`<p><span class="tag">${ET[c.etat]}</span></p>`:""}
  ${saved&&(canE||mine)?`<div class="btns">${Object.entries(ET).filter(([k])=>k!==c.etat&&!(ag&&k==="annulee")&&!(k==="a_planifier"&&c.echeance)&&!(k==="planifiee"&&!c.echeance)).map(([k,v])=>`<button class="sec" data-et="${k}">${v}</button>`).join("")}</div>`:""}
- ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
+ ${saved&&canE?`<div class="btns">${mode==="e"?`<button data-mail>Envoyer le mail</button><button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-word>Fiche Word</button>`:`<button class="sec" data-pdf>Fiche PDF</button><button class="sec" data-word>Fiche Word</button><button class="sec" data-mail>E-mail</button>`}${c.ticket_id&&tk.some(x=>x.id===c.ticket_id)?`<button class="sec" data-another>Nouvelle intervention pour ce ticket</button>`:""}</div>`:""}
  ${saved?`<h3>Notes</h3><div id="inl"></div>${r==="supervision"?"":`<textarea id="inm" rows="2" aria-label="Nouvelle note" style="margin-top:8px"></textarea><button data-nadd style="margin-top:6px">Ajouter la note</button>`}${(canE||r==="supervision")?`<h3>Historique des modifications</h3><div id="ih"></div>`:""}`
  :`<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved)$("ibody").insertAdjacentHTML("beforeend",XFOOT);phRenderT(c);if(saved){loadN();phRender("i",c,E);if(canE||r==="supervision")loadH()}}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
@@ -608,17 +608,134 @@ async function createI(){const c=curI,o={};["site_id","tribune_id","local","cate
  if(error){$("imsg").textContent="Création impossible : "+errMsg(error);return}
  const t=tid&&tk.find(x=>x.id===tid);if(t&&["nouvelle","resolue"].includes(t.statut)){await sb.from("tickets").update({statut:"en_cours"}).eq("id",tid);if(t.statut==="resolue")await sb.from("ticket_suivi").insert({ticket_id:tid,auteur:nm(),message:`Ticket rouvert : nouvelle intervention ${data.ref}`})}
  await load();curI=ints.find(x=>x.id===data.id)||data;ed=false;drawI()}
-function pdfI(){const c=curI,{jsPDF}=window.jspdf,d=new jsPDF();let y=18;
- const T=(t,b,z)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(z||11);const L=d.splitTextToSize(String(t),180);d.text(L,15,y);y+=L.length*6+2};
- T("FICHE D'INTERVENTION "+c.ref,1,16);y+=2;T(c.titre,1,13);T(`Lieu : ${siteN(c.site_id)} / ${tribN(c.tribune_id)}${c.local?" / "+c.local:""}`);T(`Catégorie : ${catLab(c)}`);T(`Responsable : ${respN(c)}`);
- T(`Priorité : ${PR[c.priorite]}      Date d'intervention : ${c.echeance?fdate(c.echeance):"à planifier"}      Durée : ${c.duree_h?fduree(c.duree_h):"non précisée"}`);T(`Intervenants : ${c.agents_noms||"à définir"}`);
- y+=3;T("Consignes",1);T(c.consignes||"Aucune consigne particulière.");y+=6;T(`Fiche émise le ${fdate(new Date())} par ${nm()}`,0,9);d.save(`fiche-${c.ref}.pdf`)}
-function mailI(){const c=curI,e=c.entreprise_id?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
- const to=e==="e"?(ent?ent.email:c.prestataire_email)||"":agents.filter(a=>(c.agent_ids||[]).includes(a.id)).map(a=>a.email).join(",");
- const m=mdl(e==="a"?"regie":dv?"devis":"entreprise"),v={ref:c.ref,titre:c.titre,consignes:c.consignes,site:siteN(c.site_id),SITE:siteN(c.site_id).toUpperCase(),zone:tribN(c.tribune_id),local:c.local,corps_etat:ce,priorite:PR[c.priorite],echeance:c.echeance?fdate(c.echeance):"",duree:c.duree_h?fduree(c.duree_h):"",signataire:nm()};
- const obj=fill(m.objet,v);sb.rpc("intervention_mail",{p_id:c.id,p_dest:to,p_objet:obj}).then(()=>{if($("ih"))loadH()});location.href="mailto:"+to+"?subject="+encodeURIComponent(obj)+"&body="+encodeURIComponent(fill(m.corps,v))}
-$("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
- if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)pdfI();else if("mail" in d)mailI();
+// ===== FICHE D'INTERVENTION : un même modèle, deux formats (PDF et Word) =====
+const FM={W:210,H:297,M:14,T:12,B:16,CW:182},FC={blue:"#102d69",orange:"#b7791f",grey:"#5b6573",line:"#b9c2d3",cream:"#fdf6ef",ph:"#dfe5ee"};
+const fsafe=t=>String(t==null?"":t).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/\u2026/g,"...").replace(/[\u202f\u00a0]/g," ");
+const feur=v=>(+v).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/[\u202f\u00a0]/g," ")+" €";
+async function fichePhotos(c){
+ if(!PH())return{t:[],i:[]};
+ const get=async(col,id,g)=>{if(!id)return[];const {data}=await sb.from("photos").select("*").eq(col,id).order("created_at"),out=[];
+  for(const p of data||[]){const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)continue;const buf=new Uint8Array(await r.data.arrayBuffer());let w=p.largeur,h=p.hauteur;
+   if(!w||!h){try{const bm=await createImageBitmap(r.data);w=bm.width;h=bm.height}catch(_){w=4;h=3}}
+   out.push({buf,w,h,g,n:out.length+1,cap:`${p.auteur||"—"} · ${fdate(p.created_at)}`})}return out};
+ return{t:await get("ticket_id",c.ticket_id,"t"),i:await get("intervention_id",c.id,"i")}}
+async function ficheModel(c){
+ const t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),en=ents.find(e=>e.id===c.entreprise_id),ph=await fichePhotos(c),B=[];
+ B.push({k:"head",ref:c.ref,sub:`${ET[c.etat]} · émise le ${fdate(new Date())} par ${nm()}`});
+ B.push({k:"note",text:"Informations pré-remplies par l'application (page 1) – à compléter par l'opérateur (page 2)"});
+ B.push({k:"bar",text:"INTERVENTION – "+catLab(c)});
+ const rows=[[{l:"Titre",v:c.titre,s:3}],[{l:"Priorité",v:PR[c.priorite]},{l:"Responsable",v:respN(c)},{l:"Ticket d'origine",v:t?`${t.ref} – ${t.titre}`:"—"}]];
+ if(t)rows.push([{l:"Demandé par",v:t.demandeur_nom||"—",s:2},{l:"Ticket créé le",v:fdate(t.created_at)}]);
+ B.push({k:"grid",w:[.40,.30,.30],rows});
+ B.push({k:"bar",text:"LIEU"});B.push({k:"grid",w:[.38,.31,.31],rows:[[{l:"Site",v:siteN(c.site_id)},{l:"Zone / tribune",v:tribN(c.tribune_id)},{l:"Local",v:c.local||"—"}]]});
+ B.push({k:"bar",text:"PLANIFICATION ET INTERVENANTS"});
+ const pl=[{l:"Date d'intervention",v:c.echeance?fdate(c.echeance):"À planifier"},{l:"Durée prévue",v:c.duree_h?fduree(c.duree_h):"—"}];
+ if(c.entreprise_id||c.prestataire){B.push({k:"grid",w:[.34,.22,.44],rows:[[...pl,{l:"Entreprise",v:en?eLab(en):c.prestataire}],[{l:"Contact (e-mail)",v:c.prestataire_email||(en&&en.email)||"—"},{l:"N° de bon de commande",v:c.bc_numero||"—"},{l:"Montant BC HT",v:c.montant_bc_ht!=null?feur(c.montant_bc_ht):"—"}]]})}
+ else B.push({k:"grid",w:[.34,.22,.44],rows:[[...pl,{l:"Intervenant(s)",v:c.agents_noms||"À désigner"}]]});
+ B.push({k:"callout",label:"CONSIGNES",text:c.consignes||"Aucune consigne particulière.",strong:1});
+ if(t)B.push({k:"callout",label:"DESCRIPTION DU PROBLÈME (ticket)",text:t.description||"—"});
+ const all=[...ph.t,...ph.i],grp=a=>{const o=[],x=a.filter(p=>p.g==="t"),y=a.filter(p=>p.g==="i");if(x.length)o.push({k:"photos",title:`Photos du ticket (${ph.t.length})`,items:x});if(y.length)o.push({k:"photos",title:`Photos de l'intervention (${ph.i.length})`,items:y});return o};
+ // la page 1 reçoit autant de photos qu'il y en a de place (estimation commune au PDF et au Word) ; le reste va en annexe
+ const est=(x,cpl,lh)=>String(x||"").split("\n").reduce((n,l)=>n+Math.max(1,Math.ceil(l.length/cpl)),0)*lh,ent=!!(c.entreprise_id||c.prestataire);
+ let left=269-(26+6.8+9+9+(t?9:0)+4+6.8+9+4+6.8+(ent?18:9)+4+8.5+est(c.consignes||"Aucune consigne particulière.",78,4.9)+7+(t?8.5+est(t.description||"—",92,4.5)+7:0))-16-6.8,n1=0;
+ for(const g of [ph.t,ph.i]){if(!g.length)continue;const rows=Math.floor((left-5.5)/36.5);if(rows<1)break;const take=Math.min(g.length,rows*3);n1+=take;left-=5.5+Math.ceil(take/3)*36.5;if(take<g.length)break}
+ if(n1){B.push({k:"bar",text:"PHOTOS"});B.push(...grp(all.slice(0,n1)))}
+ if(all.length>n1)B.push({k:"note",text:"Les autres photos figurent en annexe, à la fin de la fiche."})
+ // ---- page 2 : à compléter par l'opérateur ----
+ B.push({k:"pagebreak"},{k:"bar",text:"À COMPLÉTER PAR L'OPÉRATEUR – retour sur l'intervention",color:"orange"});B.push({k:"space",h:2});
+ B.push({k:"bar",text:"RÉALISATION"});
+ B.push({k:"grid",w:[.28,.28,.22,.22],min:12,rows:[[{l:"Date de réalisation"},{l:"Heure d'arrivée / début"},{l:"Heure de fin"},{l:"Durée réelle"}],[{l:"Intervenants présents (nom, société)",s:4}]]});
+ B.push({k:"lines",label:"Constat à l'arrivée",h:14},{k:"lines",label:"Travaux réalisés",h:46});
+ B.push({k:"table",label:"Matériel et pièces utilisées",head:["DÉSIGNATION","RÉFÉRENCE","QUANTITÉ","À COMMANDER ?"],w:[.46,.24,.14,.16],n:3});
+ B.push({k:"result",main:["Problème résolu","Résolu partiellement","Non résolu"],cond:"Si résolu partiellement ou non résolu :",why:["Pièces à commander","Accès impossible","Entreprise nécessaire","Autre : ............"],next:["Nouvelle intervention à planifier","Contrôle à refaire le ...... / ...... / ......"]});
+ B.push({k:"lines",label:"Observations / retour sur l'intervention",h:15},{k:"sign"});
+ B.push({k:"note",text:"Une fois la fiche remplie : reporter ces informations dans l'application (état « Terminée » + justification de clôture)."});
+ if(all.length>n1){B.push({k:"pagebreak"},{k:"bar",text:n1?"ANNEXE – PHOTOS (suite)":"ANNEXE – PHOTOS"},{k:"space",h:2},...grp(all.slice(n1)))}
+ return B}
+// ---------- rendu PDF ----------
+function fichePdfBuild(B,ref){
+ const {jsPDF}=window.jspdf,d=new jsPDF({unit:"mm",format:"a4"}),{M,CW,T,H,B:BM}=FM;let y=T;
+ const rgb=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)],fill=h=>d.setFillColor(...rgb(h)),stroke=h=>d.setDrawColor(...rgb(h)),ink=h=>d.setTextColor(...rgb(h)),font=(b,s)=>{d.setFont("helvetica",b?"bold":"normal");d.setFontSize(s)};
+ const room=h=>{if(y+h>H-BM){d.addPage();y=T}},wrap=(t,w,b,s)=>{font(b,s);return d.splitTextToSize(fsafe(t),w)},cbx=(x,yy,s,lw)=>{stroke(FC.blue);d.setLineWidth(lw||.4);d.rect(x,yy,s,s)};
+ const bar=(txt,col)=>{room(8);fill(col);d.rect(M,y,CW,6.8,"F");ink("#ffffff");font(1,9.5);d.text(fsafe(txt),M+3,y+4.7);y+=6.8};
+ for(const b of B){
+  if(b.k==="head"){fill(FC.blue);d.rect(M,y,CW,16,"F");ink("#ffffff");font(1,17);d.text("FICHE D'INTERVENTION",M+4,y+10.5);font(1,13);d.text(fsafe(b.ref),M+CW-4,y+7,{align:"right"});font(0,7.5);d.text(fsafe(b.sub),M+CW-4,y+12.5,{align:"right"});y+=19}
+  else if(b.k==="note"){font(0,7);ink(FC.grey);d.text(fsafe(b.text),M,y+3);y+=7}
+  else if(b.k==="space")y+=b.h;
+  else if(b.k==="pagebreak"){d.addPage();y=T}
+  else if(b.k==="bar")bar(b.text,b.color==="orange"?FC.orange:FC.blue);
+  else if(b.k==="grid"){const pad=2.2,cw=b.w.map(x=>x*CW);
+   for(const row of b.rows){let ci=0;const cells=row.map(c=>{const s=c.s||1,x=M+cw.slice(0,ci).reduce((a,v)=>a+v,0),w=cw.slice(ci,ci+s).reduce((a,v)=>a+v,0);ci+=s;return{c,x,w,L:c.v?wrap(c.v,w-2*pad,1,9.5):[]}});
+    const h=Math.max(b.min||9,...cells.map(o=>4+o.L.length*4.3+pad));room(h);
+    cells.forEach(o=>{stroke(FC.line);d.setLineWidth(.25);d.rect(o.x,y,o.w,h);font(0,6.3);ink(FC.grey);d.text(fsafe(o.c.l||"").toUpperCase(),o.x+pad,y+3.2);if(o.L.length){font(1,9.5);ink("#000000");d.text(o.L,o.x+pad,y+7.4)}});y+=h}
+   y+=4}
+  else if(b.k==="callout"){const st=!!b.strong,fs=st?11:9.5,L=wrap(b.text,CW-9,0,fs),h=8.5+L.length*fs*.3528*1.32+3;room(h);
+   if(st){fill(FC.cream);d.rect(M,y,CW,h,"F");fill(FC.orange);d.rect(M,y,2.4,h,"F")}stroke(FC.line);d.setLineWidth(.25);d.rect(M,y,CW,h);
+   font(1,6.8);ink(st?FC.orange:FC.grey);d.text(fsafe(b.label),M+5,y+4);font(0,fs);ink("#000000");d.text(L,M+5,y+9);y+=h+4}
+  else if(b.k==="photos"){const per=3,cw=CW/per,ih=30;room(9+ih+8);font(1,8);ink("#000000");d.text(fsafe(b.title),M,y+3);y+=5.5;
+   for(let i=0;i<b.items.length;i+=per){room(ih+8);b.items.slice(i,i+per).forEach((it,k)=>{const x=M+k*cw,bw=cw-4;fill(FC.ph);d.rect(x,y,bw,ih,"F");const r=Math.min(bw/it.w,ih/it.h),w=it.w*r,h=it.h*r;d.addImage(it.buf,"JPEG",x+(bw-w)/2,y+(ih-h)/2,w,h);font(0,7);ink(FC.grey);d.text(fsafe(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`),x,y+ih+3.4)});y+=ih+6.5}
+   y+=2}
+  else if(b.k==="lines"){const h=b.h;room(h+9);font(1,8.5);ink(FC.blue);d.text(fsafe(b.label),M,y+3.5);y+=5;stroke(FC.line);d.setLineWidth(.25);d.rect(M,y,CW,h);d.setLineWidth(.12);for(let yy=y+6.5;yy<y+h-1;yy+=6.5)d.line(M+1.5,yy,M+CW-1.5,yy);y+=h+4}
+  else if(b.k==="table"){const cw=b.w.map(x=>x*CW),rh=7;room(7+rh*(b.n+1)+3);font(1,8.5);ink(FC.blue);d.text(fsafe(b.label),M,y+3.5);y+=5;
+   let x=M;b.head.forEach((t,i)=>{stroke(FC.line);d.setLineWidth(.25);d.rect(x,y,cw[i],6);font(0,6.3);ink(FC.grey);d.text(fsafe(t),x+2,y+4);x+=cw[i]});y+=6;
+   for(let r=0;r<b.n;r++){x=M;cw.forEach((w,i)=>{stroke(FC.line);d.rect(x,y,w,rh);if(i===cw.length-1)cbx(x+w/2-1.6,y+rh/2-1.6,3.2,.3);x+=w});y+=rh}y+=5}
+  else if(b.k==="result"){room(52);bar("RÉSULTAT DE L'INTERVENTION",FC.blue);const top=y,h=42;stroke(FC.blue);d.setLineWidth(.5);d.rect(M,top,CW,h);
+   const n=b.main.length;b.main.forEach((t,i)=>{const x=M+4+i*(CW-8)/n;cbx(x,top+4.2,5,.5);font(1,11);ink("#000000");d.text(fsafe(t),x+7.5,top+8.2)});
+   font(0,8);ink(FC.grey);d.text(fsafe(b.cond),M+4,top+16);b.why.forEach((t,i)=>{const x=M+4+i*(CW-8)/b.why.length;cbx(x,top+18.2,4,.35);font(0,9.5);ink("#000000");d.text(fsafe(t),x+6,top+21.6)});
+   stroke(FC.line);d.setLineWidth(.25);d.line(M+4,top+27,M+CW-4,top+27);
+   b.next.forEach((t,i)=>{const x=M+4+i*(CW-8)/2;cbx(x,top+31.2,5,.5);font(1,10.5);ink("#000000");d.text(fsafe(t),x+7.5,top+35.2)});
+   y+=h+5}
+  else if(b.k==="sign"){room(25);const h=23;stroke(FC.line);d.setLineWidth(.25);d.rect(M,y,CW,h);d.line(M+CW/2,y,M+CW/2,y+h);
+   [["Opérateur",M],["Responsable ou demandeur (visa)",M+CW/2]].forEach(([t,x])=>{font(1,9);ink("#000000");d.text(t,x+3,y+5.5);font(0,7);ink(FC.grey);d.text("Nom : ..............................   Date : ................",x+3,y+11);d.text("Signature :",x+3,y+18)});y+=h+4}
+ }
+ const n=d.getNumberOfPages();for(let i=1;i<=n;i++){d.setPage(i);font(0,7);ink(FC.grey);d.text(fsafe("STADES 3M – Fiche d'intervention "+ref),M,H-9);d.text(`Page ${i} / ${n}`,M+CW,H-9,{align:"right"});stroke(FC.line);d.setLineWidth(.2);d.line(M,H-12.5,M+CW,H-12.5)}
+ return d}
+// ---------- rendu Word (.docx écrit à la main, sans bibliothèque) ----------
+function ficheDocx(B,ref){
+ const TW=10318,mm=x=>Math.round(x*56.693),E=x=>Math.round(x*36000),px=s=>String(s==null?"":s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"),media=[];let did=1;
+ const run=(t,o={})=>String(t==null?"":t).split("\n").map(s=>`<w:r><w:rPr>${o.f?`<w:rFonts w:ascii="${o.f}" w:hAnsi="${o.f}" w:eastAsia="${o.f}" w:cs="${o.f}"/>`:""}${o.b?"<w:b/>":""}${o.c?`<w:color w:val="${o.c.replace("#","")}"/>`:""}<w:sz w:val="${Math.round((o.s||9.5)*2)}"/></w:rPr><w:t xml:space="preserve">${px(s)}</w:t></w:r>`).join('<w:r><w:br/></w:r>');
+ const par=(r,o={})=>`<w:p><w:pPr><w:keepNext w:val="${o.kn?1:0}"/><w:spacing w:before="${o.bf||0}" w:after="${o.af||0}"/>${o.jc?`<w:jc w:val="${o.jc}"/>`:""}</w:pPr>${r}</w:p>`;
+ const bd=(c,sz)=>`w:val="single" w:sz="${sz||4}" w:space="0" w:color="${c.replace("#","")}"`;
+ const cell=(w,body,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.span>1?`<w:gridSpan w:val="${o.span}"/>`:""}${o.bl||o.bt?`<w:tcBorders>${o.bl?`<w:left ${o.bl}/>`:""}</w:tcBorders>`:""}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${o.fill.replace("#","")}"/>`:""}<w:vAlign w:val="${o.va||"top"}"/></w:tcPr>${body||par("")}</w:tc>`;
+ const tbl=(cols,rows,o={})=>`<w:tbl><w:tblPr><w:tblW w:w="${cols.reduce((a,x)=>a+x,0)}" w:type="dxa"/><w:tblBorders>${["top","left","bottom","right","insideH","insideV"].map(k=>o.nob?`<w:${k} w:val="nil"/>`:`<w:${k} ${bd(o.lc||FC.line,o.sz)}/>`).join("")}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="${o.pt??40}" w:type="dxa"/><w:left w:w="${o.pl??100}" w:type="dxa"/><w:bottom w:w="${o.pt??40}" w:type="dxa"/><w:right w:w="100" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${cols.map(w=>`<w:gridCol w:w="${w}"/>`).join("")}</w:tblGrid>${rows.map(r=>`<w:tr><w:trPr><w:cantSplit/>${r.h?`<w:trHeight w:val="${r.h}" w:hRule="${r.hr||"atLeast"}"/>`:""}</w:trPr>${r.c.join("")}</w:tr>`).join("")}</w:tbl>`;
+ const gap=n=>par("",{af:n||60}),cb=(t,s,b)=>run("☐ ",{s:s,f:"Segoe UI Symbol",c:FC.blue})+run(t,{s:s,b});
+ const img=(it,maxw,maxh)=>{const r=Math.min(maxw/it.w,maxh/it.h),w=it.w*r,h=it.h*r,n=media.length+1;media.push(it.buf);const id=did++;
+  return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${E(w)}" cy="${E(h)}"/><wp:docPr id="${id}" name="Photo ${id}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic><pic:nvPicPr><pic:cNvPr id="${id}" name="image${n}.jpg"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdM${n}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${E(w)}" cy="${E(h)}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`};
+ let X="";
+ for(const b of B){
+  if(b.k==="head"){const l=Math.round(TW*.58);X+=tbl([l,TW-l],[{c:[cell(l,par(run("FICHE D'INTERVENTION",{s:17,b:1,c:"#ffffff"}),{bf:100,af:100}),{fill:FC.blue,va:"center"}),cell(TW-l,par(run(b.ref,{s:13,b:1,c:"#ffffff"}),{jc:"right",bf:60})+par(run(b.sub,{s:7.5,c:"#ffffff"}),{jc:"right",af:60}),{fill:FC.blue,va:"center"})]}],{nob:1,pl:160})+gap(40)}
+  else if(b.k==="note")X+=par(run(b.text,{s:7,c:FC.grey}),{af:60});
+  else if(b.k==="space")X+=gap(mm(b.h)/2);
+  else if(b.k==="pagebreak")X+=`<w:p><w:r><w:br w:type="page"/></w:r></w:p>`;
+  else if(b.k==="bar")X+=tbl([TW],[{c:[cell(TW,par(run(b.text,{s:9.5,b:1,c:"#ffffff"}),{bf:20,af:20}),{fill:b.color==="orange"?FC.orange:FC.blue})]}],{nob:1,pl:140});
+  else if(b.k==="grid"){const cw=b.w.map(x=>Math.round(x*TW));cw[cw.length-1]=TW-cw.slice(0,-1).reduce((a,v)=>a+v,0);
+   X+=tbl(cw,b.rows.map(row=>{let ci=0;return{h:mm(b.min||9),c:row.map(c=>{const s=c.s||1,w=cw.slice(ci,ci+s).reduce((a,v)=>a+v,0);ci+=s;return cell(w,par(run((c.l||"").toUpperCase(),{s:6.5,c:FC.grey}))+(c.v?par(run(c.v,{s:9.5,b:1})):""),{span:s})})}})) +gap(80)}
+  else if(b.k==="callout"){const st=!!b.strong;X+=tbl([TW],[{c:[cell(TW,par(run(b.label,{s:6.8,b:1,c:st?FC.orange:FC.grey}),{af:20})+par(run(b.text,{s:st?11:9.5})),{fill:st?FC.cream:null,bl:st?bd(FC.orange,36):null})]}],{pt:70,pl:140})+gap(80)}
+  else if(b.k==="photos"){X+=par(run(b.title,{s:8,b:1}),{kn:1,af:60});const cw=Math.floor(TW/3);
+   for(let i=0;i<b.items.length;i+=3){const its=b.items.slice(i,i+3);X+=tbl([cw,cw,TW-2*cw],[{c:[0,1,2].map(k=>{const it=its[k];return cell(k<2?cw:TW-2*cw,it?par(img(it,56,30),{jc:"center"})+par(run(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`,{s:7,c:FC.grey}),{jc:"center"}):par(""),{va:"center"})})}],{nob:1})}
+   X+=gap(80)}
+  else if(b.k==="lines"){X+=par(run(b.label,{s:8.5,b:1,c:FC.blue}),{kn:1,af:40});const n=Math.max(1,Math.floor(b.h/6.5));X+=tbl([TW],Array.from({length:n},()=>({h:mm(6.5),hr:"exact",c:[cell(TW,par(""))]})),{pt:0,sz:4})+gap(80)}
+  else if(b.k==="table"){const cw=b.w.map(x=>Math.round(x*TW));cw[3]=TW-cw[0]-cw[1]-cw[2];X+=par(run(b.label,{s:8.5,b:1,c:FC.blue}),{kn:1,af:40})+tbl(cw,[{c:b.head.map((t,i)=>cell(cw[i],par(run(t,{s:6.5,c:FC.grey}))))},...Array.from({length:b.n},()=>({h:mm(7),hr:"exact",c:cw.map((w,i)=>cell(w,i===3?par(cb("",10),{jc:"center"}):par(""),{va:"center"}))}))])+gap(100)}
+  else if(b.k==="result"){const u=Math.floor(TW/12),cw=Array(12).fill(u);cw[11]=TW-u*11;const sp=(a,n)=>cw.slice(a,a+n).reduce((x,v)=>x+v,0),bx=FC.blue,row=(items,span,s,bold,h)=>({h:mm(h),c:items.map(t=>cell(sp(0,span),par(cb(t,s,bold)),{span,va:"center"}))});
+   X+=tbl([TW],[{c:[cell(TW,par(run("RÉSULTAT DE L'INTERVENTION",{s:9.5,b:1,c:"#ffffff"}),{bf:20,af:20}),{fill:FC.blue})]}],{nob:1,pl:140});
+   X+=tbl(cw,[row(b.main,4,11,1,11),{c:[cell(TW,par(run(b.cond,{s:8,c:FC.grey})),{span:12})]},row(b.why,3,9.5,0,8),row(b.next,6,10.5,1,9)],{lc:bx,sz:8,pt:60})+gap(100)}
+  else if(b.k==="sign"){const h=Math.floor(TW/2);X+=tbl([h,TW-h],[{h:mm(23),hr:"exact",c:[["Opérateur"],["Responsable ou demandeur (visa)"]].map((t,i)=>cell(i?TW-h:h,par(run(t[0],{s:9,b:1}))+par(run("Nom : ..............................   Date : ................",{s:7,c:FC.grey}),{bf:60})+par(run("Signature :",{s:7,c:FC.grey}),{bf:200})))}]) +gap(60)}
+ }
+ const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing" xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"';
+ const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${NS}><w:body>${X}<w:sectPr><w:footerReference w:type="default" r:id="rIdF"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="${mm(12)}" w:right="${mm(14)}" w:bottom="${mm(17)}" w:left="${mm(14)}" w:header="${mm(6)}" w:footer="${mm(7)}" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+ const ftr=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:ftr ${NS}><w:p><w:pPr><w:tabs><w:tab w:val="right" w:pos="${TW}"/></w:tabs></w:pPr>${run("STADES 3M – Fiche d'intervention "+ref,{s:7,c:FC.grey})}<w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:tab/><w:t xml:space="preserve">Page </w:t></w:r><w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:instrText xml:space="preserve"> PAGE </w:instrText></w:r><w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:t>1</w:t></w:r><w:r><w:rPr><w:color w:val="5B6573"/><w:sz w:val="14"/></w:rPr><w:fldChar w:fldCharType="end"/></w:r></w:p></w:ftr>`;
+ const sty=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:eastAsia="Arial" w:cs="Arial"/><w:sz w:val="19"/><w:lang w:val="fr-FR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="0" w:line="240" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults><w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style></w:styles>`;
+ const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="jpg" ContentType="image/jpeg"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/></Types>`;
+ const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>`;
+ const drels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rIdS" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/><Relationship Id="rIdF" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/footer" Target="footer1.xml"/>${media.map((_,i)=>`<Relationship Id="rIdM${i+1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/image${i+1}.jpg"/>`).join("")}</Relationships>`;
+ const enc=new TextEncoder(),es=[["[Content_Types].xml",enc.encode(ct)],["_rels/.rels",enc.encode(rels)],["word/document.xml",enc.encode(doc)],["word/_rels/document.xml.rels",enc.encode(drels)],["word/styles.xml",enc.encode(sty)],["word/footer1.xml",enc.encode(ftr)],...media.map((m,i)=>["word/media/image"+(i+1)+".jpg",m])].map(([name,buf])=>({name,buf}));
+ return new Blob([zipBlob(es)],{type:"application/vnd.openxmlformats-officedocument.wordprocessingml.document"})}
+async function ficheExport(btn,fmt){const old=btn.textContent;btn.disabled=true;btn.textContent="Préparation…";
+ try{const c=curI,B=await ficheModel(c);if(fmt==="pdf")fichePdfBuild(B,c.ref).save(`fiche-${c.ref}.pdf`);else dlB(ficheDocx(B,c.ref),`fiche-${c.ref}.docx`)}
+ catch(e){alert("La fiche n'a pas pu être générée : "+errMsg(e))}
+ btn.disabled=false;btn.textContent=old}
+$("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-word],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
+ if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)ficheExport(b,"pdf");else if("word" in d)ficheExport(b,"word");else if("mail" in d)mailI();
  else if("nadd" in d){const m=$("inm").value.trim();if(!m)return;const {error}=await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:m});if(error)alert(errMsg(error));else{$("inm").value="";loadN()}}};
 // ===== ANNUAIRE (console admin) =====
 function fillCorpsAnn(){const ks=[...document.querySelectorAll("#en_k [data-ec]:checked")].map(b=>+b.dataset.ec),cur=$("en_c").value,seen=new Set();
@@ -640,8 +757,8 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  document.querySelectorAll("#en_k [data-ec]").forEach(b=>b.checked=!(x.categorie_ids||[]).length||x.categorie_ids.includes(+b.dataset.ec));fillCorpsAnn();
  $("en_c").value=x.corps_etat_id||"";$("en_e").value=x.entreprise;$("en_n").value=x.contact||"";$("en_m").value=x.email||"";$("en_t").value=fmtTel(x.mobile);
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
-const NOTICE={demandeur:"notice_demandeur.html",responsable:"notice_responsable.html",supervision:"notice_supervision.html",agent_travaux:"notice_agent.html",agent_exploitation:"notice_agent.html",admin:"notice_administrateur.html"};
-$("hlp").onclick=()=>window.open(NOTICE[role()]||"notice_demandeur.html","_blank");
+const NOTICE={demandeur:"notices/notice_demandeur.html",responsable:"notices/notice_responsable.html",supervision:"notices/notice_supervision.html",agent_travaux:"notices/notice_agent.html",agent_exploitation:"notices/notice_agent.html",admin:"notices/notice_administrateur.html"};
+$("hlp").onclick=()=>window.open(NOTICE[role()]||"notices/notice_demandeur.html","_blank");
 $("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);sgTab(adm&&SGN>0?"l":"n");$("dS").showModal()};
 let SGN=0;
 function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);}
