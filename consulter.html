@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src blob: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
+<title>STADES 3M – Consultation hors ligne</title>
+<!--
+  STADES 3M – VISIONNEUSE HORS LIGNE (version 4.8.0)
+  Fichier autonome : aucune connexion Internet, aucune installation. Il ouvre les copies de sauvegarde (.zip) créées par
+  l'application (« Copie consultable hors ligne » et archives de purge) ainsi que les anciens fichiers .json.
+  Les données restent sur votre ordinateur : rien n'est envoyé nulle part.
+-->
+<style>
+:root{--bl:#102d69;--or:#b7791f;--gr:#5b6573;--li:#b9c2d3;--bg:#f4f6fb;--ok:#1b7f3b}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;font:15px/1.45 Arial,Helvetica,sans-serif;color:#111;background:var(--bg)}
+header{background:var(--bl);color:#fff;padding:10px 16px;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+header h1{font-size:18px;margin:0;flex:1;min-width:220px}
+button,.btn{font:inherit;cursor:pointer;border:1px solid var(--bl);background:var(--bl);color:#fff;padding:7px 13px;border-radius:6px}
+button.sec{background:#fff;color:var(--bl)}
+header button{background:#fff;color:var(--bl);border-color:#fff;font-weight:700}
+main{padding:14px 16px;max-width:1300px;margin:0 auto}
+.card{background:#fff;border:1px solid var(--li);border-radius:8px;padding:12px 14px;margin:0 0 12px}
+.meta{color:var(--gr);font-size:13px}
+.tabs{display:flex;gap:6px;margin:0 0 10px;flex-wrap:wrap}
+.tabs button{background:#fff;color:var(--bl)}.tabs button.on{background:var(--bl);color:#fff}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px;align-items:center}
+.filters input,.filters select{font:inherit;padding:6px 8px;border:1px solid var(--li);border-radius:6px;background:#fff;min-width:130px}
+.filters input[type=search]{flex:1;min-width:220px}
+table{width:100%;border-collapse:collapse;background:#fff}
+th,td{border-bottom:1px solid var(--li);padding:6px 8px;text-align:left;vertical-align:top;font-size:14px}
+th{background:#eef2fa;position:sticky;top:0;white-space:nowrap;cursor:pointer;user-select:none}
+tbody tr{cursor:pointer}tbody tr:hover{background:#f1f5ff}
+.tag{display:inline-block;border:1px solid var(--bl);border-radius:12px;padding:0 8px;font-size:12px;color:var(--bl);white-space:nowrap}
+.tag.or{border-color:var(--or);color:var(--or)}.tag.gr{border-color:var(--gr);color:var(--gr)}
+h2{margin:0 0 6px;font-size:20px}h3{margin:16px 0 6px;font-size:15px;color:var(--bl);border-bottom:2px solid var(--li);padding-bottom:3px}
+dl{display:grid;grid-template-columns:200px 1fr;gap:3px 12px;margin:0}dt{color:var(--gr)}dd{margin:0;font-weight:700}
+.txt{white-space:pre-wrap;background:#f6f8fc;border-left:4px solid var(--bl);padding:8px 10px;border-radius:4px}
+.txt.cons{background:#fdf6ef;border-left-color:var(--or)}
+.msg{border-bottom:1px solid var(--li);padding:5px 0}.msg b{font-size:13px}.msg small{color:var(--gr)}
+.phg{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:8px}
+.phg button{padding:0;border:1px solid var(--li);background:#dfe5ee;aspect-ratio:1;overflow:hidden;border-radius:6px}
+.phg img{width:100%;height:100%;object-fit:cover;display:block}
+.phg .cap{font-size:11px;color:var(--gr);text-align:center}
+.nb{padding:20px;text-align:center;color:var(--gr)}
+#lb{position:fixed;inset:0;background:rgba(0,0,0,.86);display:none;z-index:9;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:12px}
+#lb img{max-width:96vw;max-height:80vh;object-fit:contain;background:#fff}
+#lb .cap{color:#fff;font-size:14px;text-align:center}#lb .row{display:flex;gap:8px}
+.lk{color:var(--bl);text-decoration:underline;cursor:pointer}
+.warn{border-left:4px solid var(--or);background:#fdf6ef}
+@media (max-width:700px){dl{grid-template-columns:1fr}}
+@media print{header,.tabs,.filters,#list,.noprint,#lb{display:none!important}body{background:#fff}main{padding:0}.card{border:0;padding:0}}
+</style>
+</head>
+<body>
+<header>
+ <h1>STADES 3M – Consultation hors ligne</h1>
+ <button id="ouvrir" type="button">Ouvrir des sauvegardes (.zip)…</button>
+ <input id="fichiers" type="file" accept=".zip,.json,application/zip,application/json" multiple hidden>
+</header>
+<main>
+ <div id="accueil" class="card">
+  <h2>Comment consulter une sauvegarde ?</h2>
+  <p>Cliquez sur <b>Ouvrir des sauvegardes</b> puis choisissez un ou plusieurs fichiers <b>.zip</b> créés par l'application (copie consultable hors ligne, archives de purge). <b>Ne les extrayez pas</b> : ce fichier lit directement le ZIP, photos comprises.</p>
+  <p class="meta">Tout se passe sur votre ordinateur, sans Internet. Les fichiers contiennent des données personnelles (noms, e-mails) : conservez-les en lieu sûr.</p>
+ </div>
+ <div id="info" class="card meta" hidden></div>
+ <div id="app" hidden>
+  <div class="tabs" id="tabs">
+   <button type="button" data-v="t" class="on">Tickets</button><button type="button" data-v="i">Interventions</button><button type="button" data-v="p">Plans préventifs</button>
+  </div>
+  <div id="list">
+   <div class="filters">
+    <input id="q" type="search" placeholder="Rechercher (référence, titre, lieu, texte, noms…)" aria-label="Rechercher">
+    <select id="fs" aria-label="Statut"></select><select id="fsite" aria-label="Site"></select><select id="fcat" aria-label="Catégorie"></select><select id="fan" aria-label="Année"></select>
+    <label><input id="fph" type="checkbox"> avec photos</label>
+   </div>
+   <div class="meta" id="cnt"></div>
+   <div style="overflow:auto;max-height:72vh;background:#fff;border:1px solid var(--li);border-radius:8px"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+   <p class="nb" id="plus" hidden><button type="button" class="sec" id="btnplus">Afficher la suite</button></p>
+  </div>
+  <div id="fiche" hidden></div>
+ </div>
+</main>
+<div id="lb" role="dialog" aria-label="Photo"><div class="cap" id="lbc"></div><img id="lbi" alt=""><div class="row"><button type="button" class="sec" id="lbp">◀</button><button type="button" class="sec" id="lbn">▶</button><button type="button" class="sec" id="lbx">Fermer</button></div></div>
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?"":s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const norm=s=>String(s==null?"":s).normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const fd=d=>d?new Date(d).toLocaleDateString("fr-FR"):"—",fdt=d=>d?new Date(d).toLocaleString("fr-FR",{dateStyle:"short",timeStyle:"short"}):"—";
+const fj=j=>j==null||j===""?"—":(+j).toLocaleString("fr-FR",{maximumFractionDigits:2})+" j";
+const fe=v=>v==null||v===""?"—":(+v).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2})+" €";
+const ST={nouvelle:"Nouvelle",en_cours:"En cours",en_attente:"En attente",resolue:"Résolue",refusee:"Refusée",archivee:"Archivée"};
+const ET={a_planifier:"À planifier",planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
+const PR={basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"},NO={non:"Non",partiel:"Partielle",oui:"Oui"};
+const FIELDS={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Date d'intervention",duree_j:"Durée (jours)",etat:"État",agents_noms:"Intervenants",responsable_nom:"Responsable",prestataire:"Entreprise",prestataire_email:"E-mail de l'entreprise",bc_numero:"N° de bon de commande",devis_demande_at:"Devis demandé le",devis_recu_at:"Devis reçu le",bc_envoye_at:"Bon de commande envoyé le",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Montant du devis HT",montant_bc_ht:"Montant du bon de commande HT",montant_facture_ht:"Montant de la facture HT",local:"Local"};
+// ---------- état ----------
+let SRC=[],D={},IDX={},VIEW="t",SORT={t:{k:"d",d:-1},i:{k:"d",d:-1},p:{k:"d",d:1}},LIM=200,PHM=new Map(),CUR=[],LBI=0;
+const TB=["sites","zones","categories","corps_etat","entreprises","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","plans_preventifs","photos","audit_log"];
+// ---------- lecture des ZIP (accès direct, sans tout charger) ----------
+async function openZip(file){
+ const size=file.size,tl=Math.min(size,65557+22),tail=new Uint8Array(await file.slice(size-tl,size).arrayBuffer()),dv=new DataView(tail.buffer);let p=-1;
+ for(let i=tail.length-22;i>=0;i--){if(tail[i]===0x50&&tail[i+1]===0x4b&&tail[i+2]===5&&tail[i+3]===6){p=i;break}}
+ if(p<0)throw new Error("fichier ZIP illisible");
+ const n=dv.getUint16(p+10,true),cds=dv.getUint32(p+12,true),cdo=dv.getUint32(p+16,true);
+ if(n===0xFFFF||cdo===0xFFFFFFFF)throw new Error("archive trop volumineuse (ZIP64 non géré)");
+ const cd=new Uint8Array(await file.slice(cdo,cdo+cds).arrayBuffer()),c=new DataView(cd.buffer),dec=new TextDecoder(),ent=new Map();let o=0;
+ while(o+46<=cd.length&&c.getUint32(o,true)===0x02014b50){const m=c.getUint16(o+10,true),cs=c.getUint32(o+20,true),us=c.getUint32(o+24,true),nl=c.getUint16(o+28,true),xl=c.getUint16(o+30,true),kl=c.getUint16(o+32,true),lo=c.getUint32(o+42,true),name=dec.decode(cd.subarray(o+46,o+46+nl));ent.set(name,{m,cs,us,lo});o+=46+nl+xl+kl}
+ return{file,ent}}
+async function zipBlob(z,name,type){
+ const e=z.ent.get(name);if(!e)return null;
+ const h=new DataView(await z.file.slice(e.lo,e.lo+30).arrayBuffer()),st=e.lo+30+h.getUint16(26,true)+h.getUint16(28,true),b=z.file.slice(st,st+e.cs,type||"application/octet-stream");
+ if(e.m===0)return b;
+ if(e.m===8){if(typeof DecompressionStream==="undefined")throw new Error("navigateur trop ancien pour lire un ZIP compressé");return await new Response(b.stream().pipeThrough(new DecompressionStream("deflate-raw"))).blob()}
+ throw new Error("méthode de compression non prise en charge")}
+// ---------- chargement et fusion ----------
+async function charger(files){
+ const err=[];
+ for(const f of files){
+  try{let obj,zip=null,meta={nom:f.name};
+   if(/\.zip$/i.test(f.name)){zip=await openZip(f);const nm=zip.ent.has("donnees.json")?"donnees.json":zip.ent.has("archive.json")?"archive.json":null;if(!nm)throw new Error("ni donnees.json ni archive.json dans ce ZIP");obj=JSON.parse(await (await zipBlob(zip,nm)).text())}
+   else obj=JSON.parse(await f.text());
+   if(obj.application!=="STADES 3M")throw new Error("ce n'est pas un fichier STADES 3M");
+   const t=obj.tables||obj;meta.type=obj.type||"?";meta.date=obj.date;meta.version=obj.version;meta.manq=(obj.photos_manquantes||[]).length;
+   for(const k of TB){const a=t[k];if(!Array.isArray(a))continue;D[k]=D[k]||new Map();for(const r of a){const key=k==="audit_log"?r.id:r.id;if(!D[k].has(key))D[k].set(key,r)}}
+   if(zip)for(const e of zip.ent.keys())if(e.startsWith("photos/")){const ch=e.slice(7);if(!PHM.has(ch))PHM.set(ch,zip)}
+   SRC.push(meta)}
+  catch(e){err.push(`${f.name} : ${e.message||e}`)}}
+ if(err.length)alert("Fichier(s) non lu(s) :\n"+err.join("\n"));
+ if(SRC.length)indexer()}
+function ref(t,id){const m=D[t]&&D[t].get(id);return m}
+function indexer(){
+ const g=k=>D[k]?[...D[k].values()]:[],by=(a,key)=>{const m=new Map();for(const r of a){const v=r[key];if(v==null)continue;if(!m.has(v))m.set(v,[]);m.get(v).push(r)}return m};
+ IDX.tk=g("tickets");IDX.iv=g("interventions");IDX.pl=g("plans_preventifs");
+ IDX.suivi=by(g("ticket_suivi"),"ticket_id");IDX.ev=by(g("ticket_events"),"ticket_id");IDX.ivt=by(IDX.iv,"ticket_id");IDX.notes=by(g("intervention_notes"),"intervention_id");
+ IDX.pht=by(g("photos").filter(p=>p.ticket_id!=null),"ticket_id");IDX.phi=by(g("photos").filter(p=>p.intervention_id!=null),"intervention_id");
+ IDX.aud=new Map();for(const r of g("audit_log")){if(r.table_name!=="interventions")continue;const k=+r.row_id||r.num_id;if(!IDX.aud.has(k))IDX.aud.set(k,[]);IDX.aud.get(k).push(r)}
+ const nm=(t,id,f)=>{const r=ref(t,id);return r?r[f||"nom"]:null};
+ IDX.site=id=>nm("sites",id)||("Site n°"+id);IDX.zone=id=>nm("zones",id)||("Zone n°"+id);IDX.cat=id=>nm("categories",id)||("Catégorie n°"+id);IDX.corps=id=>id==null?"":(nm("corps_etat",id)||("Corps d'état n°"+id));
+ IDX.catl=r=>IDX.cat(r.categorie_id)+(r.corps_etat_id!=null?" / "+IDX.corps(r.corps_etat_id):"");
+ IDX.lieu=r=>IDX.site(r.site_id)+" – "+IDX.zone(r.zone_id)+(r.local?" – "+r.local:"");
+ IDX.ent=id=>{const r=ref("entreprises",id);return r?r.entreprise:null};
+ // textes de recherche
+ for(const t of IDX.tk)t._h=norm([t.ref,t.titre,t.description,t.local,IDX.lieu(t),IDX.catl(t),ST[t.statut],t.demandeur_nom,t.en_charge_nom,...(IDX.suivi.get(t.id)||[]).map(x=>x.message),...(IDX.ivt.get(t.id)||[]).map(x=>x.ref+" "+x.titre+" "+(x.consignes||""))].join(" "));
+ for(const i of IDX.iv)i._h=norm([i.ref,i.titre,i.consignes,IDX.lieu(i),IDX.catl(i),ET[i.etat],i.agents_noms,i.responsable_nom,i.prestataire,i.bc_numero,...(IDX.notes.get(i.id)||[]).map(x=>x.message)].join(" "));
+ for(const p of IDX.pl)p._h=norm([p.titre,p.consignes,IDX.lieu(p),IDX.catl(p)].join(" "));
+ $("accueil").hidden=true;$("app").hidden=false;$("info").hidden=false;
+ $("info").innerHTML="<b>Sources ouvertes :</b> "+SRC.map(s=>`${esc(s.nom)} <span class="tag gr">${esc(s.type)}${s.date?" · "+fd(s.date):""}</span>${s.manq?` <span class="tag or">${s.manq} photo(s) manquante(s)</span>`:""}`).join(" · ")+`<br><b>Contenu :</b> ${IDX.tk.length} ticket(s), ${IDX.iv.length} intervention(s), ${IDX.pl.length} plan(s) préventif(s), ${D.photos?D.photos.size:0} photo(s).`+(D.sites?"":` <span class="tag or">tables de référence absentes (noms de sites, zones et catégories remplacés par des numéros) : ouvrez aussi une copie complète</span>`);
+ filtresInit();voirListe()}
+// ---------- liste ----------
+function filtresInit(){
+ const opt=(sel,vals,first)=>{const cur=sel.value;sel.innerHTML=`<option value="">${first}</option>`+vals.map(([v,l])=>`<option value="${esc(v)}">${esc(l)}</option>`).join("");sel.value=cur};
+ const src=VIEW==="t"?IDX.tk:VIEW==="i"?IDX.iv:IDX.pl,dict=VIEW==="t"?ST:ET;
+ if(VIEW==="p")opt($("fs"),[["1","Actifs"],["0","En pause"]],"Tous les plans");else opt($("fs"),Object.entries(dict),VIEW==="t"?"Tous les statuts":"Tous les états");
+ opt($("fsite"),[...new Set(src.map(r=>r.site_id))].map(id=>[String(id),IDX.site(id)]).sort((a,b)=>a[1].localeCompare(b[1],"fr")),"Tous les sites");
+ opt($("fcat"),[...new Set(src.map(r=>r.categorie_id))].map(id=>[String(id),IDX.cat(id)]).sort((a,b)=>a[1].localeCompare(b[1],"fr")),"Toutes les catégories");
+ const an=r=>VIEW==="t"?r.created_at:VIEW==="i"?(r.echeance||r.created_at):r.prochaine_echeance;
+ opt($("fan"),[...new Set(src.map(r=>(an(r)||"").slice(0,4)).filter(Boolean))].sort().reverse().map(a=>[a,a]),"Toutes les années")}
+function ph(r){return VIEW==="t"?(IDX.pht.get(r.id)||[]).length+(IDX.ivt.get(r.id)||[]).reduce((n,i)=>n+(IDX.phi.get(i.id)||[]).length,0):VIEW==="i"?(IDX.phi.get(r.id)||[]).length:0}
+const COLS={
+ t:[["Réf.","ref",r=>`<b>${esc(r.ref)}</b>`],["Titre","titre",r=>esc(r.titre)],["Statut","st",r=>`<span class="tag">${esc(ST[r.statut]||r.statut)}</span>`],["Lieu","lieu",r=>esc(IDX.lieu(r))],["Catégorie","cat",r=>esc(IDX.catl(r))],["Demandeur","dem",r=>esc(r.demandeur_nom||"—")],["Créé le","d",r=>fd(r.created_at)],["Photos","ph",r=>ph(r)||""]],
+ i:[["Réf.","ref",r=>`<b>${esc(r.ref)}</b>`],["Titre","titre",r=>esc(r.titre)],["État","st",r=>`<span class="tag">${esc(ET[r.etat]||r.etat)}</span>`],["Lieu","lieu",r=>esc(IDX.lieu(r))],["Responsable","resp",r=>esc(r.responsable_nom||"—")],["Attribué à","att",r=>esc(r.agents_noms||r.prestataire||(r.entreprise_id!=null?IDX.ent(r.entreprise_id):"")||"—")],["Date d'interv.","d",r=>r.echeance?fd(r.echeance):`<span class="tag or">À planifier</span>`],["Photos","ph",r=>ph(r)||""]],
+ p:[["Contrôle","titre",r=>`<b>${esc(r.titre)}</b>`],["Lieu","lieu",r=>esc(IDX.lieu(r))],["Catégorie","cat",r=>esc(IDX.catl(r))],["Périodicité","per",r=>r.periodicite_mois+" mois"],["Dernière réalisation","der",r=>fd(r.derniere_realisation)],["Prochaine échéance","d",r=>fd(r.prochaine_echeance)],["Statut","st",r=>r.actif?'<span class="tag">Actif</span>':'<span class="tag gr">En pause</span>']]};
+const KEY={ref:r=>r.ref||"",titre:r=>norm(r.titre),st:r=>r.statut||r.etat||(r.actif?"a":"z"),lieu:r=>norm(IDX.lieu(r)),cat:r=>norm(IDX.catl(r)),dem:r=>norm(r.demandeur_nom),resp:r=>norm(r.responsable_nom),att:r=>norm(r.agents_noms||r.prestataire),per:r=>r.periodicite_mois,der:r=>r.derniere_realisation||"",ph:r=>ph(r),
+ d:r=>VIEW==="t"?r.created_at||"":VIEW==="i"?(r.echeance||r.created_at||""):r.prochaine_echeance||""};
+function lignes(){
+ const q=norm($("q").value).split(/\s+/).filter(Boolean),fs=$("fs").value,fsite=$("fsite").value,fcat=$("fcat").value,fan=$("fan").value,fph=$("fph").checked;
+ const an=r=>VIEW==="t"?r.created_at:VIEW==="i"?(r.echeance||r.created_at):r.prochaine_echeance;
+ let a=(VIEW==="t"?IDX.tk:VIEW==="i"?IDX.iv:IDX.pl).filter(r=>{
+  if(q.length&&!q.every(w=>r._h.includes(w)))return false;
+  if(fs&&(VIEW==="t"?r.statut!==fs:VIEW==="i"?r.etat!==fs:String(+r.actif)!==fs))return false;
+  if(fsite&&String(r.site_id)!==fsite)return false;if(fcat&&String(r.categorie_id)!==fcat)return false;
+  if(fan&&!(an(r)||"").startsWith(fan))return false;if(fph&&!ph(r))return false;return true});
+ const s=SORT[VIEW],kf=KEY[s.k]||KEY.d;a.sort((x,y)=>{const u=kf(x),v=kf(y);return(u<v?-1:u>v?1:0)*s.d});return a}
+function voirListe(){
+ $("fiche").hidden=true;$("list").hidden=false;$("tabs").hidden=false;
+ const cols=COLS[VIEW];$("thead").innerHTML="<tr>"+cols.map(c=>`<th data-k="${c[1]}">${c[0]}${SORT[VIEW].k===c[1]?(SORT[VIEW].d>0?" ▲":" ▼"):""}</th>`).join("")+"</tr>";
+ CUR=lignes();const vis=CUR.slice(0,LIM);
+ $("tbody").innerHTML=vis.map((r,i)=>`<tr data-i="${i}" tabindex="0">`+cols.map(c=>`<td>${c[2](r)}</td>`).join("")+"</tr>").join("")||`<tr><td colspan="${cols.length}" class="nb">Aucun résultat.</td></tr>`;
+ $("cnt").textContent=`${CUR.length} résultat(s)`+(CUR.length>LIM?` – ${LIM} affichés`:"");$("plus").hidden=CUR.length<=LIM}
+// ---------- photos ----------
+async function photoUrl(chemin){const z=PHM.get(chemin);if(!z)return null;if(z.cache&&z.cache.has(chemin))return z.cache.get(chemin);try{const b=await zipBlob(z,"photos/"+chemin,"image/jpeg"),u=URL.createObjectURL(b);(z.cache=z.cache||new Map()).set(chemin,u);return u}catch(e){return null}}
+function gal(arr,titre,id){
+ if(!arr.length)return"";
+ return `<h3>${esc(titre)} (${arr.length})</h3><div class="phg" id="${id}">`+arr.map((p,i)=>`<div><button type="button" data-g="${id}" data-i="${i}" aria-label="Agrandir la photo ${i+1}"><img alt="Photo ${i+1}" data-ch="${esc(p.chemin)}"></button><div class="cap">${p.cloture?"Clôture · ":""}${esc(p.auteur||"")} · ${fd(p.created_at)}</div></div>`).join("")+"</div>"}
+const GAL={};
+async function chargerPhotos(){for(const im of document.querySelectorAll("#fiche img[data-ch]")){const u=await photoUrl(im.dataset.ch);if(u)im.src=u;else{im.replaceWith(Object.assign(document.createElement("span"),{textContent:"Photo non disponible",className:"meta"}))}}}
+function lbOpen(arr,i){LBI=i;GAL.cur=arr;lbShow();$("lb").style.display="flex"}
+async function lbShow(){const a=GAL.cur,p=a[LBI];$("lbc").textContent=`Photo ${LBI+1}/${a.length} · ${p.cloture?"clôture · ":""}${p.auteur||"—"} · ${fdt(p.created_at)}`;const u=await photoUrl(p.chemin);$("lbi").src=u||"";$("lbi").alt=u?"":"Photo non disponible"}
+function lbClose(){$("lb").style.display="none"}
+// ---------- fiches ----------
+const dl=rows=>"<dl>"+rows.filter(r=>r&&r[1]!==""&&r[1]!=null).map(r=>`<dt>${esc(r[0])}</dt><dd>${r[2]?r[1]:esc(r[1])}</dd>`).join("")+"</dl>";
+const msgs=(a,ext)=>a.length?a.slice().sort((x,y)=>(x.created_at||"")<(y.created_at||"")?-1:1).map(m=>`<div class="msg"><b>${esc(m.auteur||"—")}</b> <small>${fdt(m.created_at)}${ext&&m.interne?" · note interne":""}</small><br>${esc(m.message)}</div>`).join(""):'<p class="meta">Aucun.</p>';
+function histInt(i){
+ const a=(IDX.aud.get(i.id)||[]).slice().sort((x,y)=>(x.created_at||"")<(y.created_at||"")?-1:1);if(!a.length)return"";
+ const v=(k,x)=>x==null||x===""?"—":k==="etat"?ET[x]||x:k==="priorite"?PR[x]||x:k==="duree_j"?fj(x):/_at$|^echeance$/.test(k)?fd(x):k.startsWith("facture")?NO[x]||x:/^montant/.test(k)?fe(x):String(x);
+ const rows=a.map(r=>{const ch=r.changes||{};let t="";
+  if(r.action==="INSERT")t="Création";else if(r.action==="DELETE")t="Suppression";else t=Object.entries(ch).filter(([k])=>FIELDS[k]).map(([k,x])=>`${FIELDS[k]} : ${esc(v(k,Array.isArray(x)?x[0]:null))} → ${esc(v(k,Array.isArray(x)?x[1]:x))}`).join("<br>");
+  return t?`<div class="msg"><b>${esc(r.par_nom||"—")}</b> <small>${fdt(r.created_at)}</small><br>${t}</div>`:""}).join("");
+ return rows?`<h3>Historique des modifications</h3>${rows}`:""}
+function ficheTicket(t){
+ const ivs=(IDX.ivt.get(t.id)||[]).slice().sort((a,b)=>(a.created_at||"")<(b.created_at||"")?-1:1),phs=IDX.pht.get(t.id)||[];GAL.t=phs;
+ const ev=(IDX.ev.get(t.id)||[]).slice().sort((a,b)=>(a.created_at||"")<(b.created_at||"")?-1:1);
+ return `<button type="button" class="sec noprint" id="retour">← Retour à la liste</button> <button type="button" class="sec noprint" onclick="window.print()">Imprimer cette fiche</button>
+ <div class="card"><h2>${esc(t.ref)} – ${esc(t.titre)}</h2>
+ ${dl([["Statut",ST[t.statut]||t.statut],["Priorité",PR[t.priorite]||t.priorite],["Lieu",IDX.lieu(t)],["Catégorie / corps d'état",IDX.catl(t)],["Demandeur",t.demandeur_nom],["Pris en charge par",t.en_charge_nom],["Créé le",fdt(t.created_at)],["Fin prévue",t.fin_prevue?fd(t.fin_prevue):""],["Clôturé le",t.cloture_at?fdt(t.cloture_at):""]])}
+ <h3>Description</h3><div class="txt">${esc(t.description||"Aucune description.")}</div>
+ ${gal(phs,"Photos du ticket","gt")}
+ <h3>Suivi</h3>${msgs(IDX.suivi.get(t.id)||[],true)}
+ <h3>Historique</h3>${ev.length?ev.map(e=>`<div class="msg"><b>${esc(e.type)}</b> : ${esc(e.ancien||"—")} → ${esc(e.nouveau||"—")} <small>${esc(e.par_nom||"")} · ${fdt(e.created_at)}</small></div>`).join(""):'<p class="meta">Aucun.</p>'}
+ <h3>Interventions liées (${ivs.length})</h3>${ivs.length?ivs.map(i=>`<div class="msg"><span class="lk" data-oi="${i.id}"><b>${esc(i.ref)}</b> – ${esc(i.titre)}</span> <span class="tag">${esc(ET[i.etat]||i.etat)}</span> <small>${i.echeance?fd(i.echeance):"à planifier"} · ${esc(i.agents_noms||i.prestataire||"")}</small></div>`).join(""):'<p class="meta">Aucune.</p>'}
+ </div>`}
+function ficheInt(i){
+ const t=i.ticket_id!=null?ref("tickets",i.ticket_id):null,pts=i.ticket_id!=null?(IDX.pht.get(i.ticket_id)||[]):[],pis=IDX.phi.get(i.id)||[];GAL.i=pis;GAL.pt=pts;
+ const admin=[["Entreprise",i.prestataire||(i.entreprise_id!=null?IDX.ent(i.entreprise_id):"")],["E-mail de l'entreprise",i.prestataire_email],["Devis demandé le",i.devis_demande_at?fd(i.devis_demande_at):""],["Devis reçu le",i.devis_recu_at?fd(i.devis_recu_at):""],["N° de bon de commande",i.bc_numero],["Bon de commande envoyé le",i.bc_envoye_at?fd(i.bc_envoye_at):""],["Montant du devis HT",i.montant_devis_ht!=null?fe(i.montant_devis_ht):""],["Montant du bon de commande HT",i.montant_bc_ht!=null?fe(i.montant_bc_ht):""],["Montant de la facture HT",i.montant_facture_ht!=null?fe(i.montant_facture_ht):""],["Facture reçue",i.facture_recue&&i.facture_recue!=="non"?NO[i.facture_recue]:""],["Facture payée",i.facture_payee&&i.facture_payee!=="non"?NO[i.facture_payee]:""]].filter(r=>r[1]!==""&&r[1]!=null);
+ return `<button type="button" class="sec noprint" id="retour">← Retour à la liste</button> <button type="button" class="sec noprint" onclick="window.print()">Imprimer cette fiche</button>
+ <div class="card"><h2>${esc(i.ref)} – ${esc(i.titre)}</h2>
+ ${dl([["État",ET[i.etat]||i.etat],["Priorité",PR[i.priorite]||i.priorite],["Ticket d'origine",t?`<span class="lk" data-ot="${t.id}">${esc(t.ref)} – ${esc(t.titre)}</span>`:(i.ticket_id!=null?"ticket non chargé":""),1],["Lieu",IDX.lieu(i)],["Catégorie / corps d'état",IDX.catl(i)],["Date d'intervention",i.echeance?fd(i.echeance):"À planifier"],["Durée prévue",fj(i.duree_j)],["Responsable",i.responsable_nom],["Intervenants",i.agents_noms],["Créée le",fdt(i.created_at)]])}
+ <h3>Consignes</h3><div class="txt cons">${esc(i.consignes||"Aucune consigne.")}</div>
+ ${admin.length?"<h3>Suivi administratif</h3>"+dl(admin):""}
+ ${gal(pts,"Photos du ticket","gpt")}${gal(pis,"Photos de l'intervention","gi")}
+ <h3>Notes</h3>${msgs(IDX.notes.get(i.id)||[])}
+ ${histInt(i)}</div>`}
+function fichePlan(p){return `<button type="button" class="sec noprint" id="retour">← Retour à la liste</button>
+ <div class="card"><h2>${esc(p.titre)}</h2>${dl([["Statut",p.actif?"Actif":"En pause"],["Lieu",IDX.lieu(p)],["Catégorie / corps d'état",IDX.catl(p)],["Priorité",PR[p.priorite]||p.priorite],["Périodicité",p.periodicite_mois+" mois"],["Prévenance",p.prevenance_jours!=null?p.prevenance_jours+" jours":""],["Dernière réalisation",p.derniere_realisation?fd(p.derniere_realisation):""],["Prochaine échéance",fd(p.prochaine_echeance)]])}
+ <h3>Consignes</h3><div class="txt cons">${esc(p.consignes||"Aucune consigne.")}</div></div>`}
+function voirFiche(html){$("list").hidden=true;$("tabs").hidden=true;const f=$("fiche");f.hidden=false;f.innerHTML=html;window.scrollTo(0,0);chargerPhotos()}
+const ouvrirT=id=>{const t=ref("tickets",id);if(t)voirFiche(ficheTicket(t))},ouvrirI=id=>{const i=ref("interventions",id);if(i)voirFiche(ficheInt(i))};
+// ---------- événements ----------
+$("ouvrir").onclick=()=>$("fichiers").click();
+$("fichiers").onchange=async e=>{const fs=[...e.target.files];e.target.value="";if(fs.length)await charger(fs)};
+$("tabs").onclick=e=>{const b=e.target.closest("button");if(!b)return;VIEW=b.dataset.v;LIM=200;[...$("tabs").children].forEach(x=>x.classList.toggle("on",x===b));$("q").value="";$("fph").checked=false;filtresInit();voirListe()};
+for(const id of ["q","fs","fsite","fcat","fan","fph"])$(id).addEventListener(id==="q"?"input":"change",()=>{LIM=200;voirListe()});
+$("thead").onclick=e=>{const th=e.target.closest("th");if(!th)return;const k=th.dataset.k,s=SORT[VIEW];if(s.k===k)s.d=-s.d;else{s.k=k;s.d=1}voirListe()};
+$("tbody").onclick=e=>{const tr=e.target.closest("tr[data-i]");if(!tr)return;const r=CUR[+tr.dataset.i];voirFiche(VIEW==="t"?ficheTicket(r):VIEW==="i"?ficheInt(r):fichePlan(r))};
+$("tbody").onkeydown=e=>{if(e.key==="Enter"){const tr=e.target.closest("tr[data-i]");if(tr)tr.click()}};
+$("btnplus").onclick=()=>{LIM+=300;voirListe()};
+$("fiche").onclick=e=>{
+ if(e.target.closest("#retour")){voirListe();return}
+ const o=e.target.closest("[data-oi]");if(o){ouvrirI(+o.dataset.oi);return}
+ const t=e.target.closest("[data-ot]");if(t){ouvrirT(+t.dataset.ot);return}
+ const b=e.target.closest("button[data-g]");if(b){const m={gt:GAL.t,gi:GAL.i,gpt:GAL.pt};lbOpen(m[b.dataset.g],+b.dataset.i)}};
+$("lbp").onclick=()=>{if(LBI>0){LBI--;lbShow()}};$("lbn").onclick=()=>{if(LBI<GAL.cur.length-1){LBI++;lbShow()}};$("lbx").onclick=lbClose;
+document.addEventListener("keydown",e=>{if($("lb").style.display!=="flex")return;if(e.key==="Escape")lbClose();else if(e.key==="ArrowLeft")$("lbp").click();else if(e.key==="ArrowRight")$("lbn").click()});
+$("lb").onclick=e=>{if(e.target===$("lb"))lbClose()};
+</script>
+</body>
+</html>

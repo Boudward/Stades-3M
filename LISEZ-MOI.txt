@@ -1,9 +1,22 @@
-Bibliothèques tierces hébergées avec l'application (aucun chargement depuis un CDN).
+STADES 3M – version 4.8.0 (20/11/2026) – ensemble des fichiers
 
-supabase.min.js     @supabase/supabase-js 2.45.0 (jsDelivr : /npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.min.js)
-                    SHA-384 : sha384-NNePyabYRaJyedI6EQAY7SV5Z8/0sQkuQ5WVfhKm0H+j0KSugkI2ZMNzw/QtzAWz
-jspdf.umd.min.js    jsPDF 2.5.1 (cdnjs : /ajax/libs/jspdf/2.5.1/jspdf.umd.min.js)
-                    SHA-384 du fichier d'origine : sha384-JcnsjUPPylna1s1fvi1u12X5qjY5OL56iySh75FdtrwhO/SWXgMjoVqcKyIIWOLk
-                    Seule modification : suppression de la dernière ligne « sourceMappingURL » (évite une erreur 404 dans la console).
+site/                 À déposer à la racine du dépôt GitHub Pages : index.html, config.js, app.js, style.css, icônes,
+                      dossier lib/ (bibliothèques), dossier notices/ (les cinq notices d'utilisation) et dossier consultation/
+                      (consulter.html : visionneuse hors ligne des copies de sauvegarde ZIP, à enregistrer aussi sur votre ordinateur).
+                      Renseignez dans config.js l'adresse et la clé publique de chaque base (production, test).
+sql/                  schema_complet_4_7_0.sql      Recrée TOUTE la base depuis zéro (projet Supabase vierge, avec
+                                                    pg_cron activé avant l'exécution). Ne sert pas à mettre à jour une base en service.
+                      migration_unique_4_4_0.sql    Met à niveau une base (test ou production) jusqu'à la version 4.4.0, avec
+                                                    un contrôle de niveau final à comparer entre les deux bases.
+                      migration_4_6_0.sql           Étape 4.6.0 : durée en jours, photo de clôture.
+                      migration_4_7_0.sql           Étape 4.7.0 : « tribune » devient « zone » (à exécuter puis déposer aussitôt le site).
+                      vidage_base_test.sql          BASE DE TEST UNIQUEMENT : vide les données (confirmation à saisir dans le script).
+                      restauration_sauvegarde.sql   BASE DE TEST : remet en place les données à partir d'un fichier de sauvegarde.
+fiche_intervention/   Exemples de la fiche d'intervention (PDF et Word) générée par l'application ; non déployé sur le site.
+optionnel/            invite-user.ts : fonction d'invitation (non utilisée par l'interface actuelle).
 
-Pour mettre à jour une bibliothèque : remplacer le fichier, puis incrémenter la version du projet.
+Mise à jour d'une base déjà en service : exécutez, dans l'ordre et une seule fois chacun, les fichiers de migration qui lui
+manquent (migration_unique_4_4_0.sql, puis migration_4_6_0.sql, puis migration_4_7_0.sql). Chaque script s'arrête avec un message
+clair s'il manque une étape précédente et peut être relancé sans risque. Ne relancez plus migration_unique_4_4_0.sql après la
+4.6.0 : il recréerait l'ancienne colonne de durée en heures.
+Faites toujours une sauvegarde avant (Paramètres > Données > Sauvegarde dans l'application).
