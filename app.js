@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.9.0 */
+/* STADES 3M – application – version 4.10.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -260,15 +260,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.9.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.9.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.10.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.10.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.9.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.10.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -690,12 +690,18 @@ async function createI(){const c=curI,o={};["site_id","zone_id","local","categor
 const FM={W:210,H:297,M:14,T:12,B:16,CW:182},FC={blue:"#102d69",orange:"#b7791f",grey:"#5b6573",line:"#b9c2d3",cream:"#fdf6ef",ph:"#dfe5ee"};
 const fsafe=t=>String(t==null?"":t).replace(/[\u2018\u2019]/g,"'").replace(/[\u201c\u201d]/g,'"').replace(/\u2026/g,"...").replace(/[\u202f\u00a0]/g," ");
 const feur=v=>(+v).toLocaleString("fr-FR",{minimumFractionDigits:2,maximumFractionDigits:2}).replace(/[\u202f\u00a0]/g," ")+" €";
+/* Toute photo est redessinée en JPEG standard (baseline, orientation appliquée, dimensions réelles) : évite les cadres gris du PDF et les déformations */
+async function fichePhNorm(blob){const bm=await createImageBitmap(blob,{imageOrientation:"from-image"}),k=Math.min(1,1800/Math.max(bm.width,bm.height)),w=Math.max(1,Math.round(bm.width*k)),h=Math.max(1,Math.round(bm.height*k)),cv=document.createElement("canvas");cv.width=w;cv.height=h;const x=cv.getContext("2d");x.fillStyle="#fff";x.fillRect(0,0,w,h);x.drawImage(bm,0,0,w,h);if(bm.close)bm.close();
+ const out=await new Promise(r=>cv.toBlob(r,"image/jpeg",.88));if(!out)throw new Error("encodage");return{buf:new Uint8Array(await out.arrayBuffer()),w,h}}
+/* Mise en page des photos d'un lot : colonnes selon le nombre, hauteur maximale selon la place restante */
+function fichePhLay(bs,avail){const ng=bs.length;if(!ng)return;bs.forEach(g=>{const r=Math.ceil(g.items.length/3);g.cols=Math.ceil(g.items.length/r);g.rows=Math.ceil(g.items.length/g.cols)});
+ const R=bs.reduce((a,g)=>a+g.rows,0),ih=Math.max(30,Math.min(100,Math.floor((avail-7.5*ng-6.5*R-8)/R)));bs.forEach(g=>g.ih=ih)}
 async function fichePhotos(c){
  if(!PH())return{t:[],i:[]};
  const get=async(col,id,g)=>{if(!id)return[];const {data}=await sb.from("photos").select("*").eq(col,id).order("created_at"),out=[];
   for(const p of data||[]){const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)continue;const buf=new Uint8Array(await r.data.arrayBuffer());let w=p.largeur,h=p.hauteur;
-   if(!w||!h){try{const bm=await createImageBitmap(r.data);w=bm.width;h=bm.height}catch(_){w=4;h=3}}
-   out.push({buf,w,h,g,n:out.length+1,cap:`${p.auteur||"—"} · ${fdate(p.created_at)}`})}return out};
+   let b2=buf;try{const n=await fichePhNorm(r.data);b2=n.buf;w=n.w;h=n.h}catch(_){if(!w||!h){w=4;h=3}}
+   out.push({buf:b2,w,h,g,n:out.length+1,cap:`${p.auteur||"—"} · ${fdate(p.created_at)}`})}return out};
  return{t:await get("ticket_id",c.ticket_id,"t"),i:await get("intervention_id",c.id,"i")}}
 async function ficheModel(c){
  const t=c.ticket_id&&tk.find(x=>x.id===c.ticket_id),en=ents.find(e=>e.id===c.entreprise_id),ph=await fichePhotos(c),B=[];
@@ -715,9 +721,9 @@ async function ficheModel(c){
  const all=[...ph.t,...ph.i],grp=a=>{const o=[],x=a.filter(p=>p.g==="t"),y=a.filter(p=>p.g==="i");if(x.length)o.push({k:"photos",title:`Photos du ticket (${ph.t.length})`,items:x});if(y.length)o.push({k:"photos",title:`Photos de l'intervention (${ph.i.length})`,items:y});return o};
  // la page 1 reçoit autant de photos qu'il y en a de place (estimation commune au PDF et au Word) ; le reste va en annexe
  const est=(x,cpl,lh)=>String(x||"").split("\n").reduce((n,l)=>n+Math.max(1,Math.ceil(l.length/cpl)),0)*lh,ent=!!(c.entreprise_id||c.prestataire);
- let left=269-(26+6.8+9+9+(t?9:0)+4+6.8+9+4+6.8+(ent?18:9)+4+8.5+est(c.consignes||"Aucune consigne particulière.",78,4.9)+7+(t?8.5+est(t.description||"—",92,4.5)+7:0))-16-6.8,n1=0;
+ let left0=0,left=269-(26+6.8+9+9+(t?9:0)+4+6.8+9+4+6.8+(ent?18:9)+4+8.5+est(c.consignes||"Aucune consigne particulière.",78,4.9)+7+(t?8.5+est(t.description||"—",92,4.5)+7:0))-16-6.8,n1=0;left0=left;
  for(const g of [ph.t,ph.i]){if(!g.length)continue;const rows=Math.floor((left-5.5)/36.5);if(rows<1)break;const take=Math.min(g.length,rows*3);n1+=take;left-=5.5+Math.ceil(take/3)*36.5;if(take<g.length)break}
- if(n1){B.push({k:"bar",text:"PHOTOS"});B.push(...grp(all.slice(0,n1)))}
+ if(n1){B.push({k:"bar",text:"PHOTOS"});const g1=grp(all.slice(0,n1));fichePhLay(g1,left0-(all.length>n1?7:0));B.push(...g1)}
  if(all.length>n1)B.push({k:"note",text:"Les autres photos figurent en annexe, à la fin de la fiche."})
  // ---- page 2 : à compléter par l'opérateur ----
  B.push({k:"pagebreak"},{k:"bar",text:"À COMPLÉTER PAR L'OPÉRATEUR – retour sur l'intervention",color:"orange"});B.push({k:"space",h:2});
@@ -728,7 +734,7 @@ async function ficheModel(c){
  B.push({k:"result",main:["Problème résolu","Résolu partiellement","Non résolu"],cond:"Si résolu partiellement ou non résolu :",why:["Pièces à commander","Accès impossible","Entreprise nécessaire","Autre : ............"],next:["Nouvelle intervention à planifier","Contrôle à refaire le ...... / ...... / ......"]});
  B.push({k:"lines",label:"Observations / retour sur l'intervention",h:15},{k:"sign"});
  B.push({k:"note",text:"Une fois la fiche remplie : reporter ces informations dans l'application (état « Terminée » + justification de clôture)."});
- if(all.length>n1){B.push({k:"pagebreak"},{k:"bar",text:n1?"ANNEXE – PHOTOS (suite)":"ANNEXE – PHOTOS"},{k:"space",h:2},...grp(all.slice(n1)))}
+ if(all.length>n1){B.push({k:"pagebreak"},{k:"bar",text:n1?"ANNEXE – PHOTOS (suite)":"ANNEXE – PHOTOS"},{k:"space",h:2});const g2=grp(all.slice(n1));fichePhLay(g2,260);B.push(...g2)}
  return B}
 // ---------- rendu PDF ----------
 function fichePdfBuild(B,ref){
@@ -750,8 +756,10 @@ function fichePdfBuild(B,ref){
   else if(b.k==="callout"){const st=!!b.strong,fs=st?11:9.5,L=wrap(b.text,CW-9,0,fs),h=8.5+L.length*fs*.3528*1.32+3;room(h);
    if(st){fill(FC.cream);d.rect(M,y,CW,h,"F");fill(FC.orange);d.rect(M,y,2.4,h,"F")}stroke(FC.line);d.setLineWidth(.25);d.rect(M,y,CW,h);
    font(1,6.8);ink(st?FC.orange:FC.grey);d.text(fsafe(b.label),M+5,y+4);font(0,fs);ink("#000000");d.text(L,M+5,y+9);y+=h+4}
-  else if(b.k==="photos"){const per=3,cw=CW/per,ih=30;room(9+ih+8);font(1,8);ink("#000000");d.text(fsafe(b.title),M,y+3);y+=5.5;
-   for(let i=0;i<b.items.length;i+=per){room(ih+8);b.items.slice(i,i+per).forEach((it,k)=>{const x=M+k*cw,bw=cw-4;fill(FC.ph);d.rect(x,y,bw,ih,"F");const r=Math.min(bw/it.w,ih/it.h),w=it.w*r,h=it.h*r;d.addImage(it.buf,"JPEG",x+(bw-w)/2,y+(ih-h)/2,w,h);font(0,7);ink(FC.grey);d.text(fsafe(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`),x,y+ih+3.4)});y+=ih+6.5}
+  else if(b.k==="photos"){const per=b.cols||3,cw=CW/per,ih=b.ih||30;room(9+ih+8);font(1,8);ink("#000000");d.text(fsafe(b.title),M,y+3);y+=5.5;
+   for(let i=0;i<b.items.length;i+=per){room(ih+8);b.items.slice(i,i+per).forEach((it,k)=>{const x=M+k*cw,bw=cw-4,r=Math.min(bw/it.w,ih/it.h),w=it.w*r,h=it.h*r;
+    try{d.addImage(it.buf,"JPEG",x+(bw-w)/2,y+(ih-h)/2,w,h,undefined,"FAST")}catch(_){stroke(FC.line);d.setLineWidth(.25);d.rect(x,y,bw,ih);font(0,8);ink(FC.grey);d.text("Photo non affichable",x+bw/2,y+ih/2,{align:"center"})}
+    font(0,7);ink(FC.grey);d.text(fsafe(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`),x,y+ih+3.4)});y+=ih+6.5}
    y+=2}
   else if(b.k==="lines"){const h=b.h;room(h+9);font(1,8.5);ink(FC.blue);d.text(fsafe(b.label),M,y+3.5);y+=5;stroke(FC.line);d.setLineWidth(.25);d.rect(M,y,CW,h);d.setLineWidth(.12);for(let yy=y+6.5;yy<y+h-1;yy+=6.5)d.line(M+1.5,yy,M+CW-1.5,yy);y+=h+4}
   else if(b.k==="table"){const cw=b.w.map(x=>x*CW),rh=7;room(7+rh*(b.n+1)+3);font(1,8.5);ink(FC.blue);d.text(fsafe(b.label),M,y+3.5);y+=5;
@@ -789,8 +797,8 @@ function ficheDocx(B,ref){
   else if(b.k==="grid"){const cw=b.w.map(x=>Math.round(x*TW));cw[cw.length-1]=TW-cw.slice(0,-1).reduce((a,v)=>a+v,0);
    X+=tbl(cw,b.rows.map(row=>{let ci=0;return{h:mm(b.min||9),c:row.map(c=>{const s=c.s||1,w=cw.slice(ci,ci+s).reduce((a,v)=>a+v,0);ci+=s;return cell(w,par(run((c.l||"").toUpperCase(),{s:6.5,c:FC.grey}))+(c.v?par(run(c.v,{s:9.5,b:1})):""),{span:s})})}})) +gap(80)}
   else if(b.k==="callout"){const st=!!b.strong;X+=tbl([TW],[{c:[cell(TW,par(run(b.label,{s:6.8,b:1,c:st?FC.orange:FC.grey}),{af:20})+par(run(b.text,{s:st?11:9.5})),{fill:st?FC.cream:null,bl:st?bd(FC.orange,36):null})]}],{pt:70,pl:140})+gap(80)}
-  else if(b.k==="photos"){X+=par(run(b.title,{s:8,b:1}),{kn:1,af:60});const cw=Math.floor(TW/3);
-   for(let i=0;i<b.items.length;i+=3){const its=b.items.slice(i,i+3);X+=tbl([cw,cw,TW-2*cw],[{c:[0,1,2].map(k=>{const it=its[k];return cell(k<2?cw:TW-2*cw,it?par(img(it,56,30),{jc:"center"})+par(run(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`,{s:7,c:FC.grey}),{jc:"center"}):par(""),{va:"center"})})}],{nob:1})}
+  else if(b.k==="photos"){X+=par(run(b.title,{s:8,b:1}),{kn:1,af:60});const cols=b.cols||3,cw=Math.floor(TW/cols),mw=182/cols-4;
+   for(let i=0;i<b.items.length;i+=cols){const its=b.items.slice(i,i+cols),ws=Array.from({length:cols},(_,k)=>k<cols-1?cw:TW-(cols-1)*cw);X+=tbl(ws,[{c:ws.map((w,k)=>{const it=its[k];return cell(w,it?par(img(it,mw,b.ih||30),{jc:"center"})+par(run(`${it.g==="t"?"T":"I"}${it.n} · ${it.cap}`,{s:7,c:FC.grey}),{jc:"center"}):par(""),{va:"center"})})}],{nob:1})}
    X+=gap(80)}
   else if(b.k==="lines"){X+=par(run(b.label,{s:8.5,b:1,c:FC.blue}),{kn:1,af:40});const n=Math.max(1,Math.floor(b.h/6.5));X+=tbl([TW],Array.from({length:n},()=>({h:mm(6.5),hr:"exact",c:[cell(TW,par(""))]})),{pt:0,sz:4})+gap(80)}
   else if(b.k==="table"){const cw=b.w.map(x=>Math.round(x*TW));cw[3]=TW-cw[0]-cw[1]-cw[2];X+=par(run(b.label,{s:8.5,b:1,c:FC.blue}),{kn:1,af:40})+tbl(cw,[{c:b.head.map((t,i)=>cell(cw[i],par(run(t,{s:6.5,c:FC.grey}))))},...Array.from({length:b.n},()=>({h:mm(7),hr:"exact",c:cw.map((w,i)=>cell(w,i===3?par(cb("",10),{jc:"center"}):par(""),{va:"center"}))}))])+gap(100)}
@@ -812,6 +820,12 @@ async function ficheExport(btn,fmt){const old=btn.textContent;btn.disabled=true;
  try{const c=curI,B=await ficheModel(c);if(fmt==="pdf")fichePdfBuild(B,c.ref).save(`fiche-${c.ref}.pdf`);else dlB(ficheDocx(B,c.ref),`fiche-${c.ref}.docx`)}
  catch(e){alert("La fiche n'a pas pu être générée : "+errMsg(e))}
  btn.disabled=false;btn.textContent=old}
+function mailI(){const c=curI,e=c.entreprise_id||c.prestataire?"e":"a",ent=ents.find(x=>x.id===c.entreprise_id),dv=e==="e"&&devisMail,ce=(corps.find(x=>x.id===c.corps_etat_id)||{}).nom;
+ const to=e==="e"?(ent?ent.email:c.prestataire_email)||"":agents.filter(a=>(c.agent_ids||[]).includes(a.id)).map(a=>a.email).filter(Boolean).join(",");
+ const m=mdl(e==="a"?"regie":dv?"devis":"entreprise"),v={ref:c.ref,titre:c.titre,consignes:c.consignes,site:siteN(c.site_id),SITE:siteN(c.site_id).toUpperCase(),zone:zoneN(c.zone_id),local:c.local,corps_etat:ce,priorite:PR[c.priorite],echeance:c.echeance?fdate(c.echeance):"",duree:c.duree_j?fduree(c.duree_j):"",signataire:nm()};
+ const obj=fill(m.objet,v),url="mailto:"+to+"?subject="+encodeURIComponent(obj)+"&body="+encodeURIComponent(fill(m.corps,v));
+ sb.rpc("intervention_mail",{p_id:c.id,p_dest:to,p_objet:obj}).then(()=>{if($("ih"))loadH()},()=>{});
+ const a=document.createElement("a");a.href=url;a.rel="noopener noreferrer";document.body.appendChild(a);a.click();a.remove()}
 $("ibody").onclick=async e=>{const b=e.target.closest("[data-edit],[data-et],[data-create],[data-pdf],[data-word],[data-mail],[data-nadd],[data-another]");if(!b)return;const d=b.dataset;
  if("edit" in d){ed=!ed;drawI()}else if(d.et)setEt(d.et);else if("create" in d)createI();else if("another" in d){const t=tk.find(x=>x.id===curI.ticket_id);pendingTicket=t;openIv(null,t)}else if("pdf" in d)ficheExport(b,"pdf");else if("word" in d)ficheExport(b,"word");else if("mail" in d)mailI();
  else if("nadd" in d){const m=$("inm").value.trim();if(!m)return;const {error}=await sb.from("intervention_notes").insert({intervention_id:curI.id,auteur:nm(),message:m});if(error)alert(errMsg(error));else{$("inm").value="";loadN()}}};
@@ -836,23 +850,26 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  $("en_c").value=x.corps_etat_id||"";$("en_e").value=x.entreprise;$("en_n").value=x.contact||"";$("en_m").value=x.email||"";$("en_t").value=fmtTel(x.mobile);
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
 const NOTICE={demandeur:"notices/notice_demandeur.html",responsable:"notices/notice_responsable.html",supervision:"notices/notice_supervision.html",agent_travaux:"notices/notice_agent.html",agent_exploitation:"notices/notice_agent.html",admin:"notices/notice_administrateur.html"};
-$("hlp").onclick=()=>window.open(NOTICE[role()]||"notices/notice_demandeur.html","_blank");
-$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").classList.remove("hide");const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);sgTab(adm&&SGN>0?"l":"n");$("dS").showModal()};
+$("hlp").onclick=()=>window.open(NOTICE[role()]||"notices/notice_demandeur.html","_blank","noopener,noreferrer");
+$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").disabled=false;const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);$("sgt_p").classList.toggle("hide",!(adm&&SGN>0));sgTab(adm&&SGN>0?"p":"n");$("dS").showModal()};
 let SGN=0;
-function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);}
-let SGM="l";
-function sgTab(k){SGM=k==="v"?"v":"l";$("sg_new").classList.toggle("hide",k!=="n");$("sg_list").classList.toggle("hide",k==="n");$("sgt_n").classList.toggle("on",k==="n");$("sgt_l").classList.toggle("on",k==="l");$("sgt_v").classList.toggle("on",k==="v");if(k!=="n")renderSug()}
-function setSgc(r,v){$("sgn").textContent=`(${r})`;$("sgv").textContent=`(${v})`}
+function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);const tp=$("sgt_p");if(tp)tp.classList.toggle("hide",!(n>0&&me&&me.role==="admin"))}
+let SGM="l";const isPb=x=>x.type==="Problème rencontré";
+function sgTab(k){SGM=["p","l","v"].includes(k)?k:"n";["n","p","l","v"].forEach(t=>{const b=$("sgt_"+t);b.classList.toggle("on",t===SGM);b.setAttribute("aria-selected",t===SGM)});$("sg_new").classList.toggle("hide",SGM!=="n");$("sg_list").classList.toggle("hide",SGM==="n");if(SGM!=="n")renderSug()}
+function setSgc(r,v,p){$("sgn").textContent=`(${r})`;$("sgv").textContent=`(${v})`;$("sgp").textContent=`(${p})`}
 $("sgtabs").onclick=e=>{const b=e.target.closest("[data-sgt]");if(b)sgTab(b.dataset.sgt)};
-async function sugAlert(){if(!me||me.role!=="admin")return;const {data,error}=await sb.from("suggestions").select("type,traitee");if(error)return;setSgn(data.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);setSgc(data.filter(x=>!x.traitee).length,data.filter(x=>x.traitee).length)}
+async function sugAlert(){if(!me||me.role!=="admin")return;const {data,error}=await sb.from("suggestions").select("type,traitee");if(error)return;setSgn(data.filter(x=>isPb(x)&&!x.traitee).length);setSgc(data.filter(x=>!x.traitee&&!isPb(x)).length,data.filter(x=>x.traitee).length,data.filter(x=>isPb(x)&&!x.traitee).length)}
 $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.color="";if(!ti){$("sugm").textContent="Le titre est obligatoire.";return}
+ $("sugb").disabled=true;
  const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
+ $("sugb").disabled=false;
  if(error){$("sugm").textContent="Envoi impossible : "+errMsg(error);return}
- $("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur.";$("sugb").classList.add("hide")};
+ $("sugti").value="";$("sugtx").value="";$("sugt").value="Idée";$("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur. Vous pouvez en saisir une autre.";$("sugti").focus();sugAlert()};
+["sugti","sugtx","sugt"].forEach(i=>$(i).addEventListener("input",()=>{$("sugm").textContent=""}));
 let SG=[];
-async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>x.type==="Problème rencontré"&&!x.traitee).length);setSgc(SG.filter(x=>!x.traitee).length,SG.filter(x=>x.traitee).length);const VUE=SG.filter(x=>SGM==="v"?x.traitee:!x.traitee);
+async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>isPb(x)&&!x.traitee).length);setSgc(SG.filter(x=>!x.traitee&&!isPb(x)).length,SG.filter(x=>x.traitee).length,SG.filter(x=>isPb(x)&&!x.traitee).length);if(SGM==="p"&&!SGN){SGM="l";["n","p","l","v"].forEach(t=>$("sgt_"+t).classList.toggle("on",t===SGM))}const VUE=SG.filter(x=>SGM==="v"?x.traitee:SGM==="p"?(isPb(x)&&!x.traitee):(!x.traitee&&!isPb(x)));
  const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
- $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=VUE.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">${SGM==="v"?"Aucune idée traitée.":"Aucune idée à traiter."}</p>`}
+ $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=VUE.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">${SGM==="v"?"Aucune idée traitée.":SGM==="p"?"Aucun problème en cours.":"Aucune idée à traiter."}</p>`}
 let SE=null;
 function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
