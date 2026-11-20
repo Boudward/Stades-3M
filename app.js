@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.8.0 */
+/* STADES 3M – application – version 4.9.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -218,26 +218,57 @@ class ZipOut{constructor(sink){this.s=sink;this.off=0;this.cen=[];this.enc=new T
  async end(){const cs=this.off;for(const e of this.cen){const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(12,this.tm,true);c.setUint16(14,this.dt,true);c.setUint32(16,e.crc,true);c.setUint32(20,e.sz,true);c.setUint32(24,e.sz,true);c.setUint16(28,e.nm.length,true);c.setUint32(42,e.start,true);await this.w(new Uint8Array(c.buffer));await this.w(e.nm)}
   const cl=this.off-cs,z=new DataView(new ArrayBuffer(22));z.setUint32(0,0x06054b50,true);z.setUint16(8,this.cen.length,true);z.setUint16(10,this.cen.length,true);z.setUint32(12,cl,true);z.setUint32(16,cs,true);await this.w(new Uint8Array(z.buffer))}}
 const LISEZ_LOCAL="STADES 3M – copie consultable hors ligne\r\n\r\nPour consulter cette copie sur votre ordinateur, sans Internet :\r\n 1) extrayez le fichier consulter.html de ce ZIP (ou utilisez celui de l'application) et ouvrez-le avec Chrome, Edge ou Firefox ;\r\n 2) cliquez sur « Ouvrir des sauvegardes » et choisissez ce fichier ZIP (ne l'extrayez pas : la visionneuse le lit directement, photos comprises) ;\r\n 3) recherchez un ticket ou une intervention : fiche complète, suivi, historique et photos.\r\n\r\nCe fichier contient des données personnelles (noms, adresses e-mail) : conservez-le en lieu sûr.\r\n";
+async function zipRead(file){const size=file.size,tl=Math.min(size,65557+22),tail=new Uint8Array(await file.slice(size-tl,size).arrayBuffer()),dv=new DataView(tail.buffer);let p=-1;
+ for(let i=tail.length-22;i>=0;i--){if(tail[i]===0x50&&tail[i+1]===0x4b&&tail[i+2]===5&&tail[i+3]===6){p=i;break}}
+ if(p<0)throw new Error("fichier ZIP illisible");
+ const n=dv.getUint16(p+10,true),cds=dv.getUint32(p+12,true),cdo=dv.getUint32(p+16,true);if(n===0xFFFF||cdo===0xFFFFFFFF)throw new Error("archive trop volumineuse");
+ const cd=new Uint8Array(await file.slice(cdo,cdo+cds).arrayBuffer()),c=new DataView(cd.buffer),dec=new TextDecoder(),ent=new Map();let o=0;
+ while(o+46<=cd.length&&c.getUint32(o,true)===0x02014b50){const nl=c.getUint16(o+28,true),xl=c.getUint16(o+30,true),kl=c.getUint16(o+32,true);ent.set(dec.decode(cd.subarray(o+46,o+46+nl)),{m:c.getUint16(o+10,true),cs:c.getUint32(o+20,true),lo:c.getUint32(o+42,true)});o+=46+nl+xl+kl}
+ return{file,ent}}
+async function zipBytes(z,name){const e=z.ent.get(name);if(!e)return null;const h=new DataView(await z.file.slice(e.lo,e.lo+30).arrayBuffer()),st=e.lo+30+h.getUint16(26,true)+h.getUint16(28,true),b=z.file.slice(st,st+e.cs);
+ if(e.m===0)return new Uint8Array(await b.arrayBuffer());
+ if(e.m===8){if(typeof DecompressionStream==="undefined")throw new Error("navigateur trop ancien pour lire un ZIP compressé");return new Uint8Array(await new Response(b.stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer())}
+ throw new Error("compression non prise en charge")}
+/* Fusion de la copie précédente (prev) et de l'état actuel de la base (cur) : sans doublon (clé = id) ; la base prime pour une ligne
+   existante, les lignes disparues de la base (purgées) sont conservées. Refuse la fusion si les identifiants ne désignent pas les mêmes objets. */
+function mergeCopie(prev,cur){const out={},stat={nouveaux:0,conserves:0},cle={tickets:"ref",interventions:"ref",plans_preventifs:"created_at",photos:"chemin"};
+ for(const k of new Set([...Object.keys(prev||{}),...Object.keys(cur)])){const mp=new Map();for(const r of (prev&&prev[k])||[])mp.set(r.id,r);const mc=new Map();for(const r of cur[k]||[])mc.set(r.id,r);
+  const f=cle[k];if(f)for(const [id,r] of mc){const o=mp.get(id);if(o&&o[f]!==undefined&&r[f]!==undefined&&o[f]!==r[f])throw new Error(`cumul impossible : ${k} n°${id} diffère entre la copie précédente et la base (base différente ou réinitialisée)`)}
+  const res=new Map(mp);for(const [id,r] of mc)res.set(id,r);out[k]=[...res.values()];
+  if(k==="tickets"||k==="interventions"){for(const id of mc.keys())if(!mp.has(id))stat.nouveaux++;for(const id of mp.keys())if(!mc.has(id))stat.conserves++}}
+ return{tables:out,stat}}
 async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabled=true;m.style.color="";let w=null,parts=null;
- try{const name=`stades3m_consultable_${today()}.zip`;let sink;
+ try{const name=`stades3m_cumul_${today()}.zip`;let sink,prev=null,prevZ=null;
+  const pf=$("exprev")&&$("exprev").files[0];
+  if(pf){if(!window.showSaveFilePicker)throw new Error("la mise à jour d'une copie existante nécessite Chrome ou Edge");
+   prevZ=await zipRead(pf);if(!prevZ.ent.has("donnees.json"))throw new Error("la copie précédente ne contient pas donnees.json");
+   prev=JSON.parse(new TextDecoder().decode(await zipBytes(prevZ,"donnees.json")));
+   if(prev.application!=="STADES 3M"||!prev.tables)throw new Error("la copie précédente n'est pas une copie STADES 3M");
+   if(prev.environnement&&prev.environnement!==ENV)throw new Error(`la copie précédente provient de la base « ${prev.environnement} » : cumul refusé avec la base « ${ENV} »`)}
   if(window.showSaveFilePicker){try{const h=await window.showSaveFilePicker({suggestedName:name,types:[{description:"Archive ZIP",accept:{"application/zip":[".zip"]}}]});w=await h.createWritable();sink={write:u=>w.write(u)}}catch(e){if(e&&e.name==="AbortError"){btn.disabled=false;return}throw e}}
   else{parts=[];sink={write:async u=>{parts.push(u)}}}
-  const tables={},names=["sites","zones","categories","corps_etat","entreprises","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","plans_preventifs"];
-  for(const t of names){m.textContent="Lecture : "+t+"…";tables[t]=await tbl(t,"id")}
-  m.textContent="Lecture : historique des interventions…";tables.audit_log=[];for(let i=0;;i+=1000){const {data,error}=await sb.from("audit_log").select("*").eq("table_name","interventions").order("id").range(i,i+999);if(error)throw error;tables.audit_log=tables.audit_log.concat(data);if(data.length<1000)break}
-  tables.photos=PH()?await tbl("photos","id"):[];
-  const tot=tables.photos.reduce((a,p)=>a+(p.taille_octets||0),0);
-  if(!confirm(`La copie contiendra ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s) et ${tables.photos.length} photo(s) (environ ${(tot/1048576).toFixed(1)} Mo).`+(parts?"\n\nVotre navigateur garde la copie en mémoire : pour un gros volume, utilisez Chrome ou Edge.":"")+"\n\nContinuer ?")){if(w)await w.abort();btn.disabled=false;m.textContent="";return}
-  const zip=new ZipOut(sink),enc=new TextEncoder(),manq=[];let n=0;
-  for(const p of tables.photos){m.textContent=`Photos ${++n}/${tables.photos.length}…`;try{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");await zip.add("photos/"+p.chemin,new Uint8Array(await r.data.arrayBuffer()))}catch(_){manq.push(p.chemin)}}
-  m.textContent="Écriture des données…";await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.8.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,tables})));
+  const cur={},names=["sites","zones","categories","corps_etat","entreprises","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","plans_preventifs"];
+  for(const t of names){m.textContent="Lecture : "+t+"…";cur[t]=await tbl(t,"id")}
+  m.textContent="Lecture : historique des interventions…";cur.audit_log=[];for(let i=0;;i+=1000){const {data,error}=await sb.from("audit_log").select("*").eq("table_name","interventions").order("id").range(i,i+999);if(error)throw error;cur.audit_log=cur.audit_log.concat(data);if(data.length<1000)break}
+  cur.photos=PH()?await tbl("photos","id"):[];
+  const mg=mergeCopie(prev&&prev.tables,cur),tables=mg.tables,have=new Set(prevZ?[...prevZ.ent.keys()].filter(e=>e.startsWith("photos/")).map(e=>e.slice(7)):[]);
+  const aTel=tables.photos.filter(p=>!have.has(p.chemin)&&cur.photos.some(c=>c.id===p.id)),tot=aTel.reduce((a,p)=>a+(p.taille_octets||0),0);
+  if(!confirm(`La copie contiendra ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s) et ${tables.photos.length} photo(s).`+(prev?`\n\nPar rapport à la copie précédente : ${mg.stat.nouveaux} nouveau(x) ticket(s)/intervention(s), ${mg.stat.conserves} conservé(s) alors qu'ils ne sont plus en ligne. ${aTel.length} photo(s) à télécharger (environ ${(tot/1048576).toFixed(1)} Mo).`:`\n\nPhotos à télécharger : ${aTel.length} (environ ${(tot/1048576).toFixed(1)} Mo).`)+(parts?"\n\nVotre navigateur garde la copie en mémoire : pour un gros volume, utilisez Chrome ou Edge.":"")+"\n\nContinuer ?")){if(w)await w.abort();btn.disabled=false;m.textContent="";return}
+  const zip=new ZipOut(sink),enc=new TextEncoder(),manq=[];let n=0,copiees=0,telech=0;
+  for(const p of tables.photos){m.textContent=`Photos ${++n}/${tables.photos.length}…`;
+   try{let buf=null;if(have.has(p.chemin)){buf=await zipBytes(prevZ,"photos/"+p.chemin);copiees++}
+    else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
+    await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
+  m.textContent="Écriture des données…";
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.9.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.9.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
-  m.style.color="var(--ok)";m.textContent=`Copie créée : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s).`+(manq.length?` ${manq.length} photo(s) introuvable(s) dans le stockage (listées dans le fichier).`:"")+" Pour la consulter : ouvrez consulter.html puis choisissez ce ZIP."}
+  m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.8.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.9.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}

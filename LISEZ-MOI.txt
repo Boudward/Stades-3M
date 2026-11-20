@@ -1,8 +1,10 @@
-STADES 3M – version 4.8.0 (20/11/2026) – ensemble des fichiers
+STADES 3M – version 4.9.0 (20/11/2026) – ensemble des fichiers
 
 site/                 À déposer à la racine du dépôt GitHub Pages : index.html, config.js, app.js, style.css, icônes,
                       dossier lib/ (bibliothèques), dossier notices/ (les cinq notices d'utilisation) et dossier consultation/
-                      (consulter.html : visionneuse hors ligne des copies de sauvegarde ZIP, à enregistrer aussi sur votre ordinateur).
+                      (consulter.html : visionneuse hors ligne des copies ZIP, à enregistrer aussi sur votre ordinateur).
+                      Version 4.9.0 : la copie consultable peut être cumulative (fusion avec la copie précédente, sans doublon).
+                      Aucune migration SQL n'est nécessaire pour cette version.
                       Renseignez dans config.js l'adresse et la clé publique de chaque base (production, test).
 sql/                  schema_complet_4_7_0.sql      Recrée TOUTE la base depuis zéro (projet Supabase vierge, avec
                                                     pg_cron activé avant l'exécution). Ne sert pas à mettre à jour une base en service.
