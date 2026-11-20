@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.10.0 */
+/* STADES 3M – application – version 4.10.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -231,9 +231,9 @@ async function zipBytes(z,name){const e=z.ent.get(name);if(!e)return null;const 
  throw new Error("compression non prise en charge")}
 /* Fusion de la copie précédente (prev) et de l'état actuel de la base (cur) : sans doublon (clé = id) ; la base prime pour une ligne
    existante, les lignes disparues de la base (purgées) sont conservées. Refuse la fusion si les identifiants ne désignent pas les mêmes objets. */
-function mergeCopie(prev,cur){const out={},stat={nouveaux:0,conserves:0},cle={tickets:"ref",interventions:"ref",plans_preventifs:"created_at",photos:"chemin"};
+function mergeCopie(prev,cur){const out={},stat={nouveaux:0,conserves:0},cle={tickets:["ref","created_at"],interventions:["ref","created_at"],plans_preventifs:["created_at"],photos:["chemin"]};
  for(const k of new Set([...Object.keys(prev||{}),...Object.keys(cur)])){const mp=new Map();for(const r of (prev&&prev[k])||[])mp.set(r.id,r);const mc=new Map();for(const r of cur[k]||[])mc.set(r.id,r);
-  const f=cle[k];if(f)for(const [id,r] of mc){const o=mp.get(id);if(o&&o[f]!==undefined&&r[f]!==undefined&&o[f]!==r[f])throw new Error(`cumul impossible : ${k} n°${id} diffère entre la copie précédente et la base (base différente ou réinitialisée)`)}
+  const f=cle[k];if(f)for(const [id,r] of mc){const o=mp.get(id);if(o&&f.some(c=>o[c]!==undefined&&r[c]!==undefined&&o[c]!==r[c]))throw new Error(`cumul impossible : ${k} n°${id} diffère entre la copie précédente et la base (base différente ou réinitialisée)`)}
   const res=new Map(mp);for(const [id,r] of mc)res.set(id,r);out[k]=[...res.values()];
   if(k==="tickets"||k==="interventions"){for(const id of mc.keys())if(!mp.has(id))stat.nouveaux++;for(const id of mp.keys())if(!mc.has(id))stat.conserves++}}
  return{tables:out,stat}}
@@ -260,15 +260,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.10.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.10.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.10.1",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.10.1",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.10.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.10.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -655,8 +655,12 @@ function drawI(){const c=curI,saved=!!c.id,r=role(),ag=isAg(),canE=!ag&&r!=="dem
  :`${PH()?'<div id="phzs"></div>':""}<p class="msg" id="imsg"></p><button data-create>Créer l'intervention</button> <button class="sec" data-icancel>Annuler</button>`}`;if(saved)$("ibody").insertAdjacentHTML("beforeend",XFOOT);phRenderT(c);if(saved){loadN();phRender("i",c,E);if(canE||r==="supervision")loadH()}else phStageRender("i")}
 async function loadN(){const {data}=await sb.from("intervention_notes").select("*").eq("intervention_id",curI.id).order("created_at");
  $("inl").innerHTML=(data||[]).map(x=>`<div class="tl nt"><span>${tlTime(x.created_at)}</span><b>${esc(x.auteur)}</b> : ${esc(x.message)}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune note.</p>`}
-async function upd(u){if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
- await load();curI=ints.find(x=>x.id===curI.id)||{...curI,...u}}else Object.assign(curI,u);drawI()}
+/* Un champ de texte saisi puis un clic direct sur un bouton : le changement part au moment du clic ; si la fiche est alors redessinée, le clic est perdu.
+   On ne redessine donc que lorsque la modification change l'affichage ou d'autres champs. */
+const QUIET=()=>["consignes","local","duree_j","bc_numero",...SU.map(x=>x[0])];
+async function upd(u){const quiet=Object.keys(u).every(k=>QUIET().includes(k)||(!curI.id&&k==="titre"));
+ if(curI.id){const {error}=await sb.from("interventions").update(u).eq("id",curI.id);if(error){alert("Modification impossible : "+errMsg(error));drawI();return}
+  await load();curI=ints.find(x=>x.id===curI.id)||{...curI,...u}}else Object.assign(curI,u);if(!quiet)drawI()}
 $("ibody").onchange=async e=>{const t=e.target,d=t.dataset;
  if(d.agent!==undefined){const ch=[...document.querySelectorAll("#ibody [data-agent]:checked")];return upd({agent_ids:ch.map(b=>b.dataset.agent),agents_noms:ch.map(b=>b.dataset.n).join(", "),entreprise_id:null,prestataire:null,prestataire_email:null})}
  if(d.dv!==undefined){devisMail=t.checked;return t.checked&&!curI.devis_demande_at?upd({devis_demande_at:today()}):drawI()}
