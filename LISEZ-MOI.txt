@@ -1,4 +1,4 @@
-STADES 3M – version 4.10.0 (20/11/2026) – ensemble des fichiers
+STADES 3M – version 4.10.1 (20/11/2026) – ensemble des fichiers
 
 site/                 À déposer à la racine du dépôt GitHub Pages : index.html, config.js, app.js, style.css, icônes,
                       dossier lib/ (bibliothèques), dossier notices/ (les cinq notices d'utilisation) et dossier consultation/
