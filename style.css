@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.2.2 */
+/* STADES 3M – feuille de style – version 4.7.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -30,6 +30,7 @@ tr.new td,tr.np td{font-weight:700}
 .plan .pl{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}.plan .pv2{font-size:22px;font-weight:700;color:var(--accent)}.plan input{width:auto;min-width:150px;margin:0}.plan input.dur{min-width:90px;width:110px}
 tbody tr.c.ro{cursor:default}tbody tr.c.ro:hover{background:none}
 .phg{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;margin:6px 0}.ph{padding:0;border:1px solid var(--line);background:#fff;border-radius:6px;overflow:hidden;aspect-ratio:1}.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.phw{position:relative}.phw .ph{width:100%}.phx{position:absolute;top:4px;right:4px;padding:3px 5px;background:#fff;border-radius:6px}
 .phadd{display:inline-block;position:relative;padding:8px 14px;border:1px solid var(--accent);border-radius:6px;color:var(--accent);background:#fff;cursor:pointer;font-weight:600;margin:6px 0}.phadd input{position:absolute;opacity:0;width:1px;height:1px;left:0;top:0}.phadd:focus-within{outline:3px solid var(--accent);outline-offset:2px}
 dialog.phv{max-width:96vw;width:min(900px,96vw)}.phv img{max-width:100%;max-height:72vh;display:block;margin:8px auto;object-fit:contain}
 .sgp{margin:16px 0 4px;padding:5px 10px;border-left:6px solid var(--accent);background:#f6f8fc;font-size:15px}.sgp-haute{border-left-color:#b3261e}.sgp-normale{border-left-color:#3b82c4}.sgp-basse{border-left-color:#8a99a3}
