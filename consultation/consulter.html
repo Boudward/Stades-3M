@@ -6,7 +6,7 @@
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src blob: data:; style-src 'unsafe-inline'; script-src 'unsafe-inline'; base-uri 'none'; form-action 'none'">
 <title>STADES 3M – Consultation hors ligne</title>
 <!--
-  STADES 3M – VISIONNEUSE HORS LIGNE (version 4.8.0)
+  STADES 3M – VISIONNEUSE HORS LIGNE (version 4.9.0)
   Fichier autonome : aucune connexion Internet, aucune installation. Il ouvre les copies de sauvegarde (.zip) créées par
   l'application (« Copie consultable hors ligne » et archives de purge) ainsi que les anciens fichiers .json.
   Les données restent sur votre ordinateur : rien n'est envoyé nulle part.
@@ -97,7 +97,7 @@ const ET={a_planifier:"À planifier",planifiee:"Planifiée",en_attente_pieces:"E
 const PR={basse:"Basse",normale:"Normale",haute:"Haute",urgente:"Urgente"},NO={non:"Non",partiel:"Partielle",oui:"Oui"};
 const FIELDS={titre:"Titre",consignes:"Consignes",priorite:"Priorité",echeance:"Date d'intervention",duree_j:"Durée (jours)",etat:"État",agents_noms:"Intervenants",responsable_nom:"Responsable",prestataire:"Entreprise",prestataire_email:"E-mail de l'entreprise",bc_numero:"N° de bon de commande",devis_demande_at:"Devis demandé le",devis_recu_at:"Devis reçu le",bc_envoye_at:"Bon de commande envoyé le",facture_recue:"Facture reçue",facture_payee:"Facture payée",montant_devis_ht:"Montant du devis HT",montant_bc_ht:"Montant du bon de commande HT",montant_facture_ht:"Montant de la facture HT",local:"Local"};
 // ---------- état ----------
-let SRC=[],D={},IDX={},VIEW="t",SORT={t:{k:"d",d:-1},i:{k:"d",d:-1},p:{k:"d",d:1}},LIM=200,PHM=new Map(),CUR=[],LBI=0;
+let SRC=[],D={},DT={},IDX={},VIEW="t",SORT={t:{k:"d",d:-1},i:{k:"d",d:-1},p:{k:"d",d:1}},LIM=200,PHM=new Map(),CUR=[],LBI=0;
 const TB=["sites","zones","categories","corps_etat","entreprises","tickets","ticket_suivi","ticket_events","interventions","intervention_notes","plans_preventifs","photos","audit_log"];
 // ---------- lecture des ZIP (accès direct, sans tout charger) ----------
 async function openZip(file){
@@ -124,7 +124,7 @@ async function charger(files){
    else obj=JSON.parse(await f.text());
    if(obj.application!=="STADES 3M")throw new Error("ce n'est pas un fichier STADES 3M");
    const t=obj.tables||obj;meta.type=obj.type||"?";meta.date=obj.date;meta.version=obj.version;meta.manq=(obj.photos_manquantes||[]).length;
-   for(const k of TB){const a=t[k];if(!Array.isArray(a))continue;D[k]=D[k]||new Map();for(const r of a){const key=k==="audit_log"?r.id:r.id;if(!D[k].has(key))D[k].set(key,r)}}
+   meta.copies=obj.copies||[];const sd=obj.date||"";for(const k of TB){const a=t[k];if(!Array.isArray(a))continue;D[k]=D[k]||new Map();DT[k]=DT[k]||new Map();for(const r of a){const key=r.id,od=DT[k].get(key);if(od===undefined||sd>=od){D[k].set(key,r);DT[k].set(key,sd)}}}
    if(zip)for(const e of zip.ent.keys())if(e.startsWith("photos/")){const ch=e.slice(7);if(!PHM.has(ch))PHM.set(ch,zip)}
    SRC.push(meta)}
   catch(e){err.push(`${f.name} : ${e.message||e}`)}}
