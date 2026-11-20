@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.10.1 */
+/* STADES 3M – feuille de style – version 4.11.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -86,3 +86,11 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
 #dPl .pl-pause{margin:6px 0;padding:6px 8px;border:1px solid var(--line);border-radius:6px;background:#f2f5f7}
 #dPl.pl-off #plbody{opacity:.5;background:#e4e8ec;border-radius:6px;padding:6px}#dPl.pl-off #dPlT::after{content:" (inactif)";color:var(--warn)}.pl-row-off td{opacity:.55}
 .dper button{margin-right:6px}
+
+/* 4.11.0 – plans en série, catalogue des contrôles */
+.bplist .bph,.bplist .bprow{display:grid;grid-template-columns:2.4fr 1.5fr 1fr 1.15fr .75fr;gap:8px;align-items:center;padding:6px 4px}
+.bplist .bph{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line,#d5dbe5)}
+.bplist .bprow{border-bottom:1px solid var(--line,#e3e8ef)}.bplist .bprow.on{background:#eef4fd}.bplist .bprow select,.bplist .bprow input[type=date],.bplist .bprow input[type=number]{margin:0;width:100%}
+.bplist .bprow .ck{margin:0}.bplist .bprow .tag{margin-left:6px}
+@media(max-width:760px){.bplist .bph{display:none}.bplist .bprow{grid-template-columns:1fr 1fr}.bplist .bprow>label{grid-column:1/-1}}
+.pmt input,.pmt select{margin:0;min-width:110px}.pmt td{vertical-align:middle}.pmt input[type=number]{min-width:0;width:80px}
