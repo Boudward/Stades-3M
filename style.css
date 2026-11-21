@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.11.0 */
+/* STADES 3M – feuille de style – version 4.13.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -24,7 +24,7 @@ dialog{border:0;border-radius:6px;padding:20px;width:min(560px,94vw);box-shadow:
 #login{max-width:400px;margin:40px auto;background:#fff;padding:24px;border-radius:6px;border:1px solid var(--line)}
 th{white-space:nowrap}
 td.nw{white-space:nowrap}td.tt{min-width:220px;overflow-wrap:anywhere}td.lc{min-width:180px;overflow-wrap:anywhere}
-tr.new td,tr.np td{font-weight:700}
+tr.new td[data-k=ref],tr.new td[data-k=titre],tr.new td[data-k=site],tr.new td[data-k=date],tr.np td[data-k=ref],tr.np td[data-k=titre],tr.np td[data-k=site],tr.np td[data-k=corps]{font-weight:700}.rt td.rf{font-size:12px}
 .tag.t-np{color:var(--warn);border-color:var(--warn);background:#fdf6ef;font-weight:700}
 .plan{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-end;padding:10px 16px;margin:12px 0;border:1px solid var(--line);border-left:6px solid var(--accent);background:#f6f8fc;border-radius:6px}.plan.np{border-left-color:var(--warn);background:#fdf6ef}
 .plan .pl{display:block;font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em;margin-bottom:2px}.plan .pv2{font-size:22px;font-weight:700;color:var(--accent)}.plan input{width:auto;min-width:150px;margin:0}.plan input.dur{min-width:90px;width:110px}
@@ -42,7 +42,7 @@ tr.res{opacity:.7}tr.arc{opacity:.5}
 .vasbar{max-width:1750px;margin:8px auto -8px;padding:0 20px;text-align:right}.vasbar select{width:auto;font-size:12px;padding:3px 6px;color:var(--mute)}
 .tabrow{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.acts{margin-left:auto;display:flex;gap:10px;flex-wrap:wrap}
 button.cta{background:var(--warn);font-weight:600}button.cta:hover{filter:brightness(.92)}
-table.rt{table-layout:fixed;width:auto;max-width:none}.rt th{position:relative;overflow:hidden;padding-right:12px}.rt td{overflow:hidden}.rt td.nw{text-overflow:ellipsis}.rt td.tt,.rt td.lc{overflow-wrap:anywhere}
+table.rt{table-layout:fixed;width:auto;max-width:none}.rt th{position:relative;overflow:hidden;padding-right:12px}.rt td{overflow:hidden}.rt td.nw{text-overflow:ellipsis}.rt td{white-space:nowrap;text-overflow:ellipsis}.rt td.tt,.rt td.lc{min-width:0}
 .rs{position:absolute;right:0;top:0;bottom:0;width:8px;cursor:col-resize;touch-action:none}.rs:hover,.rs:active{background:var(--accent);opacity:.4}
 header h1 small{font-size:12px;font-weight:400;opacity:.85;margin-left:8px}.gh{margin:22px 0 8px;color:var(--accent)}.gh small{color:var(--mute);font-weight:400}.s-refusee{color:var(--bad)}
 #dDet,#dIv{width:min(640px,94vw)}.dh{display:flex;justify-content:space-between;align-items:start;gap:10px}.dh h2{margin:0}.sub{color:var(--mute)}
@@ -87,10 +87,18 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
 #dPl.pl-off #plbody{opacity:.5;background:#e4e8ec;border-radius:6px;padding:6px}#dPl.pl-off #dPlT::after{content:" (inactif)";color:var(--warn)}.pl-row-off td{opacity:.55}
 .dper button{margin-right:6px}
 
-/* 4.11.0 – plans en série, catalogue des contrôles */
+/* 4.13.0 – plans en série, catalogue des contrôles */
 .bplist .bph,.bplist .bprow{display:grid;grid-template-columns:2.4fr 1.5fr 1fr 1.15fr .75fr;gap:8px;align-items:center;padding:6px 4px}
 .bplist .bph{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line,#d5dbe5)}
 .bplist .bprow{border-bottom:1px solid var(--line,#e3e8ef)}.bplist .bprow.on{background:#eef4fd}.bplist .bprow select,.bplist .bprow input[type=date],.bplist .bprow input[type=number]{margin:0;width:100%}
 .bplist .bprow .ck{margin:0}.bplist .bprow .tag{margin-left:6px}
 @media(max-width:760px){.bplist .bph{display:none}.bplist .bprow{grid-template-columns:1fr 1fr}.bplist .bprow>label{grid-column:1/-1}}
 .pmt input,.pmt select{margin:0;min-width:110px}.pmt td{vertical-align:middle}.pmt input[type=number]{min-width:0;width:80px}
+
+/* 4.13.0 – petit écran : boutons compacts */
+.acts .pl1,.acts .ico{display:none}
+@media(max-width:760px){
+ .tabrow button.sec .r{display:none}
+ .tabrow button{padding-left:12px;padding-right:12px}
+ .acts .lb{display:none}.acts .pl1{display:inline;font-size:20px;font-weight:700;line-height:1}.acts .ico{display:inline-block;vertical-align:middle}
+}

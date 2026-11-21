@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.11.0 */
+/* STADES 3M – application – version 4.13.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -113,11 +113,12 @@ function cols(S){if(!S.length)return '<p class="empty">Aucune donnée.</p>';cons
  return `<svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Évolution dans le temps"><line x1="${L}" y1="${H-B}" x2="${W}" y2="${H-B}" stroke="#d3d9e6"/><text x="0" y="12" font-size="10" fill="#5d6e77">${mx}</text>`+S.map((x,i)=>{const X=L+i*bw,w=Math.max(2,bw*.38);
   return `<rect x="${X+bw*.1}" y="${y(x.crees)}" width="${w}" height="${H-B-y(x.crees)}" fill="#102d69"><title>${x.crees} créé(s)</title></rect><rect x="${X+bw*.1+w+1}" y="${y(x.resolus)}" width="${w}" height="${H-B-y(x.resolus)}" fill="#2e8b3c"><title>${x.resolus} résolu(s)</title></rect>${(!day||i%5===0)?`<text x="${X+bw/2}" y="${H-6}" font-size="9" text-anchor="middle" fill="#5d6e77">${lab(x)}</text>`:""}`}).join("")+`</svg><div class="meta"><span style="color:#102d69">■</span> créés &nbsp; <span style="color:#2e8b3c">■</span> résolus</div>`}
 const setP=()=>[...$("dper").children].forEach(b=>b.classList.toggle("sec",b.dataset.p!==DP));
+const fDel=v=>v==null?"—":(+v<1?Math.round(+v*24)+" h":(+v).toLocaleString("fr-FR",{maximumFractionDigits:1})+" j");
 async function loadDash(){$("dDb").innerHTML='<p class="empty">Chargement…</p>';const {data:d,error}=await sb.rpc("stats_tableau_bord",{p_debut:dDeb()});
  if(error){$("dDb").textContent=errMsg(error)+" (la migration SQL du tableau de bord est peut-être à exécuter)";return}
  const T=d.tickets_par_statut||{},I=d.interventions_par_etat||{},tile=(n,l,w)=>`<div class="gc" style="padding:10px;text-align:center${w?";border-color:var(--warn)":""}"><div style="font-size:26px;font-weight:700;color:${w?"var(--warn)":"var(--accent)"}">${n??"—"}</div><div class="meta">${l}</div></div>`,box=(t,b,full)=>`<div class="gc"${full?' style="grid-column:1/-1"':""}><h4>${t}</h4><div style="padding:10px">${b}</div></div>`,
  g=(m,x)=>`<div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(${m}px,1fr));margin-top:${x}px">`;
- $("dDb").innerHTML=`${g(130,0)}${tile(d.tickets_total,"Tickets")}${tile(d.tickets_en_retard,"Tickets en retard",d.tickets_en_retard>0)}${tile(d.delai_moyen_jours==null?"—":d.delai_moyen_jours+" j","Délai moyen de résolution")}${tile(d.interventions_total,"Interventions")}${tile(d.interventions_en_retard,"Interventions en retard",d.interventions_en_retard>0)}</div>
+ $("dDb").innerHTML=`${g(130,0)}${tile(d.tickets_total,"Tickets")}${tile(fDel(d.delai_prise_en_charge_jours),"Délai de prise en charge ticket")}${tile(d.delai_moyen_jours==null?"—":d.delai_moyen_jours+" j","Délai moyen de résolution")}${tile(d.interventions_total,"Interventions")}${tile(fDel(d.delai_demarrage_jours),"Délai démarrage intervention")}</div>
  ${g(320,14)}${box("Tickets par statut",donut(Object.keys(ST).map(k=>({l:ST[k],v:T[k]||0,c:SC[k]}))))}${box("Interventions par état",donut(Object.keys(ET).map(k=>({l:ET[k],v:I[k]||0,c:EC[k]}))))}${box("Tickets par catégorie",bars((d.tickets_par_categorie||[]).map(x=>({l:x.nom,v:x.n})),"#102d69"))}${box("Tickets par site",bars((d.tickets_par_site||[]).map(x=>({l:x.nom,v:x.n})),"#3b82c4"))}${box("Évolution des tickets "+(d.serie_unite==="day"?"(par jour)":DP==="all"?"(par mois, 12 derniers mois)":"(par mois)"),cols(d.serie||[]),true)}</div>`}
 $("dash").onclick=()=>{$("dDash").showModal();setP();loadDash()};
 $("dper").onclick=e=>{const b=e.target.closest("button");if(!b)return;DP=b.dataset.p;setP();loadDash()};
@@ -260,15 +261,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.11.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.11.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.13.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.13.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.11.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.13.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -300,11 +301,11 @@ const VS=[{t:"Bienvenue dans STADES 3M",x:"Cette visite d'une minute présente l
  {s:"tabs",t:"Tickets et interventions",x:"Les tickets sont les signalements ; les interventions sont les actions confiées à des agents ou à des entreprises."},
  {s:"newint",t:"Nouvelle intervention",x:"Confiez un travail à des agents ou à une entreprise, avec consignes, échéance et suivi (devis, bon de commande, facture)."},
  {s:"tabp",t:"Maintenance préventive",x:"Les contrôles périodiques (SSI, extincteurs, ascenseurs…) : échéances suivies et interventions créées automatiquement avant la date."},
- {s:"dash",t:"Tableau de bord",x:"Les chiffres clés : tickets par statut, retards, délai moyen de résolution et interventions."},
+ {s:"dash",t:"Tableau de bord",x:"Les chiffres clés : tickets par statut, délais de prise en charge, de résolution et de démarrage des interventions."},
  {s:"colt",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Dans les tableaux : cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir la fiche. Ligne en gras = nouveau, en rouge = urgent."},
  {s:"coli",t:"Colonnes, tri et filtres",x:"Affichez ou masquez des colonnes. Cliquez sur le nom d'une colonne pour trier, sur ▾ pour filtrer, sur une ligne pour ouvrir l'intervention et changer son état."},
  {s:"bell",t:"Notifications",x:"Le compteur indique les nouveautés : ticket attribué, message, changement de statut, intervention. Cliquez sur une notification pour ouvrir l'élément concerné."},
- {s:"sug",t:"Idées et suggestions",x:"Proposez une amélioration ou signalez un problème à l'administrateur."},
+ {s:"sug",t:"Problèmes et suggestions",x:"Signalez un problème, proposez une amélioration ou une nouvelle fonctionnalité à l'administrateur."},
  {s:"hlp",t:"Notice d'utilisation",x:"Ouvre la notice complète de votre profil."},
  {s:"adm",t:"Paramètres",x:"Annuaire des entreprises, corps d'état, sites et zones ; pour l'administrateur : comptes, référents, modèles d'e-mails, journal d'audit, sauvegardes."},
  {s:"tourb",t:"Visite guidée",x:"Relance cette visite à tout moment."},
@@ -509,28 +510,34 @@ const TB={t:{f:{},s:{k:null,d:1},base:[]},i:{f:{},s:{k:null,d:1},base:[]},p:{f:{
 const ts=d=>d?+new Date(d):0,mk=(l,v)=>({l,v,k:x=>String(v(x)).toLowerCase()});
 const catLab=x=>x.categorie_id?`${(cats.find(c=>c.id===x.categorie_id)||{}).nom||"?"} / ${(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—"}`:"—";
 const refK=(x,o)=>{const [a,b,c]=x.ref.split("-").slice(o).map(Number);return a*1e8+b*1e6+c};
+const prenom=n=>(n||"").trim().split(/\s+/)[0]||"—";
+const corpsN=x=>(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—";
 const COLS={
- ref:{l:"N°",c:"nw",lock:1,v:x=>x.ref,k:x=>refK(x,0)},
- titre:{...mk("Ticket",x=>x.titre),c:"tt",lock:1},
- date:{l:"Créé le",c:"nw",v:x=>new Date(x.created_at).toLocaleDateString("fr-FR"),k:x=>ts(x.created_at)},
+ ref:{l:"N°",c:"nw rf",lock:1,v:x=>x.ref,k:x=>refK(x,0)},
  priorite:{l:"Priorité",c:"nw",v:x=>PR[x.priorite],k:x=>["urgente","haute","normale","basse"].indexOf(x.priorite),h:x=>`<span class="tag p-${x.priorite}">${PR[x.priorite]}</span>`},
+ statut:{l:"Statut",c:"nw",v:x=>ST[x.statut],k:x=>Object.keys(ST).indexOf(x.statut),h:x=>`<span class="tag s-${x.statut}">${ST[x.statut]}</span>`},
  site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone",x=>zoneN(x.zone_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
- corps:{...mk("Corps d'état",x=>(corps.find(c=>c.id===x.corps_etat_id)||{}).nom||"—"),c:"lc"},
- par:{...mk("Demandeur",x=>x.demandeur_nom||"—"),c:"nw"},
- charge:{...mk("En charge",x=>x.en_charge_nom||"—"),c:"nw"},
+ titre:{...mk("Ticket",x=>x.titre),c:"tt",lock:1},
+ corps:{...mk("Corps d'état",corpsN),c:"lc"},
+ charge:{...mk("En charge",x=>prenom(x.en_charge_nom)),c:"nw"},
  fin:{l:"Fin prévue",c:"nw",v:x=>x.fin_prevue?fdate(x.fin_prevue):"—",k:x=>ts(x.fin_prevue)},
- statut:{l:"Statut",c:"nw",v:x=>ST[x.statut],k:x=>Object.keys(ST).indexOf(x.statut),h:x=>`<span class="tag s-${x.statut}">${ST[x.statut]}</span>`}};
+ par:{...mk("Demandeur",x=>prenom(x.demandeur_nom)),c:"nw"},
+ date:{l:"Créé le",c:"nw",v:x=>new Date(x.created_at).toLocaleDateString("fr-FR"),k:x=>ts(x.created_at)}};
 const np=x=>!x.echeance&&!["terminee","annulee"].includes(x.etat);
 const attV=x=>{const en=ents.find(e=>e.id===x.entreprise_id);return [x.agents_noms,en?eLab(en):x.prestataire].filter(Boolean).join(" · ")||"—"};
+const entV=x=>{const en=ents.find(e=>e.id===x.entreprise_id);return en?en.entreprise:(x.prestataire||"—")};
 const ICOLS={
- ref:{l:"N°",c:"nw",lock:1,v:x=>x.ref,k:x=>refK(x,1)},
+ ref:{l:"N°",c:"nw rf",lock:1,v:x=>x.ref,k:x=>refK(x,1)},
  titre:{...mk("Intervention",x=>x.titre),c:"tt",lock:1},
+ etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`},
  site:{...mk("Site",x=>siteN(x.site_id)),c:"lc"},zone:{...mk("Zone",x=>zoneN(x.zone_id)),c:"lc"},local:{...mk("Local",x=>x.local||"—"),c:"lc"},
- cat:{l:"Catégorie / corps d'état",c:"lc",v:catLab,k:x=>catLab(x).toLowerCase()},
- fin:{l:"Date d'intervention",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance),h:x=>x.echeance?esc(fdate(x.echeance)):(np(x)?'<span class="tag t-np">À planifier</span>':"—")},duree:{l:"Durée",c:"nw",v:x=>fduree(x.duree_j),k:x=>+x.duree_j||0},att:{...mk("Attribué à / entreprise",attV),c:"lc"},resp:{...mk("Responsable",x=>x.responsable_nom||"—"),c:"lc"},
- etat:{l:"État",c:"nw",v:x=>ET[x.etat],k:x=>Object.keys(ET).indexOf(x.etat),h:x=>`<span class="tag">${ET[x.etat]}</span>`}};
-Object.entries({ref:85,titre:280,date:105,priorite:105,site:130,zone:140,local:120,corps:160,par:150,charge:150,fin:105,statut:115}).forEach(([k,w])=>COLS[k].w=w);
-Object.entries({ref:100,titre:280,site:130,zone:140,local:120,cat:230,fin:140,duree:90,att:220,resp:150,etat:150}).forEach(([k,w])=>ICOLS[k].w=w);
+ corps:{...mk("Corps d'état",corpsN),c:"lc"},
+ fin:{l:"Date d'intervention",c:"nw",v:x=>x.echeance?fdate(x.echeance):(np(x)?"À planifier":"—"),k:x=>ts(x.echeance),h:x=>x.echeance?esc(fdate(x.echeance)):(np(x)?'<span class="tag t-np">À planifier</span>':"—")},
+ duree:{l:"Durée",c:"nw",v:x=>fduree(x.duree_j),k:x=>+x.duree_j||0},
+ ent:{...mk("Entreprise",entV),c:"lc"},
+ resp:{...mk("Responsable",x=>prenom(x.responsable_nom)),c:"nw"}};
+Object.entries({ref:92,priorite:95,statut:105,site:120,zone:105,local:105,titre:230,corps:120,charge:100,fin:100,par:95,date:95}).forEach(([k,w])=>COLS[k].w=w);
+Object.entries({ref:110,titre:230,etat:110,site:120,zone:105,local:105,corps:120,fin:150,duree:75,ent:140,resp:95}).forEach(([k,w])=>ICOLS[k].w=w);
 const PCOLS={
  titre:{...mk("Contrôle",p=>p.titre),c:"tt",lock:1,h:p=>`<b>${esc(p.titre)}</b>`},
  lieu:{...mk("Lieu",p=>`${siteN(p.site_id)} – ${zoneN(p.zone_id)}${p.local?" – "+p.local:""}`),c:"lc"},
@@ -556,7 +563,7 @@ const visCols=tb=>Object.entries(CB[tb]).filter(([k,c])=>c.lock||!visOf(tb)[k]);
 const tw=tb=>visCols(tb).reduce((a,[k,c])=>a+(wOf(tb)[k]||c.w||120),0);
 const colsHtml=tb=>visCols(tb).map(([k,c])=>`<col data-tb="${tb}" data-k="${k}" style="width:${wOf(tb)[k]||c.w||120}px">`).join("");
 const thHtml=tb=>{const T=TB[tb];return visCols(tb).map(([k,c])=>c.nof?`<th></th>`:`<th aria-sort="${T.s.k===k?(T.s.d>0?"ascending":"descending"):"none"}"><button class="hb" data-s="${k}">${c.l}${T.s.k===k?(T.s.d>0?" ▲":" ▼"):""}</button><button class="hf${T.f[k]?" on":""}" data-f="${k}" aria-label="Filtrer la colonne ${c.l}">${T.f[k]?"⧩":"▾"}</button><span class="rs" data-tb="${tb}" data-r="${k}" title="Glisser pour ajuster la largeur"></span></th>`).join("")};
-const rowH=(tb,x,cls,attr)=>`<tr class="c ${cls}" ${attr}>${visCols(tb).map(([k,c])=>`<td class="${c.c||""}">${c.h?c.h(x):esc(c.v(x))}</td>`).join("")}</tr>`;
+const rowH=(tb,x,cls,attr)=>`<tr class="c ${cls}" ${attr}>${visCols(tb).map(([k,c])=>`<td class="${c.c||""}" data-k="${k}"${c.h?"":` title="${esc(c.v(x))}"`}>${c.h?c.h(x):esc(c.v(x))}</td>`).join("")}</tr>`;
 function head(tb){if(tb==="p"){$("phr").innerHTML=thHtml("p");$("pcg").innerHTML=colsHtml("p");$("ptab").style.width=tw("p")+"px"}if(tb==="i"){$("ihr").innerHTML=thHtml("i");$("ihr2").innerHTML=thHtml("i");$("icg").innerHTML=$("icg2").innerHTML=colsHtml("i");document.querySelectorAll('table[data-tb="i"]').forEach(t=>t.style.width=tw("i")+"px")}}
 const hdClick=tb=>e=>{const b=e.target.closest("button");if(!b)return;const T=TB[tb];
  if(b.dataset.s){T.s=T.s.k===b.dataset.s?{k:T.s.k,d:-T.s.d}:{k:b.dataset.s,d:1};redraw(tb)}else openPop(tb,b.dataset.f,b)};
@@ -920,10 +927,10 @@ $("en_l").onclick=e=>{const a=e.target.closest("[data-en],[data-ee]");if(!a)retu
  $("en_b").textContent="Enregistrer les modifications";$("en_x").classList.remove("hide");$("en_e").scrollIntoView({block:"center"})};
 const NOTICE={demandeur:"notices/notice_demandeur.html",responsable:"notices/notice_responsable.html",supervision:"notices/notice_supervision.html",agent_travaux:"notices/notice_agent.html",agent_exploitation:"notices/notice_agent.html",admin:"notices/notice_administrateur.html"};
 $("hlp").onclick=()=>window.open(NOTICE[role()]||"notices/notice_demandeur.html","_blank","noopener,noreferrer");
-$("sug").onclick=()=>{$("sugt").value="Idée";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").disabled=false;const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);$("sgt_p").classList.toggle("hide",!(adm&&SGN>0));sgTab(adm&&SGN>0?"p":"n");$("dS").showModal()};
+$("sug").onclick=()=>{$("sugt").value="Amélioration";$("sugti").value="";$("sugtx").value="";$("sugm").textContent="";$("sugb").disabled=false;const adm=me.role==="admin";$("sgtabs").classList.toggle("hide",!adm);$("sgt_p").classList.toggle("hide",!(adm&&SGN>0));sgTab(adm&&SGN>0?"p":"n");$("dS").showModal()};
 let SGN=0;
-function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Idées et suggestions`:"Proposer une idée ou une amélioration";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);const tp=$("sgt_p");if(tp)tp.classList.toggle("hide",!(n>0&&me&&me.role==="admin"))}
-let SGM="l";const isPb=x=>x.type==="Problème rencontré";
+function setSgn(n){SGN=n;const b=$("sug"),t=n>0?`${n} problème${n>1?"s":""} signalé${n>1?"s":""} non traité${n>1?"s":""} – Problèmes et suggestions`:"Signaler un problème ou faire une suggestion";b.classList.toggle("alert",n>0);b.title=t;b.setAttribute("aria-label",t);const tp=$("sgt_p");if(tp)tp.classList.toggle("hide",!(n>0&&me&&me.role==="admin"))}
+let SGM="l";const isPb=x=>x.type==="Problème rencontré",typL=t=>t==="Idée"?"Nouvelle fonctionnalité":t;
 function sgTab(k){SGM=["p","l","v"].includes(k)?k:"n";["n","p","l","v"].forEach(t=>{const b=$("sgt_"+t);b.classList.toggle("on",t===SGM);b.setAttribute("aria-selected",t===SGM)});$("sg_new").classList.toggle("hide",SGM!=="n");$("sg_list").classList.toggle("hide",SGM==="n");if(SGM!=="n")renderSug()}
 function setSgc(r,v,p){$("sgn").textContent=`(${r})`;$("sgv").textContent=`(${v})`;$("sgp").textContent=`(${p})`}
 $("sgtabs").onclick=e=>{const b=e.target.closest("[data-sgt]");if(b)sgTab(b.dataset.sgt)};
@@ -933,14 +940,14 @@ $("sugb").onclick=async()=>{const ti=$("sugti").value.trim();$("sugm").style.col
  const {error}=await sb.from("suggestions").insert({auteur_nom:nm(),role:me.role,type:$("sugt").value,titre:ti,texte:$("sugtx").value.trim()||null});
  $("sugb").disabled=false;
  if(error){$("sugm").textContent="Envoi impossible : "+errMsg(error);return}
- $("sugti").value="";$("sugtx").value="";$("sugt").value="Idée";$("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur. Vous pouvez en saisir une autre.";$("sugti").focus();sugAlert()};
+ $("sugti").value="";$("sugtx").value="";$("sugt").value="Amélioration";$("sugm").style.color="var(--ok)";$("sugm").textContent="Merci, votre suggestion a été transmise à l'administrateur. Vous pouvez en saisir une autre.";$("sugti").focus();sugAlert()};
 ["sugti","sugtx","sugt"].forEach(i=>$(i).addEventListener("input",()=>{$("sugm").textContent=""}));
 let SG=[];
 async function renderSug(){const {data}=await sb.from("suggestions").select("*").order("created_at",{ascending:false});SG=data||[];setSgn(SG.filter(x=>isPb(x)&&!x.traitee).length);setSgc(SG.filter(x=>!x.traitee&&!isPb(x)).length,SG.filter(x=>x.traitee).length,SG.filter(x=>isPb(x)&&!x.traitee).length);if(SGM==="p"&&!SGN){SGM="l";["n","p","l","v"].forEach(t=>$("sgt_"+t).classList.toggle("on",t===SGM))}const VUE=SG.filter(x=>SGM==="v"?x.traitee:SGM==="p"?(isPb(x)&&!x.traitee):(!x.traitee&&!isPb(x)));
- const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(x.type)}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
+ const SPR={haute:"Haute",normale:"Normale",basse:"Basse"},rowS=x=>`<div class="suivi">${x.type==="Problème rencontré"&&!x.traitee?'<span class="tag t-np">À traiter</span> ':""}<b>${esc(typL(x.type))}</b> – ${esc(x.titre)} <select data-sp="${x.id}" aria-label="Priorité" style="width:auto;display:inline-block;margin:0 4px">${Object.entries(SPR).reverse().map(([k,l])=>`<option value="${k}"${(x.priorite||"normale")===k?" selected":""}>${l}</option>`).join("")}</select><label class="ck" style="display:inline-flex;margin:0 4px"><input type="checkbox" data-sv="${x.id}"${x.traitee?" checked":""} aria-label="Marquer comme traitée"> Traitée</label><button class="sec ic" data-se="${x.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-sd="${x.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button> <small>(${esc(x.auteur_nom||"")} · ${esc(ROLES[x.role]||"")} · ${tlTime(x.created_at)})</small>${x.texte?`<br>${esc(x.texte)}`:""}</div>`;
  $("sug_l").innerHTML=["haute","normale","basse"].map(p=>{const L=VUE.filter(x=>(x.priorite||"normale")===p);return L.length?`<h4 class="sgp sgp-${p}">Priorité ${SPR[p].toLowerCase()} (${L.length})</h4>`+L.map(rowS).join(""):""}).join("")||`<p class="empty" style="padding:8px">${SGM==="v"?"Aucune idée traitée.":SGM==="p"?"Aucun problème en cours.":"Aucune idée à traiter."}</p>`}
 let SE=null;
-function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=x.type;$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
+function editSug(id){const x=SG.find(s=>String(s.id)===String(id));if(!x)return;SE=x.id;$("se_t").value=typL(x.type);$("se_ti").value=x.titre||"";$("se_tx").value=x.texte||"";$("se_m").textContent="";$("dSE").showModal()}
 $("se_ok").onclick=async()=>{if(!$("se_ti").value.trim()){$("se_m").textContent="Le titre est obligatoire.";return}
  const {error}=await sb.from("suggestions").update({type:$("se_t").value,titre:$("se_ti").value.trim(),texte:$("se_tx").value.trim()||null}).eq("id",SE);if(error){$("se_m").textContent=errMsg(error);return}$("dSE").close();renderSug()};
 $("sug_l").onclick=async e=>{const b=e.target.closest("[data-se],[data-sd]");if(!b)return;if(b.dataset.sd){if(!confirm("Supprimer cette suggestion ?"))return;await sb.from("suggestions").delete().eq("id",b.dataset.sd);renderSug()}else editSug(b.dataset.se)};
