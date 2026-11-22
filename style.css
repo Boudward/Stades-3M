@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.13.0 */
+/* STADES 3M – feuille de style – version 4.14.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -87,7 +87,7 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
 #dPl.pl-off #plbody{opacity:.5;background:#e4e8ec;border-radius:6px;padding:6px}#dPl.pl-off #dPlT::after{content:" (inactif)";color:var(--warn)}.pl-row-off td{opacity:.55}
 .dper button{margin-right:6px}
 
-/* 4.13.0 – plans en série, catalogue des contrôles */
+/* 4.14.0 – plans en série, catalogue des contrôles */
 .bplist .bph,.bplist .bprow{display:grid;grid-template-columns:2.4fr 1.5fr 1fr 1.15fr .75fr;gap:8px;align-items:center;padding:6px 4px}
 .bplist .bph{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.03em;border-bottom:2px solid var(--line,#d5dbe5)}
 .bplist .bprow{border-bottom:1px solid var(--line,#e3e8ef)}.bplist .bprow.on{background:#eef4fd}.bplist .bprow select,.bplist .bprow input[type=date],.bplist .bprow input[type=number]{margin:0;width:100%}
@@ -95,10 +95,18 @@ input[type=checkbox]{width:auto;margin:0 6px 0 0}
 @media(max-width:760px){.bplist .bph{display:none}.bplist .bprow{grid-template-columns:1fr 1fr}.bplist .bprow>label{grid-column:1/-1}}
 .pmt input,.pmt select{margin:0;min-width:110px}.pmt td{vertical-align:middle}.pmt input[type=number]{min-width:0;width:80px}
 
-/* 4.13.0 – petit écran : boutons compacts */
+/* 4.14.0 – petit écran : boutons compacts */
 .acts .pl1,.acts .ico{display:none}
 @media(max-width:760px){
  .tabrow button.sec .r{display:none}
  .tabrow button{padding-left:12px;padding-right:12px}
  .acts .lb{display:none}.acts .pl1{display:inline;font-size:20px;font-weight:700;line-height:1}.acts .ico{display:inline-block;vertical-align:middle}
 }
+
+/* 4.14.0 – compteurs d'eau */
+.cpg{margin:10px 0;background:#fff;border:1px solid var(--line);border-radius:10px;padding:4px 10px}.cpg>summary{cursor:pointer;padding:8px 2px}
+table.cpt{width:100%;border-collapse:collapse;font-size:14px}.cpt th,.cpt td{padding:6px 8px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:240px}
+.cpt th{font-size:12px;color:var(--mute);font-weight:600}.cpt .num{text-align:right}.cpt tbody tr[data-cp]{cursor:pointer}.cpt tbody tr[data-cp]:hover{background:#f4f6fb}
+.cpt td input,.cpt td select{margin:0;padding:4px 6px;min-width:130px}.cpt button{padding:3px 8px;font-size:12px;margin-right:4px}
+.cpch{width:100%;height:auto;max-height:210px;background:#fff;border:1px solid var(--line);border-radius:8px}
+.cptool>div{flex:1 1 150px}

@@ -1,0 +1,69 @@
+<!doctype html>
+<!-- STADES 3M – version 4.14.0 (21/11/2026) – page publique de saisie d'index de compteur d'eau (base de TEST uniquement) -->
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Relevé de compteur</title>
+<style>
+:root{--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;--bg:#eef1f7;font-family:"Segoe UI",system-ui,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:17px}
+header{background:var(--accent);color:#fff;padding:14px 18px;font-weight:600}
+.test{background:var(--warn);color:#fff;text-align:center;font-size:13px;padding:3px}
+main{max-width:480px;margin:0 auto;padding:18px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px;margin-bottom:14px}
+h1{font-size:20px;margin:0 0 4px}.mute{color:var(--mute);font-size:14px}
+label{display:block;margin:14px 0 4px;font-weight:600}
+input{width:100%;font:inherit;padding:12px;border:1px solid var(--line);border-radius:8px}
+input.big{font-size:26px;text-align:center;letter-spacing:1px}
+button{width:100%;margin-top:16px;padding:14px;font:inherit;font-weight:700;color:#fff;background:var(--accent);border:0;border-radius:10px}
+button:disabled{opacity:.5}
+.msg{margin-top:12px;padding:12px;border-radius:8px;font-size:15px}.ok{background:#e6f4ec;color:var(--ok)}.ko{background:#fbe9e7;color:var(--bad)}.wr{background:#fdf6ef;color:var(--warn)}
+.hide{display:none}small{display:block;margin-top:14px;color:var(--mute);font-size:12px}
+</style></head><body>
+<header>Relevé de compteur d'eau</header><div class="test">BASE DE TEST</div>
+<main>
+ <div id="load" class="card mute">Chargement…</div>
+ <div id="nok" class="card hide"><h1>Compteur introuvable</h1><p class="mute">Ce QR code n'est plus valide ou le compteur est désactivé. Prévenez le responsable du site.</p></div>
+ <div id="bloque" class="card hide"><h1>Saisie non autorisée</h1><p class="mute">Cet appareil n'est pas autorisé à saisir des relevés. Contactez le responsable du site.</p></div>
+ <form id="f" class="card hide" autocomplete="off">
+  <h1 id="cn"></h1><div class="mute" id="cs"></div>
+  <p class="mute" id="cd" style="margin:10px 0 0"></p>
+  <label for="ix">Index du compteur (en m³)</label>
+  <input id="ix" class="big" inputmode="decimal" placeholder="ex. 12345,678" required>
+  <p class="mute" style="margin:6px 0 0">Recopiez les chiffres noirs (m³). Les chiffres rouges sont les litres : facultatifs, à saisir après la virgule.</p>
+  <label for="nm">Votre nom (facultatif)</label><input id="nm" maxlength="60" autocomplete="name">
+  <button id="go" type="submit">Envoyer le relevé</button>
+  <div id="m" class="msg hide" role="status"></div>
+  <small>Pour limiter les abus, un identifiant aléatoire propre à votre navigateur est enregistré avec le relevé (aucune donnée personnelle, ni numéro de téléphone, ni position).</small>
+ </form>
+</main>
+<script src="lib/supabase.min.js"></script><script src="config.js"></script>
+<script>
+(async()=>{
+const $=id=>document.getElementById(id),E=window.STADES_ENVS&&window.STADES_ENVS.test;
+const show=id=>{["load","nok","bloque","f"].forEach(x=>$(x).classList.toggle("hide",x!==id))};
+let app="";try{app=localStorage.getItem("stades_appareil")||"";if(!app){app=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now().toString(36)+"0000000000000000").replace(/-/g,"");localStorage.setItem("stades_appareil",app)}$("nm").value=localStorage.getItem("stades_releve_nom")||""}catch(e){}
+if(app.length<16)app=(Date.now().toString(36)+Math.random().toString(36).slice(2)+"0000000000000000").slice(0,32);
+const tok=new URLSearchParams(location.search).get("c")||"";
+if(!E||!tok){show("nok");return}
+const sb=supabase.createClient(E.url,E.key,{auth:{persistSession:false}});
+const fmt=n=>Number(n).toLocaleString("fr-FR",{maximumFractionDigits:3});
+let c;
+try{const {data,error}=await sb.rpc("compteur_public",{p_token:tok,p_appareil:app});if(error)throw error;c=data}catch(e){$("load").textContent="Service indisponible, réessayez plus tard.";return}
+if(!c){show("nok");return}if(c.bloque){show("bloque");return}
+$("cn").textContent=c.nom;$("cs").textContent=[c.site,c.local].filter(Boolean).join(" · ");
+$("cd").textContent=c.dernier_index!=null?`Dernier relevé : ${fmt(c.dernier_index)} m³ le ${new Date(c.dernier_at).toLocaleDateString("fr-FR")}`:"Aucun relevé enregistré pour l'instant.";
+show("f");
+const msg=(t,k)=>{const m=$("m");m.className="msg "+k;m.textContent=t};
+$("f").onsubmit=async e=>{e.preventDefault();
+ const v=parseFloat($("ix").value.replace(/\s/g,"").replace(",","."));
+ if(!isFinite(v)||v<0){msg("Saisissez un index valide.","ko");return}
+ if(c.dernier_index!=null&&v<c.dernier_index&&!confirm(`L'index saisi (${fmt(v)}) est inférieur au dernier relevé (${fmt(c.dernier_index)}). L'envoyer quand même ?`))return;
+ $("go").disabled=true;
+ try{try{localStorage.setItem("stades_releve_nom",$("nm").value.trim())}catch(e){}
+  const {data,error}=await sb.rpc("releve_saisir",{p_token:tok,p_index:v,p_appareil:app,p_nom:$("nm").value.trim()||null});
+  if(error)throw error;
+  if(data&&data.ok){msg(data.statut==="a_verifier"?"Relevé enregistré, il sera vérifié par un responsable.":"Merci, votre relevé a bien été enregistré.",data.statut==="a_verifier"?"wr":"ok");c.dernier_index=v;c.dernier_at=new Date().toISOString();$("cd").textContent=`Dernier relevé : ${fmt(v)} m³ à l'instant`;$("ix").value="";return}
+  msg((data&&data.message)||"Enregistrement impossible.","ko");if(data&&data.code==="bloque")show("bloque")}
+ catch(err){msg("Enregistrement impossible : vérifiez votre connexion et réessayez.","ko")}
+ finally{$("go").disabled=false}};
+})();
+</script></body></html>

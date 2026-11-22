@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.13.0 */
+/* STADES 3M – application – version 4.14.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -261,15 +261,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.13.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.13.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.13.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -453,6 +453,7 @@ $("ns").onchange=()=>$("nt2").innerHTML=tOpts($("ns").value);
 
 function render(){
  const r=role(),isAgent=r.startsWith("agent");
+ renderCp();
  const inAdm=!$("ad").classList.contains("hide");renderIv();renderPl();$("tk").classList.toggle("hide",inAdm||tab!=="t");$("iv").classList.toggle("hide",inAdm||tab!=="i");$("adm").innerHTML=inAdm?ADM_BACK:ADM_KEY;$("adm").title=$("adm").ariaLabel=inAdm?"Retour aux tickets":"Paramètres";
  $("tkA").classList.toggle("hide",isAgent);$("tkC").classList.toggle("hide",isAgent);$("agentmsg").classList.toggle("hide",!isAgent);
  const baseL=tk.filter(x=>canSee(x,r));TB.t.base=baseL;const list=sortFilt(baseL,"t");
@@ -960,5 +961,115 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
+// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.0) =====
+const CPOK=()=>ENV==="test"&&["admin","responsable","supervision"].includes(role()),canCp=()=>ENV==="test"&&["admin","responsable"].includes(role());
+let CP=[],RL=[],APP=[],CPL=false,CPERR="",CPD=90,CPE=null,CPCUR=null;
+const fm3=n=>n==null||isNaN(n)?"—":(+n).toLocaleString("fr-FR",{maximumFractionDigits:3}),
+ gmap=c=>c.latitude!=null&&c.longitude!=null?`https://www.google.com/maps?q=${c.latitude},${c.longitude}`:"",
+ cpUrl=c=>new URL("releve.html?c="+encodeURIComponent(c.token),location.href).href,
+ fdh=d=>new Date(d).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"2-digit",hour:"2-digit",minute:"2-digit"});
+async function loadCp(){CPL=true;CPERR="";
+ const q=async(t,fn)=>{let r=[];for(let i=0;;i+=1000){const {data,error}=await fn(sb.from(t).select("*")).range(i,i+999);if(error)throw error;r=r.concat(data);if(data.length<1000)break}return r};
+ try{CP=await q("compteurs",b=>b.order("id"));
+  RL=await q("releves_compteur",b=>b.gte("releve_at",new Date(Date.now()-420*864e5).toISOString()).order("releve_at").order("id"));
+  APP=await q("appareils_compteur",b=>b.order("derniere_vue",{ascending:false}).order("appareil_id"))}
+ catch(e){CPERR=/does not exist|schema cache|Could not find/i.test(e.message||"")?"Le module Compteurs n'est pas installé sur cette base : exécutez migration_4_14_0_compteurs.sql.":errMsg(e);CP=[];RL=[];APP=[]}
+ renderCp()}
+// Analyse d'un compteur : consommation par jour sur chaque intervalle entre relevés valides espacés d'au moins 12 h
+function cpStats(c){const all=RL.filter(r=>r.compteur_id==c.id&&r.statut!=="rejete"),val=all.filter(r=>r.statut==="valide"),pts=[];
+ val.forEach(r=>{const t=new Date(r.releve_at).getTime();if(!pts.length||t-pts[pts.length-1].t>=432e5)pts.push({t,x:+r.index_m3,r})});
+ const iv=[];for(let i=1;i<pts.length;i++){const j=(pts[i].t-pts[i-1].t)/864e5,d=pts[i].x-pts[i-1].x;if(j>0&&d>=0)iv.push({t0:pts[i-1].t,t1:pts[i].t,j,d,cj:d/j})}
+ const L=iv[iv.length-1],lastR=all[all.length-1],al=[];let base=null;
+ if(L){const h=iv.slice(0,-1).filter(v=>v.t1>=L.t0-60*864e5),sj=h.reduce((s,v)=>s+v.j,0);if(sj>=7)base=h.reduce((s,v)=>s+v.d,0)/sj;
+  if(c.seuil_jour_m3!=null&&L.cj>+c.seuil_jour_m3)al.push(`${fm3(L.cj)} m³/j > seuil ${fm3(c.seuil_jour_m3)}`);
+  if(base!=null){if(base>0?(L.cj>c.coef_alerte*base&&L.cj-base>=.05):L.cj>=.2)al.push(base>0?`×${(L.cj/base).toLocaleString("fr-FR",{maximumFractionDigits:1})} la moyenne`:"consommation inhabituelle")}}
+ if(c.delai_releve_j&&lastR&&(Date.now()-new Date(lastR.releve_at))/864e5>c.delai_releve_j)al.push(`aucun relevé depuis ${Math.floor((Date.now()-new Date(lastR.releve_at))/864e5)} j`);
+ if(c.delai_releve_j&&!lastR&&(Date.now()-new Date(c.created_at))/864e5>c.delai_releve_j)al.push("aucun relevé");
+ const nv=all.filter(r=>r.statut==="a_verifier").length;if(nv)al.push(`${nv} relevé(s) à vérifier`);
+ return{c,lastR,cj:L?L.cj:null,base,ecart:L&&base>0?(L.cj/base-1)*100:null,al,iv,pts}}
+function renderCp(){const ok=CPOK(),inAdm=!$("ad").classList.contains("hide");
+ $("tabc").classList.toggle("hide",!ok);$("tabc").classList.toggle("sec",tab!=="c");$("cv").classList.toggle("hide",inAdm||tab!=="c"||!ok);
+ if(!ok||tab!=="c"||inAdm)return;if(!CPL){loadCp();return}
+ ["cp_new","cp_qr"].forEach(i=>$(i).classList.toggle("hide",!canCp()));
+ const sv=$("cp_s").value;$("cp_s").innerHTML=sOpts("Tous les sites");$("cp_s").value=sv;
+ if(CPERR){$("cpbody").innerHTML=`<p class="empty">${esc(CPERR)}</p>`;return}
+ const q=$("cp_q").value.trim().toLowerCase(),onlyA=$("cp_a").checked;
+ let st=CP.filter(c=>(!sv||c.site_id==sv)&&(!q||[c.nom,c.ref_concessionnaire,c.local].join(" ").toLowerCase().includes(q))).map(cpStats);
+ const nA=st.filter(s=>s.al.length&&s.c.actif).length;if(onlyA)st=st.filter(s=>s.al.length);
+ $("cp_n").textContent=`${st.length} compteur(s)${nA?` · ${nA} en alerte`:""}`;
+ if(!st.length){$("cpbody").innerHTML=`<p class="empty">${CP.length?"Aucun compteur ne correspond à ces filtres.":"Aucun compteur enregistré."}</p>`;return}
+ const g={};st.forEach(s=>(g[s.c.site_id]=g[s.c.site_id]||[]).push(s));const many=st.length>60;
+ $("cpbody").innerHTML=Object.keys(g).sort((a,b)=>siteN(a).localeCompare(siteN(b),"fr")).map(sid=>{const rows=g[sid].sort((a,b)=>(b.al.length>0)-(a.al.length>0)||a.c.nom.localeCompare(b.c.nom,"fr",{numeric:true})),na=rows.filter(s=>s.al.length&&s.c.actif).length;
+  return`<details class="cpg"${!many||na||sv?" open":""}><summary><b>${esc(siteN(sid))}</b> — ${rows.length} compteur(s)${na?` · <span class="off">${na} alerte(s)</span>`:""}</summary><div class="table"><table class="cpt"><thead><tr><th>Compteur</th><th>Réf. concessionnaire</th><th>Zone / local</th><th class="num">Dernier index (m³)</th><th>Relevé</th><th class="num">Conso/j</th><th class="num">Moyenne/j</th><th>Statut</th></tr></thead><tbody>`+
+  rows.map(s=>{const c=s.c,zl=[c.zone_id?zoneN(c.zone_id):"",c.local].filter(Boolean).join(" · ");
+   return`<tr data-cp="${c.id}" class="${s.al.length&&c.actif?"urg":""}${c.actif?"":" arc"}"><td title="${esc(c.nom)}"><b>${esc(c.nom)}</b>${c.actif?"":" (inactif)"}</td><td title="${esc(c.ref_concessionnaire||"")}">${esc(c.ref_concessionnaire||"—")}</td><td title="${esc(zl)}">${esc(zl||"—")}</td><td class="num">${s.lastR?fm3(s.lastR.index_m3):"—"}</td><td>${s.lastR?fdate(s.lastR.releve_at):"—"}</td><td class="num">${fm3(s.cj)}</td><td class="num">${fm3(s.base)}</td><td title="${esc(s.al.join(" ; "))}">${s.al.length?`<span class="tag t-np" style="color:var(--bad);border-color:var(--bad);background:#fbe9e7">${esc(s.al[0])}${s.al.length>1?` +${s.al.length-1}`:""}</span>`:'<span class="tag s-resolue">OK</span>'}</td></tr>`}).join("")+`</tbody></table></div></details>`}).join("")}
+// --- fiche d'un compteur
+function cpChart(s){const W=720,H=170,t1=Date.now(),t0=t1-CPD*864e5,iv=s.iv.filter(v=>v.t1>=t0);if(!iv.length)return'<p class="empty">Pas assez de relevés sur la période pour tracer une consommation.</p>';
+ const c=s.c,mx=Math.max(...iv.map(v=>v.cj),+c.seuil_jour_m3||0,(s.base||0)*c.coef_alerte,.1)*1.15,X=t=>40+(Math.max(t,t0)-t0)/(t1-t0)*(W-50),Y=v=>H-22-v/mx*(H-34);
+ let o=`<svg viewBox="0 0 ${W} ${H}" class="cpch" role="img" aria-label="Consommation par jour"><line x1="40" y1="${H-22}" x2="${W-10}" y2="${H-22}" stroke="#999"/>`+
+ iv.map(v=>{const bad=(c.seuil_jour_m3!=null&&v.cj>+c.seuil_jour_m3)||(s.base>0&&v.cj>c.coef_alerte*s.base&&v.cj-s.base>=.05);return`<rect x="${X(v.t0)}" y="${Y(v.cj)}" width="${Math.max(2,X(v.t1)-X(v.t0)-1)}" height="${H-22-Y(v.cj)}" fill="${bad?"#b3261e":"#102d69"}" opacity=".8"><title>${fdate(v.t0)} → ${fdate(v.t1)} : ${fm3(v.cj)} m³/j</title></rect>`}).join("");
+ if(s.base>0)o+=`<line x1="40" x2="${W-10}" y1="${Y(s.base)}" y2="${Y(s.base)}" stroke="#2f7d4f" stroke-dasharray="4 3"/><text x="44" y="${Y(s.base)-3}" font-size="10" fill="#2f7d4f">moyenne ${fm3(s.base)}</text>`;
+ if(c.seuil_jour_m3!=null)o+=`<line x1="40" x2="${W-10}" y1="${Y(+c.seuil_jour_m3)}" y2="${Y(+c.seuil_jour_m3)}" stroke="#b3261e" stroke-dasharray="4 3"/><text x="44" y="${Y(+c.seuil_jour_m3)-3}" font-size="10" fill="#b3261e">seuil ${fm3(c.seuil_jour_m3)}</text>`;
+ return o+`<text x="36" y="14" text-anchor="end" font-size="10">${fm3(mx)}</text><text x="36" y="${H-22}" text-anchor="end" font-size="10">0</text><text x="40" y="${H-6}" font-size="10">${fdate(t0)}</text><text x="${W-10}" y="${H-6}" text-anchor="end" font-size="10">${fdate(t1)}</text></svg><div class="mute" style="font-size:12px">m³ par jour, par intervalle entre deux relevés.</div>`}
+function cpDetail(id){const c=CP.find(x=>x.id==id);if(!c)return;CPCUR=c.id;const s=cpStats(c),m=gmap(c),rl=RL.filter(r=>r.compteur_id==c.id).slice().reverse();
+ const tl=rl.slice(0,60).map(r=>{const prev=RL.filter(p=>p.compteur_id==c.id&&p.statut==="valide"&&(p.releve_at<r.releve_at||(p.releve_at===r.releve_at&&p.id<r.id))).pop(),dl=prev&&r.index_m3>=prev.index_m3?fm3(r.index_m3-prev.index_m3):"—",ap=APP.find(a=>a.appareil_id===r.appareil_id);
+  return`<tr class="${r.statut==="rejete"?"arc":""}"><td>${fdh(r.releve_at)}</td><td class="num">${fm3(r.index_m3)}</td><td class="num">${dl}</td><td>${esc(r.auteur_nom||(r.source==="manuel"?"saisie manuelle":"—"))}</td><td title="${esc(r.appareil_id||"")}">${r.appareil_id?esc(r.appareil_id.slice(0,6)):"—"}${ap&&ap.statut!=="inconnu"?` <span class="tag ${ap.statut==="fiable"?"s-resolue":"p-urgente"}">${ap.statut}</span>`:""}</td><td>${r.statut==="valide"?"":`<span class="tag ${r.statut==="rejete"?"p-urgente":"t-np"}" title="${esc(r.motif||"")}">${r.statut==="rejete"?"rejeté":"à vérifier"}</span>`}</td><td>${canCp()?(r.statut==="valide"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:`<button class="sec" data-rr="${r.id}" data-to="valide">${r.statut==="rejete"?"Rétablir":"Valider"}</button>${r.statut==="a_verifier"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:""}`):""}</td></tr>`}).join("");
+ $("cpd").innerHTML=`<h2 style="margin-top:0;padding-right:38px">${esc(c.nom)}${c.actif?"":" (inactif)"}</h2><p class="mute">${esc(siteN(c.site_id))}${c.zone_id?" · "+esc(zoneN(c.zone_id)):""}${c.local?" · "+esc(c.local):""}${c.ref_concessionnaire?" · réf. "+esc(c.ref_concessionnaire):""}${m?` · <a href="${m}" target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>`:""}</p>
+ ${s.al.length?`<p class="msg">⚠ ${esc(s.al.join(" ; "))}</p>`:""}
+ <div class="row dper" style="margin:8px 0">${[30,90,180,365].map(d=>`<button class="${CPD===d?"":"sec"}" data-cpd="${d}">${d} j</button>`).join("")}</div>${cpChart(s)}
+ ${canCp()?`<div class="row" style="margin:12px 0;align-items:end"><div><label for="cpx">Saisie manuelle d'un index (m³)</label><input id="cpx" inputmode="decimal" placeholder="ex. 12345,6"></div><div><label for="cpt">Date et heure</label><input id="cpt" type="datetime-local"></div><button id="cpxb" style="flex:0 0 auto">Ajouter</button></div><div id="cpxm" class="msg"></div>`:""}
+ <div class="table"><table class="cpt"><thead><tr><th>Date</th><th class="num">Index (m³)</th><th class="num">Conso (m³)</th><th>Auteur</th><th>Appareil</th><th>Statut</th><th></th></tr></thead><tbody>${tl||'<tr><td colspan="7" class="empty">Aucun relevé.</td></tr>'}</tbody></table></div>
+ <div class="row xfoot">${canCp()?'<button type="button" class="sec" id="cpedit">Modifier le compteur / QR code</button>':""}<button type="button" class="sec" data-close>Fermer</button></div>`;
+ if(canCp()){const d=new Date(Date.now()-new Date().getTimezoneOffset()*6e4);$("cpt").value=d.toISOString().slice(0,16);
+  $("cpedit").onclick=()=>cpEdit(c.id);
+  $("cpxb").onclick=async()=>{const v=parseFloat($("cpx").value.replace(/\s/g,"").replace(",","."));if(!isFinite(v)||v<0){$("cpxm").textContent="Index invalide.";return}
+   const last=s.pts.length?s.pts[s.pts.length-1].x:null,low=last!=null&&v<last;if(low&&!confirm(`L'index (${fm3(v)}) est inférieur au dernier relevé valide (${fm3(last)}). L'enregistrer « à vérifier » ?`))return;
+   const {error}=await sb.from("releves_compteur").insert({compteur_id:c.id,index_m3:v,releve_at:new Date($("cpt").value||Date.now()).toISOString(),source:"manuel",auteur_nom:nm(),saisi_par:me.id,statut:low?"a_verifier":"valide",motif:low?"Index inférieur au précédent":null});
+   if(error){$("cpxm").textContent=errMsg(error);return}await loadCp();cpDetail(c.id)}}
+ if(!$("dCp").open)$("dCp").showModal()}
+// --- création / modification
+function cpEdit(id){const c=id?CP.find(x=>x.id==id):null;CPE=c?c.id:null;$("dCp").close();
+ $("ce_t").textContent=c?"Modifier le compteur":"Nouveau compteur";$("ce_s").innerHTML=sOpts();$("ce_s").value=c?c.site_id:($("cp_s").value||(sites[0]||{}).id||"");
+ const zf=()=>{$("ce_z").innerHTML=tOpts($("ce_s").value,"— Aucune —")};zf();$("ce_s").onchange=zf;if(c&&c.zone_id)$("ce_z").value=c.zone_id;
+ const v=(k,d="")=>c&&c[k]!=null?c[k]:d;$("ce_n").value=v("nom");$("ce_r").value=v("ref_concessionnaire");$("ce_l").value=v("local");$("ce_la").value=v("latitude");$("ce_lo").value=v("longitude");
+ $("ce_se").value=v("seuil_jour_m3");$("ce_co").value=v("coef_alerte",2);$("ce_de").value=v("delai_releve_j");$("ce_no").value=v("notes");$("ce_a").checked=c?c.actif:true;$("ce_m").textContent="";
+ $("ce_qr").classList.toggle("hide",!c);$("ce_del").classList.toggle("hide",!c||role()!=="admin");
+ if(c){$("ce_qrs").innerHTML=QR.svg(cpUrl(c),150);$("ce_url").value=cpUrl(c);$("ce_mp").innerHTML=gmap(c)?`<a href="${gmap(c)}" target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>`:""}
+ $("dCe").showModal()}
+const num=s=>{s=String(s).trim().replace(",",".");return s===""?null:(isFinite(+s)?+s:NaN)};
+$("ce_f").onsubmit=async e=>{e.preventDefault();const la=num($("ce_la").value),lo=num($("ce_lo").value),se=num($("ce_se").value),co=num($("ce_co").value),de=num($("ce_de").value);
+ if([la,lo,se,co,de].some(Number.isNaN)){$("ce_m").textContent="Un des champs numériques est invalide.";return}
+ if((la==null)!==(lo==null)){$("ce_m").textContent="Renseignez la latitude ET la longitude (ou aucune des deux).";return}
+ const row={site_id:$("ce_s").value,zone_id:$("ce_z").value||null,nom:$("ce_n").value.trim(),ref_concessionnaire:$("ce_r").value.trim()||null,local:$("ce_l").value.trim()||null,latitude:la,longitude:lo,seuil_jour_m3:se,coef_alerte:co||2,delai_releve_j:de,notes:$("ce_no").value.trim()||null,actif:$("ce_a").checked};
+ const {error}=CPE?await sb.from("compteurs").update(row).eq("id",CPE):await sb.from("compteurs").insert(row);
+ if(error){$("ce_m").textContent=/duplicate|unique/i.test(error.message)?"Un compteur de ce nom existe déjà sur ce site.":errMsg(error);return}
+ $("dCe").close();await loadCp()};
+$("ce_geo").onclick=()=>{if(!navigator.geolocation){$("ce_m").textContent="Géolocalisation indisponible sur cet appareil.";return}$("ce_m").textContent="Recherche de la position…";
+ navigator.geolocation.getCurrentPosition(p=>{$("ce_la").value=p.coords.latitude.toFixed(6);$("ce_lo").value=p.coords.longitude.toFixed(6);$("ce_m").textContent=""},()=>{$("ce_m").textContent="Position refusée ou introuvable."},{enableHighAccuracy:true,timeout:15000})};
+$("ce_cp").onclick=async()=>{try{await navigator.clipboard.writeText($("ce_url").value);$("ce_m").style.color="var(--ok)";$("ce_m").textContent="Lien copié."}catch(e){$("ce_url").select()}};
+$("ce_re").onclick=async()=>{if(!CPE||!confirm("Régénérer le QR code ? Les QR déjà imprimés et collés ne fonctionneront plus."))return;
+ const b=new Uint8Array(10);crypto.getRandomValues(b);const t=Array.from(b,x=>x.toString(16).padStart(2,"0")).join("");const {error}=await sb.from("compteurs").update({token:t}).eq("id",CPE);
+ if(error){$("ce_m").textContent=errMsg(error);return}await loadCp();cpEdit(CPE)};
+$("ce_pr").onclick=()=>{const c=CP.find(x=>x.id==CPE);if(c)cpPrint([c])};
+$("ce_del").onclick=async()=>{const c=CP.find(x=>x.id==CPE);if(!c||!confirm(`Supprimer définitivement « ${c.nom} » et tous ses relevés ?`))return;const {error}=await sb.from("compteurs").delete().eq("id",c.id);if(error){$("ce_m").textContent=errMsg(error);return}$("dCe").close();await loadCp()};
+// --- planche de QR codes à imprimer
+function cpPrint(list){if(!list.length){alert("Aucun compteur à imprimer.");return}
+ const L=list.map(c=>`<div class="e"><div class="s">${esc(siteN(c.site_id))}</div>${QR.svg(cpUrl(c),170)}<div class="n">${esc(c.nom)}</div><div class="l">${esc([c.zone_id?zoneN(c.zone_id):"",c.local].filter(Boolean).join(" · "))}</div><div class="r">${esc(c.ref_concessionnaire||"")}</div><div class="t">Scannez pour saisir l'index du compteur</div></div>`).join("");
+ const h=`<!doctype html><meta charset="utf-8"><title>QR compteurs</title><style>body{font-family:system-ui,sans-serif;margin:12px}.g{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.e{border:1px dashed #888;padding:8px;text-align:center;break-inside:avoid}.s{font-size:11px;color:#555}.n{font-weight:700}.l,.r{font-size:12px}.t{font-size:11px;color:#555;margin-top:4px}button{margin-bottom:10px;padding:8px 14px}@media print{button{display:none}}</style><button onclick="print()">Imprimer</button><div class="g">${L}</div>`;
+ window.open(URL.createObjectURL(new Blob([h],{type:"text/html"})),"_blank","noopener,noreferrer")}
+// --- appareils (liste de confiance / liste noire)
+function cpApp(){const ro=!canCp();$("cpa").innerHTML=(APP.length?`<table class="cpt"><thead><tr><th>Appareil</th><th>Libellé</th><th>Statut</th><th class="num">Relevés</th><th class="num">Rejets</th><th>Dernière activité</th></tr></thead><tbody>`+
+ APP.slice().sort((a,b)=>b.nb_rejets-a.nb_rejets||(b.derniere_vue>a.derniere_vue?1:-1)).map(a=>`<tr><td title="${esc(a.appareil_id)}">${esc(a.appareil_id.slice(0,8))}</td><td><input data-al="${esc(a.appareil_id)}" value="${esc(a.libelle||"")}" placeholder="ex. téléphone agent Dupont"${ro?" disabled":""}></td><td><select data-as="${esc(a.appareil_id)}"${ro?" disabled":""}>${[["inconnu","Inconnu"],["fiable","Fiable"],["bloque","Bloqué"]].map(([k,l])=>`<option value="${k}"${a.statut===k?" selected":""}>${l}</option>`).join("")}</select></td><td class="num">${a.nb_releves}</td><td class="num">${a.nb_rejets}</td><td>${fdh(a.derniere_vue)}</td></tr>`).join("")+"</tbody></table>":'<p class="empty">Aucun appareil enregistré pour l\'instant.</p>');
+ if(!$("dAp").open)$("dAp").showModal()}
+$("cpa").onchange=async e=>{const t=e.target,id=t.dataset.as||t.dataset.al;if(!id)return;const {error}=await sb.from("appareils_compteur").update(t.dataset.as?{statut:t.value}:{libelle:t.value.trim()||null}).eq("appareil_id",id);
+ if(error){alert(errMsg(error));return}const a=APP.find(x=>x.appareil_id===id);if(a){if(t.dataset.as)a.statut=t.value;else a.libelle=t.value.trim()||null}};
+// --- branchements
+$("tabc").onclick=()=>{tab="c";render()};
+["cp_s","cp_a"].forEach(i=>$(i).onchange=renderCp);$("cp_q").oninput=renderCp;$("cp_r").onclick=loadCp;$("cp_new").onclick=()=>cpEdit(null);$("cp_ap").onclick=cpApp;
+$("cp_qr").onclick=()=>{const sv=$("cp_s").value;cpPrint(CP.filter(c=>c.actif&&(!sv||c.site_id==sv)))};
+$("cpbody").onclick=e=>{const tr=e.target.closest("tr[data-cp]");if(tr)cpDetail(tr.dataset.cp)};
+$("cpd").onclick=async e=>{const d=e.target.closest("[data-cpd]");if(d){CPD=+d.dataset.cpd;cpDetail(CPCUR);return}
+ const b=e.target.closest("[data-rr]");if(!b)return;let motif=null;if(b.dataset.to==="rejete"){motif=prompt("Motif du rejet (facultatif) :");if(motif===null)return}
+ const {error}=await sb.from("releves_compteur").update({statut:b.dataset.to,motif:motif||null}).eq("id",b.dataset.rr);if(error){alert(errMsg(error));return}await loadCp();cpDetail(CPCUR)};
 start();
 (function(){var b=document.getElementById("boot");if(b)b.remove()})();
