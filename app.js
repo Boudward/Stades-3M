@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.14.1 */
+/* STADES 3M – application – version 4.14.2 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -261,15 +261,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.1",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.1",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.2",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.2",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.2",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -961,7 +961,7 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.1) =====
+// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.2) =====
 const CPOK=()=>ENV==="test"&&["admin","responsable","supervision"].includes(role()),canCp=()=>ENV==="test"&&["admin","responsable"].includes(role());
 const CCOLS={
  nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},
@@ -987,10 +987,10 @@ async function loadCp(){CPL=true;CPERR="";
   APP=await q("appareils_compteur",b=>b.order("derniere_vue",{ascending:false}).order("appareil_id"))}
  catch(e){CPERR=/does not exist|schema cache|Could not find/i.test(e.message||"")?"Le module Compteurs n'est pas installé sur cette base : exécutez migration_4_14_0_compteurs.sql.":errMsg(e);CP=[];RL=[];APP=[]}
  renderCp()}
-// Analyse d'un compteur : consommation par jour sur chaque intervalle entre relevés valides espacés d'au moins 12 h
+// Analyse d'un compteur : consommation par jour sur chaque intervalle entre relevés valides (durée comptée pour 12 h minimum, pour ne pas gonfler la consommation de relevés très rapprochés)
 function cpStats(c){const all=RL.filter(r=>r.compteur_id==c.id&&r.statut!=="rejete"),val=all.filter(r=>r.statut==="valide"),pts=[];
- val.forEach(r=>{const t=new Date(r.releve_at).getTime();if(!pts.length||t-pts[pts.length-1].t>=432e5)pts.push({t,x:+r.index_m3,r})});
- const iv=[];for(let i=1;i<pts.length;i++){const j=(pts[i].t-pts[i-1].t)/864e5,d=pts[i].x-pts[i-1].x;if(j>0&&d>=0)iv.push({t0:pts[i-1].t,t1:pts[i].t,j,d,cj:d/j})}
+ val.forEach(r=>pts.push({t:new Date(r.releve_at).getTime(),x:+r.index_m3,r}));
+ const iv=[];for(let i=1;i<pts.length;i++){const j=(pts[i].t-pts[i-1].t)/864e5,d=pts[i].x-pts[i-1].x;if(j>0&&d>=0)iv.push({t0:pts[i-1].t,t1:pts[i].t,j,d,cj:d/Math.max(j,.5)})}
  const L=iv[iv.length-1],lastR=all[all.length-1],al=[];let base=null;
  if(L){const h=iv.slice(0,-1).filter(v=>v.t1>=L.t0-60*864e5),sj=h.reduce((s,v)=>s+v.j,0);if(sj>=7)base=h.reduce((s,v)=>s+v.d,0)/sj;
   if(c.seuil_jour_m3!=null&&L.cj>+c.seuil_jour_m3)al.push(`${fm3(L.cj)} m³/j > seuil ${fm3(c.seuil_jour_m3)}`);
