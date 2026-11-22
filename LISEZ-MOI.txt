@@ -1,4 +1,4 @@
-STADES 3M – version 4.14.0 (20/11/2026) – ensemble des fichiers
+STADES 3M – version 4.14.1 (20/11/2026) – ensemble des fichiers
 
 site/                 À déposer à la racine du dépôt GitHub Pages : index.html, config.js, app.js, style.css, icônes,
                       dossier lib/ (bibliothèques), dossier notices/ (les cinq notices d'utilisation) et dossier consultation/
@@ -12,7 +12,7 @@ sql/                  schema_complet_4_7_0.sql      Recrée TOUTE la base depuis
                                                     un contrôle de niveau final à comparer entre les deux bases.
                       migration_4_6_0.sql           Étape 4.6.0 : durée en jours, photo de clôture.
                       migration_4_7_0.sql           Étape 4.7.0 : « tribune » devient « zone » (à exécuter puis déposer aussitôt le site).
-                      migration_4_11_0.sql          Étape 4.14.0 : catalogue des contrôles de maintenance préventive (à exécuter avant de déposer le site 4.14.0).
+                      migration_4_11_0.sql          Étape 4.14.1 : catalogue des contrôles de maintenance préventive (à exécuter avant de déposer le site 4.14.1).
                       vidage_base_test.sql          BASE DE TEST UNIQUEMENT : vide les données (confirmation à saisir dans le script).
                       restauration_sauvegarde.sql   BASE DE TEST : remet en place les données à partir d'un fichier de sauvegarde.
 fiche_intervention/   Exemples de la fiche d'intervention (PDF et Word) générée par l'application ; non déployé sur le site.

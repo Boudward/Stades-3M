@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.14.0 */
+/* STADES 3M – application – version 4.14.1 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -261,15 +261,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.1",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.1",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -549,7 +549,7 @@ const PCOLS={
  st:{l:"Statut",c:"nw",v:p=>stPl(p)[1],k:p=>["retard","venir","jour","pause"].indexOf(stPl(p)[0]),h:p=>{const s=stPl(p);return `<span class="pst ${s[0]}">${s[1]}</span>`}},
  act:{l:"",c:"nw",lock:1,nof:1,v:()=>"",k:()=>0,h:p=>canPl()?`<button class="sec ic" data-pe="${p.id}" title="Modifier" aria-label="Modifier">✎</button> <button class="sec ic" data-pd="${p.id}" title="Supprimer" aria-label="Supprimer">${TRASH}</button>`:""}};
 Object.entries({titre:260,lieu:260,cat:240,per:120,der:140,pro:140,st:110,act:90}).forEach(([k,w])=>PCOLS[k].w=w);
-const CB={t:COLS,i:ICOLS,p:PCOLS},redraw=tb=>tb==="t"?render():tb==="p"?renderPl():renderIv();
+const CB={t:COLS,i:ICOLS,p:PCOLS},redraw=tb=>tb==="t"?render():tb==="p"?renderPl():tb==="c"?renderCp():renderIv();
 const done=x=>["resolue","refusee","archivee"].includes(x.statut);
 const rowCls=x=>(x.statut==="nouvelle"?"new ":"")+(x.priorite==="urgente"&&!done(x)?"urg ":"")+(["resolue","refusee"].includes(x.statut)?"res":x.statut==="archivee"?"arc":"");
 function sortFilt(l,tb){const T=TB[tb],C=CB[tb];l=l.filter(x=>Object.entries(T.f).every(([k,s])=>s.has(C[k].v(x))));
@@ -603,7 +603,7 @@ $("pop").onchange=e=>{const tb=$("pop").dataset.tb,k=$("pop").dataset.k,T=TB[tb]
  $("pall").checked=bx.every(b=>b.checked);redraw(tb)};
 $("pop").oninput=e=>{if(e.target.id!=="pq")return;const q=e.target.value.toLowerCase();
  document.querySelectorAll("#pl label").forEach(l=>l.classList.toggle("hide",!l.textContent.toLowerCase().includes(q)))};
-document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli,#colp"))$("cpop").classList.add("hide")});
+document.addEventListener("click",e=>{if(!e.target.closest("#pop,.hf"))$("pop").classList.add("hide");if(!e.target.closest("#cpop,#colt,#coli,#colp,#colc"))$("cpop").classList.add("hide")});
 const isResp=r=>r==="responsable";
 const dom=r=>({agent_travaux:"batiments",agent_exploitation:"exploitation"})[r];
 const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
@@ -961,8 +961,20 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.0) =====
+// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.1) =====
 const CPOK=()=>ENV==="test"&&["admin","responsable","supervision"].includes(role()),canCp=()=>ENV==="test"&&["admin","responsable"].includes(role());
+const CCOLS={
+ nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},
+ ref:{...mk("Réf. concessionnaire",s=>s.c.ref_concessionnaire||"—"),c:"lc"},
+ zone:{...mk("Zone",s=>s.c.zone_id?zoneN(s.c.zone_id):"—"),c:"lc"},local:{...mk("Local",s=>s.c.local||"—"),c:"lc"},
+ idx:{l:"Dernier index (m³)",c:"nw num",v:s=>s.lastR?fm3(s.lastR.index_m3):"—",k:s=>s.lastR?+s.lastR.index_m3:-1},
+ rel:{l:"Relevé",c:"nw",v:s=>s.lastR?fdate(s.lastR.releve_at):"—",k:s=>s.lastR?ts(s.lastR.releve_at):0},
+ cj:{l:"Conso/j",c:"nw num",v:s=>fm3(s.cj),k:s=>s.cj==null?-1:s.cj},
+ base:{l:"Moyenne/j",c:"nw num",v:s=>fm3(s.base),k:s=>s.base==null?-1:s.base},
+ ecart:{l:"Écart",c:"nw num",v:s=>s.ecart==null?"—":(s.ecart>0?"+":"")+Math.round(s.ecart)+" %",k:s=>s.ecart==null?-1e9:s.ecart},
+ st:{l:"Statut",c:"nw",v:s=>s.al.length?s.al.join(" ; "):"OK",k:s=>s.al.length,h:s=>s.al.length?`<span class="tag" style="color:var(--bad);border-color:var(--bad);background:#fbe9e7" title="${esc(s.al.join(" ; "))}">${esc(s.al[0])}${s.al.length>1?` +${s.al.length-1}`:""}</span>`:'<span class="tag s-resolue">OK</span>'}};
+Object.entries({nom:200,ref:150,zone:110,local:120,idx:135,rel:110,cj:95,base:105,ecart:95,st:240}).forEach(([k,w])=>CCOLS[k].w=w);
+CB.c=CCOLS;TB.c={f:{},s:{k:null,d:1},base:[]};
 let CP=[],RL=[],APP=[],CPL=false,CPERR="",CPD=90,CPE=null,CPCUR=null;
 const fm3=n=>n==null||isNaN(n)?"—":(+n).toLocaleString("fr-FR",{maximumFractionDigits:3}),
  gmap=c=>c.latitude!=null&&c.longitude!=null?`https://www.google.com/maps?q=${c.latitude},${c.longitude}`:"",
@@ -997,12 +1009,11 @@ function renderCp(){const ok=CPOK(),inAdm=!$("ad").classList.contains("hide");
  let st=CP.filter(c=>(!sv||c.site_id==sv)&&(!q||[c.nom,c.ref_concessionnaire,c.local].join(" ").toLowerCase().includes(q))).map(cpStats);
  const nA=st.filter(s=>s.al.length&&s.c.actif).length;if(onlyA)st=st.filter(s=>s.al.length);
  $("cp_n").textContent=`${st.length} compteur(s)${nA?` · ${nA} en alerte`:""}`;
- if(!st.length){$("cpbody").innerHTML=`<p class="empty">${CP.length?"Aucun compteur ne correspond à ces filtres.":"Aucun compteur enregistré."}</p>`;return}
- const g={};st.forEach(s=>(g[s.c.site_id]=g[s.c.site_id]||[]).push(s));const many=st.length>60;
- $("cpbody").innerHTML=Object.keys(g).sort((a,b)=>siteN(a).localeCompare(siteN(b),"fr")).map(sid=>{const rows=g[sid].sort((a,b)=>(b.al.length>0)-(a.al.length>0)||a.c.nom.localeCompare(b.c.nom,"fr",{numeric:true})),na=rows.filter(s=>s.al.length&&s.c.actif).length;
-  return`<details class="cpg"${!many||na||sv?" open":""}><summary><b>${esc(siteN(sid))}</b> — ${rows.length} compteur(s)${na?` · <span class="off">${na} alerte(s)</span>`:""}</summary><div class="table"><table class="cpt"><thead><tr><th>Compteur</th><th>Réf. concessionnaire</th><th>Zone / local</th><th class="num">Dernier index (m³)</th><th>Relevé</th><th class="num">Conso/j</th><th class="num">Moyenne/j</th><th>Statut</th></tr></thead><tbody>`+
-  rows.map(s=>{const c=s.c,zl=[c.zone_id?zoneN(c.zone_id):"",c.local].filter(Boolean).join(" · ");
-   return`<tr data-cp="${c.id}" class="${s.al.length&&c.actif?"urg":""}${c.actif?"":" arc"}"><td title="${esc(c.nom)}"><b>${esc(c.nom)}</b>${c.actif?"":" (inactif)"}</td><td title="${esc(c.ref_concessionnaire||"")}">${esc(c.ref_concessionnaire||"—")}</td><td title="${esc(zl)}">${esc(zl||"—")}</td><td class="num">${s.lastR?fm3(s.lastR.index_m3):"—"}</td><td>${s.lastR?fdate(s.lastR.releve_at):"—"}</td><td class="num">${fm3(s.cj)}</td><td class="num">${fm3(s.base)}</td><td title="${esc(s.al.join(" ; "))}">${s.al.length?`<span class="tag t-np" style="color:var(--bad);border-color:var(--bad);background:#fbe9e7">${esc(s.al[0])}${s.al.length>1?` +${s.al.length-1}`:""}</span>`:'<span class="tag s-resolue">OK</span>'}</td></tr>`}).join("")+`</tbody></table></div></details>`}).join("")}
+ TB.c.base=st;const list=sortFilt(st,"c");
+ if(!list.length){$("cpbody").innerHTML=`<p class="empty">${CP.length?"Aucun compteur ne correspond à ces filtres.":"Aucun compteur enregistré."}</p>`;return}
+ const g={};list.forEach(s=>(g[s.c.site_id]=g[s.c.site_id]||[]).push(s));const many=list.length>60,srt=!!TB.c.s.k;
+ $("cpbody").innerHTML=Object.keys(g).sort((a,b)=>siteN(a).localeCompare(siteN(b),"fr")).map(sid=>{const rows=srt?g[sid]:g[sid].sort((a,b)=>(b.al.length>0)-(a.al.length>0)||a.c.nom.localeCompare(b.c.nom,"fr",{numeric:true})),na=rows.filter(s=>s.al.length&&s.c.actif).length;
+  return`<details class="cpg"${!many||na||sv?" open":""}><summary><b>${esc(siteN(sid))}</b> — ${rows.length} compteur(s)${na?` · <span class="off">${na} alerte(s)</span>`:""}</summary><div class="table"><table class="rt" data-tb="c" style="width:${tw("c")}px"><colgroup>${colsHtml("c")}</colgroup><thead><tr>${thHtml("c")}</tr></thead><tbody>${rows.map(s=>rowH("c",s,s.c.actif?"":"arc",`data-cp="${s.c.id}"`)).join("")}</tbody></table></div></details>`}).join("")}
 // --- fiche d'un compteur
 function cpChart(s){const W=720,H=170,t1=Date.now(),t0=t1-CPD*864e5,iv=s.iv.filter(v=>v.t1>=t0);if(!iv.length)return'<p class="empty">Pas assez de relevés sur la période pour tracer une consommation.</p>';
  const c=s.c,mx=Math.max(...iv.map(v=>v.cj),+c.seuil_jour_m3||0,(s.base||0)*c.coef_alerte,.1)*1.15,X=t=>40+(Math.max(t,t0)-t0)/(t1-t0)*(W-50),Y=v=>H-22-v/mx*(H-34);
@@ -1065,9 +1076,9 @@ $("cpa").onchange=async e=>{const t=e.target,id=t.dataset.as||t.dataset.al;if(!i
  if(error){alert(errMsg(error));return}const a=APP.find(x=>x.appareil_id===id);if(a){if(t.dataset.as)a.statut=t.value;else a.libelle=t.value.trim()||null}};
 // --- branchements
 $("tabc").onclick=()=>{tab="c";render()};
-["cp_s","cp_a"].forEach(i=>$(i).onchange=renderCp);$("cp_q").oninput=renderCp;$("cp_r").onclick=loadCp;$("cp_new").onclick=()=>cpEdit(null);$("cp_ap").onclick=cpApp;
+["cp_s","cp_a"].forEach(i=>$(i).onchange=renderCp);$("cp_q").oninput=renderCp;$("cp_r").onclick=loadCp;$("colc").onclick=e=>openCols("c",e.currentTarget);$("cpbody").addEventListener("click",hdClick("c"));$("cp_new").onclick=()=>cpEdit(null);$("cp_ap").onclick=cpApp;
 $("cp_qr").onclick=()=>{const sv=$("cp_s").value;cpPrint(CP.filter(c=>c.actif&&(!sv||c.site_id==sv)))};
-$("cpbody").onclick=e=>{const tr=e.target.closest("tr[data-cp]");if(tr)cpDetail(tr.dataset.cp)};
+$("cpbody").addEventListener("click",e=>{if(e.target.closest("button.hb,button.hf,.rs"))return;const tr=e.target.closest("tr[data-cp]");if(tr)cpDetail(tr.dataset.cp)});
 $("cpd").onclick=async e=>{const d=e.target.closest("[data-cpd]");if(d){CPD=+d.dataset.cpd;cpDetail(CPCUR);return}
  const b=e.target.closest("[data-rr]");if(!b)return;let motif=null;if(b.dataset.to==="rejete"){motif=prompt("Motif du rejet (facultatif) :");if(motif===null)return}
  const {error}=await sb.from("releves_compteur").update({statut:b.dataset.to,motif:motif||null}).eq("id",b.dataset.rr);if(error){alert(errMsg(error));return}await loadCp();cpDetail(CPCUR)};
