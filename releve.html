@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STADES 3M – version 4.14.3 (21/11/2026) – page publique de saisie d'index de compteur d'eau (base de TEST uniquement) -->
+<!-- STADES 3M – version 4.16.0 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Relevé de compteur</title>
 <style>
@@ -18,7 +18,7 @@ button:disabled{opacity:.5}
 .fuite{background:var(--bad);color:#fff;font-weight:700;font-size:17px;border:3px solid #7a1510;padding:16px}.msg{margin-top:12px;padding:12px;border-radius:8px;font-size:15px}.ok{background:#e6f4ec;color:var(--ok)}.ko{background:#fbe9e7;color:var(--bad)}.wr{background:#fdf6ef;color:var(--warn)}
 .hide{display:none}small{display:block;margin-top:14px;color:var(--mute);font-size:12px}
 </style></head><body>
-<header>Relevé de compteur d'eau</header><div class="test">BASE DE TEST</div>
+<header>Relevé de compteur d'eau</header><div class="test hide" id="tst">BASE DE TEST</div>
 <main>
  <div id="load" class="card mute">Chargement…</div>
  <div id="nok" class="card hide"><h1>Compteur introuvable</h1><p class="mute">Ce QR code n'est plus valide ou le compteur est désactivé. Prévenez le responsable du site.</p></div>
@@ -42,7 +42,7 @@ button:disabled{opacity:.5}
 <script src="lib/supabase.min.js"></script><script src="config.js"></script>
 <script>
 (async()=>{
-const $=id=>document.getElementById(id),E=window.STADES_ENVS&&window.STADES_ENVS.test;
+const $=id=>document.getElementById(id),TST=new URLSearchParams(location.search).get("e")==="test",E=window.STADES_ENVS&&window.STADES_ENVS[TST?"test":"prod"];if(TST)$("tst").classList.remove("hide");
 const show=id=>{["load","nok","bloque","f"].forEach(x=>$(x).classList.toggle("hide",x!==id))};
 let app="";try{app=localStorage.getItem("stades_appareil")||"";if(!app){app=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now().toString(36)+"0000000000000000").replace(/-/g,"");localStorage.setItem("stades_appareil",app)}$("nm").value=localStorage.getItem("stades_releve_nom")||""}catch(e){}
 if(!$("nm").value){const m=document.cookie.match(/(?:^|; )stades_nom=([^;]*)/);if(m)try{$("nm").value=decodeURIComponent(m[1])}catch(e){}}
