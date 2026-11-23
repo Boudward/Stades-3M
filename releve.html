@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STADES 3M – version 4.17.0 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
+<!-- STADES 3M – version 4.17.1 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Relevé de compteur</title>
 <style>
@@ -58,6 +58,9 @@ $("cn").textContent=c.nom;$("cs").textContent=[c.site,c.local].filter(Boolean).j
 $("cd").textContent=c.dernier_index!=null?`Dernier relevé : ${fmt(c.dernier_index)} m³ le ${new Date(c.dernier_at).toLocaleDateString("fr-FR")}`:"Aucun relevé enregistré pour l'instant.";
 show("f");$("geo").classList.toggle("hide",!!c.geo);
 const msg=(t,k)=>{const m=$("m");m.className="msg "+(k==="fuite"?"ko fuite":k);m.textContent=t};
+// Majuscule automatique en début de champ (textes libres uniquement)
+document.addEventListener("input",e=>{const t=e.target;if(!t||!(t.tagName==="TEXTAREA"||(t.tagName==="INPUT"&&(!t.type||t.type==="text")))||t.readOnly||t.dataset.nocap!==undefined||["numeric","decimal"].includes(t.inputMode)||t.type==="search"||[].includes(t.id)||/^[\s]*[A-ZÀ-Ý0-9]/.test(t.value)||!/^\s*[a-zà-ÿ]/.test(t.value))return;
+ const s=t.selectionStart,n=t.selectionEnd,v=t.value,i=v.search(/\S/);t.value=v.slice(0,i)+v[i].toLocaleUpperCase("fr")+v.slice(i+1);try{t.setSelectionRange(s,n)}catch(_){}});
 $("f").onsubmit=async e=>{e.preventDefault();
  const v=parseFloat($("ix").value.replace(/\s/g,"").replace(",","."));
  if(!isFinite(v)||v<0){msg("Saisissez un index valide.","ko");return}
