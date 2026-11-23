@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.14.2 */
+/* STADES 3M – application – version 4.14.3 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -261,15 +261,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.2",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.2",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.14.3",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.14.3",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.2",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.14.3",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -961,7 +961,7 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.2) =====
+// ===== COMPTEURS D'EAU (base de test uniquement, 4.14.3) =====
 const CPOK=()=>ENV==="test"&&["admin","responsable","supervision"].includes(role()),canCp=()=>ENV==="test"&&["admin","responsable"].includes(role());
 const CCOLS={
  nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},
@@ -997,11 +997,13 @@ function cpStats(c){const all=RL.filter(r=>r.compteur_id==c.id&&r.statut!=="reje
   if(base!=null){if(base>0?(L.cj>c.coef_alerte*base&&L.cj-base>=.05):L.cj>=.2)al.push(base>0?`×${(L.cj/base).toLocaleString("fr-FR",{maximumFractionDigits:1})} la moyenne`:"consommation inhabituelle")}}
  if(c.delai_releve_j&&lastR&&(Date.now()-new Date(lastR.releve_at))/864e5>c.delai_releve_j)al.push(`aucun relevé depuis ${Math.floor((Date.now()-new Date(lastR.releve_at))/864e5)} j`);
  if(c.delai_releve_j&&!lastR&&(Date.now()-new Date(c.created_at))/864e5>c.delai_releve_j)al.push("aucun relevé");
- const nv=all.filter(r=>r.statut==="a_verifier").length;if(nv)al.push(`${nv} relevé(s) à vérifier`);
- return{c,lastR,cj:L?L.cj:null,base,ecart:L&&base>0?(L.cj/base-1)*100:null,al,iv,pts}}
+ const vr=all.filter(r=>r.statut==="a_verifier"),nf=vr.filter(r=>/anormale/.test(r.motif||"")).length,nb=vr.length-nf;if(nf)al.unshift(`⚠ fuite suspectée : ${nf} relevé(s) à contrôler`);if(nb)al.push(`${nb} relevé(s) inférieur(s) à contrôler`);
+ return{c,lastR,cj:L?L.cj:null,base,ecart:L&&base>0?(L.cj/base-1)*100:null,al,iv,pts,def:c.actif&&(vr.length>0||al.some(t=>/seuil|moyenne|inhabituelle/.test(t)))}}
 function renderCp(){const ok=CPOK(),inAdm=!$("ad").classList.contains("hide");
  $("tabc").classList.toggle("hide",!ok);$("tabc").classList.toggle("sec",tab!=="c");$("cv").classList.toggle("hide",inAdm||tab!=="c"||!ok);
- if(!ok||tab!=="c"||inAdm)return;if(!CPL){loadCp();return}
+ if(ok&&!CPL){loadCp();return}
+ if(ok&&!CPERR){const nd=CP.map(cpStats).filter(s=>s.def).length;$("tabc").classList.toggle("alrt",nd>0);$("cpbdg").textContent=nd?nd:"";$("tabc").title=nd?`Compteurs d'eau : ${nd} compteur(s) en défaut`:"Compteurs d'eau"}
+ if(!ok||tab!=="c"||inAdm)return;
  ["cp_new","cp_qr"].forEach(i=>$(i).classList.toggle("hide",!canCp()));
  const sv=$("cp_s").value;$("cp_s").innerHTML=sOpts("Tous les sites");$("cp_s").value=sv;
  if(CPERR){$("cpbody").innerHTML=`<p class="empty">${esc(CPERR)}</p>`;return}
@@ -1024,7 +1026,7 @@ function cpChart(s){const W=720,H=170,t1=Date.now(),t0=t1-CPD*864e5,iv=s.iv.filt
  return o+`<text x="36" y="14" text-anchor="end" font-size="10">${fm3(mx)}</text><text x="36" y="${H-22}" text-anchor="end" font-size="10">0</text><text x="40" y="${H-6}" font-size="10">${fdate(t0)}</text><text x="${W-10}" y="${H-6}" text-anchor="end" font-size="10">${fdate(t1)}</text></svg><div class="mute" style="font-size:12px">m³ par jour, par intervalle entre deux relevés.</div>`}
 function cpDetail(id){const c=CP.find(x=>x.id==id);if(!c)return;CPCUR=c.id;const s=cpStats(c),m=gmap(c),rl=RL.filter(r=>r.compteur_id==c.id).slice().reverse();
  const tl=rl.slice(0,60).map(r=>{const prev=RL.filter(p=>p.compteur_id==c.id&&p.statut==="valide"&&(p.releve_at<r.releve_at||(p.releve_at===r.releve_at&&p.id<r.id))).pop(),dl=prev&&r.index_m3>=prev.index_m3?fm3(r.index_m3-prev.index_m3):"—",ap=APP.find(a=>a.appareil_id===r.appareil_id);
-  return`<tr class="${r.statut==="rejete"?"arc":""}"><td>${fdh(r.releve_at)}</td><td class="num">${fm3(r.index_m3)}</td><td class="num">${dl}</td><td>${esc(r.auteur_nom||(r.source==="manuel"?"saisie manuelle":"—"))}</td><td title="${esc(r.appareil_id||"")}">${r.appareil_id?esc(r.appareil_id.slice(0,6)):"—"}${ap&&ap.statut!=="inconnu"?` <span class="tag ${ap.statut==="fiable"?"s-resolue":"p-urgente"}">${ap.statut}</span>`:""}</td><td>${r.statut==="valide"?"":`<span class="tag ${r.statut==="rejete"?"p-urgente":"t-np"}" title="${esc(r.motif||"")}">${r.statut==="rejete"?"rejeté":"à vérifier"}</span>`}</td><td>${canCp()?(r.statut==="valide"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:`<button class="sec" data-rr="${r.id}" data-to="valide">${r.statut==="rejete"?"Rétablir":"Valider"}</button>${r.statut==="a_verifier"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:""}`):""}</td></tr>`}).join("");
+  return`<tr class="${r.statut==="rejete"?"arc":""}"><td>${fdh(r.releve_at)}</td><td class="num">${fm3(r.index_m3)}</td><td class="num">${dl}</td><td>${esc(r.auteur_nom||(r.source==="manuel"?"saisie manuelle":"—"))}</td><td title="${esc(r.appareil_id||"")}">${r.appareil_id?esc(r.appareil_id.slice(0,6)):"—"}${ap&&ap.statut!=="inconnu"?` <span class="tag ${ap.statut==="fiable"?"s-resolue":"p-urgente"}">${ap.statut}</span>`:""}</td><td>${r.statut==="valide"?"":r.statut==="rejete"?`<span class="tag p-urgente" title="${esc(r.motif||"")}">rejeté</span>`:`<span class="tag" style="background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700">À VÉRIFIER</span><div style="color:var(--bad);font-size:12px;font-weight:600;white-space:normal">${esc(r.motif||"")}</div>`}</td><td>${canCp()?(r.statut==="valide"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:`<button class="sec" data-rr="${r.id}" data-to="valide">${r.statut==="rejete"?"Rétablir":"Valider"}</button>${r.statut==="a_verifier"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:""}`):""}</td></tr>`}).join("");
  $("cpd").innerHTML=`<h2 style="margin-top:0;padding-right:38px">${esc(c.nom)}${c.actif?"":" (inactif)"}</h2><p class="mute">${esc(siteN(c.site_id))}${c.zone_id?" · "+esc(zoneN(c.zone_id)):""}${c.local?" · "+esc(c.local):""}${c.ref_concessionnaire?" · réf. "+esc(c.ref_concessionnaire):""}${m?` · <a href="${m}" target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>`:""}</p>
  ${s.al.length?`<p class="msg">⚠ ${esc(s.al.join(" ; "))}</p>`:""}
  <div class="row dper" style="margin:8px 0">${[30,90,180,365].map(d=>`<button class="${CPD===d?"":"sec"}" data-cpd="${d}">${d} j</button>`).join("")}</div>${cpChart(s)}
@@ -1034,8 +1036,12 @@ function cpDetail(id){const c=CP.find(x=>x.id==id);if(!c)return;CPCUR=c.id;const
  if(canCp()){const d=new Date(Date.now()-new Date().getTimezoneOffset()*6e4);$("cpt").value=d.toISOString().slice(0,16);
   $("cpedit").onclick=()=>cpEdit(c.id);
   $("cpxb").onclick=async()=>{const v=parseFloat($("cpx").value.replace(/\s/g,"").replace(",","."));if(!isFinite(v)||v<0){$("cpxm").textContent="Index invalide.";return}
-   const last=s.pts.length?s.pts[s.pts.length-1].x:null,low=last!=null&&v<last;if(low&&!confirm(`L'index (${fm3(v)}) est inférieur au dernier relevé valide (${fm3(last)}). L'enregistrer « à vérifier » ?`))return;
-   const {error}=await sb.from("releves_compteur").insert({compteur_id:c.id,index_m3:v,releve_at:new Date($("cpt").value||Date.now()).toISOString(),source:"manuel",auteur_nom:nm(),saisi_par:me.id,statut:low?"a_verifier":"valide",motif:low?"Index inférieur au précédent":null});
+   const at=new Date($("cpt").value||Date.now()),lp=s.pts[s.pts.length-1],last=lp?lp.x:null,low=last!=null&&v<last;let hi=null;
+   if(lp&&!low){const rate=(v-lp.x)/Math.max((at-lp.t)/864e5,.5),w=s.pts.filter(p=>p.t>at-60*864e5),sp=w.length>1?(w[w.length-1].t-w[0].t)/864e5:0,bs=sp>=7?(w[w.length-1].x-w[0].x)/sp:null;
+    if((c.seuil_jour_m3!=null&&rate>+c.seuil_jour_m3)||(bs!=null&&rate>c.coef_alerte*bs&&rate-bs>=.05))hi=`Consommation anormale : ${fm3(rate)} m³/j`+(c.seuil_jour_m3!=null&&rate>+c.seuil_jour_m3?` (seuil ${fm3(c.seuil_jour_m3)})`:` (moyenne habituelle ${fm3(bs)})`)}
+   if(low&&!confirm(`L'index (${fm3(v)}) est inférieur au dernier relevé valide (${fm3(last)}). L'enregistrer « à vérifier » ?`))return;
+   if(hi&&!confirm(`⚠ FUITE SUSPECTÉE : ${hi}.\n\nL'enregistrer au statut « à vérifier » ?`))return;
+   const {error}=await sb.from("releves_compteur").insert({compteur_id:c.id,index_m3:v,releve_at:new Date($("cpt").value||Date.now()).toISOString(),source:"manuel",auteur_nom:nm(),saisi_par:me.id,statut:low||hi?"a_verifier":"valide",motif:low?"Index inférieur au précédent ("+fm3(last)+")":hi});
    if(error){$("cpxm").textContent=errMsg(error);return}await loadCp();cpDetail(c.id)}}
  if(!$("dCp").open)$("dCp").showModal()}
 // --- création / modification
@@ -1075,7 +1081,7 @@ function cpApp(){const ro=!canCp();$("cpa").innerHTML=(APP.length?`<table class=
 $("cpa").onchange=async e=>{const t=e.target,id=t.dataset.as||t.dataset.al;if(!id)return;const {error}=await sb.from("appareils_compteur").update(t.dataset.as?{statut:t.value}:{libelle:t.value.trim()||null}).eq("appareil_id",id);
  if(error){alert(errMsg(error));return}const a=APP.find(x=>x.appareil_id===id);if(a){if(t.dataset.as)a.statut=t.value;else a.libelle=t.value.trim()||null}};
 // --- branchements
-$("tabc").onclick=()=>{tab="c";render()};
+$("tabc").onclick=()=>{tab="c";render();loadCp()};setInterval(()=>{if(CPOK()&&CPL)loadCp()},6e5);
 ["cp_s","cp_a"].forEach(i=>$(i).onchange=renderCp);$("cp_q").oninput=renderCp;$("cp_r").onclick=loadCp;$("colc").onclick=e=>openCols("c",e.currentTarget);$("cpbody").addEventListener("click",hdClick("c"));$("cp_new").onclick=()=>cpEdit(null);$("cp_ap").onclick=cpApp;
 $("cp_qr").onclick=()=>{const sv=$("cp_s").value;cpPrint(CP.filter(c=>c.actif&&(!sv||c.site_id==sv)))};
 $("cpbody").addEventListener("click",e=>{if(e.target.closest("button.hb,button.hf,.rs"))return;const tr=e.target.closest("tr[data-cp]");if(tr)cpDetail(tr.dataset.cp)});
