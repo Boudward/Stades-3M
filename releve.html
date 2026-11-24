@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STADES 3M – version 4.17.1 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
+<!-- STADES 3M – version 4.18.0 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Relevé de compteur</title>
 <style>
@@ -35,7 +35,7 @@ button:disabled{opacity:.5}
    <button id="gob" type="button" style="background:#fff;color:var(--accent);border:1px solid var(--accent);margin-top:10px">📍 Enregistrer la position du compteur</button>
    <div id="gm" class="msg hide" role="status"></div></div>
   <button id="go" type="submit">Envoyer le relevé</button>
-  <div id="m" class="msg hide" role="status"></div>
+  <div id="pend" class="msg wr hide" role="status"></div><div id="m" class="msg hide" role="status"></div>
   <small>Pour limiter les abus, un identifiant aléatoire propre à votre navigateur est enregistré avec le relevé (aucune donnée personnelle, ni numéro de téléphone, ni position).</small>
  </form>
 </main>
@@ -51,8 +51,10 @@ const tok=new URLSearchParams(location.search).get("c")||"";
 if(!E||!tok){show("nok");return}
 const sb=supabase.createClient(E.url,E.key,{auth:{persistSession:false}});
 const fmt=n=>Number(n).toLocaleString("fr-FR",{maximumFractionDigits:3});
-let c;
-try{const {data,error}=await sb.rpc("compteur_public",{p_token:tok,p_appareil:app});if(error)throw error;c=data}catch(e){$("load").textContent="Service indisponible, réessayez plus tard.";return}
+const isNet=err=>!navigator.onLine||/failed to fetch|networkerror|load failed|network request failed|fetch/i.test(String(err&&(err.message||err))),CK="stades_cp_"+tok;
+let c,hors=false;
+try{const {data,error}=await sb.rpc("compteur_public",{p_token:tok,p_appareil:app});if(error)throw error;c=data;if(c)try{localStorage.setItem(CK,JSON.stringify(c))}catch(e){}}
+catch(e){if(isNet(e)){try{c=JSON.parse(localStorage.getItem(CK)||"null")}catch(_){c=null}hors=!!c;if(!c){$("load").textContent="Pas de réseau, et ce compteur n'a encore jamais été ouvert sur ce téléphone. Réessayez avec du réseau.";return}}else{$("load").textContent="Service indisponible, réessayez plus tard.";return}}
 if(!c){show("nok");return}if(c.bloque){show("bloque");return}
 $("cn").textContent=c.nom;$("cs").textContent=[c.site,c.local].filter(Boolean).join(" · ");
 $("cd").textContent=c.dernier_index!=null?`Dernier relevé : ${fmt(c.dernier_index)} m³ le ${new Date(c.dernier_at).toLocaleDateString("fr-FR")}`:"Aucun relevé enregistré pour l'instant.";
@@ -61,6 +63,20 @@ const msg=(t,k)=>{const m=$("m");m.className="msg "+(k==="fuite"?"ko fuite":k);m
 // Majuscule automatique en début de champ (textes libres uniquement)
 document.addEventListener("input",e=>{const t=e.target;if(!t||!(t.tagName==="TEXTAREA"||(t.tagName==="INPUT"&&(!t.type||t.type==="text")))||t.readOnly||t.dataset.nocap!==undefined||["numeric","decimal"].includes(t.inputMode)||t.type==="search"||[].includes(t.id)||/^[\s]*[A-ZÀ-Ý0-9]/.test(t.value)||!/^\s*[a-zà-ÿ]/.test(t.value))return;
  const s=t.selectionStart,n=t.selectionEnd,v=t.value,i=v.search(/\S/);t.value=v.slice(0,i)+v[i].toLocaleUpperCase("fr")+v.slice(i+1);try{t.setSelectionRange(s,n)}catch(_){}});
+const QK="stades_releve_file",EK=TST?"test":"prod",qget=()=>{try{return JSON.parse(localStorage.getItem(QK)||"[]")}catch(e){return[]}},qset=q=>{try{localStorage.setItem(QK,JSON.stringify(q))}catch(e){}};
+const pend=()=>{const n=qget().filter(x=>x.e===EK).length,p=$("pend");p.classList.toggle("hide",!n);p.textContent=n?`📶 ${n} relevé(s) en attente d'envoi sur ce téléphone : envoi automatique dès le retour du réseau (gardez cette page ouverte ou rouvrez-la).`:""};
+const decr=data=>{const f=data.anomalie==="fuite",b=data.anomalie==="baisse";
+ return[f?"⚠ FUITE SUSPECTÉE : ce relevé correspond à une consommation anormalement élevée"+(data.conso_j!=null?` (${fmt(data.conso_j)} m³ par jour)`:"")+". Vérifiez que l'index saisi est exact. S'il l'est, signalez-le immédiatement au responsable du site et, si possible, fermez l'arrivée d'eau. Le relevé est mis en vérification.":b?"Cet index est inférieur au précédent relevé : il est enregistré mais sera vérifié par un responsable.":data.statut==="a_verifier"?"Relevé enregistré, il sera vérifié par un responsable.":"Merci, votre relevé a bien été enregistré.",f?"fuite":(b||data.statut==="a_verifier")?"wr":"ok"]};
+let flushing=false;
+async function flush(){if(flushing||!navigator.onLine&&qget().length===0)return;flushing=true;let sent=0,fuite=null,bad=null;
+ try{for(;;){const it=qget().find(x=>x.e===EK);if(!it)break;let r;
+   try{r=await sb.rpc("releve_saisir",{p_token:it.t,p_index:it.v,p_appareil:app,p_nom:it.n,p_at:it.at});if(r.error)throw r.error}catch(err){break}
+   const d=r.data;if(d&&!d.ok&&(d.code==="limite"||d.code==="appareil"))break;
+   qset(qget().filter(x=>x.id!==it.id));
+   if(d&&d.ok){sent++;if(d.anomalie==="fuite")fuite=decr(d)}else bad=(d&&d.message)||"Un relevé en attente a été refusé."}}
+ finally{flushing=false;pend()}
+ if(fuite){msg(fuite[0],"fuite");$("m").scrollIntoView({behavior:"smooth",block:"center"})}
+ else if(bad)msg(bad,"ko");else if(sent)msg(sent>1?`${sent} relevés en attente ont été envoyés, merci.`:"Votre relevé en attente a été envoyé, merci.","ok")}
 $("f").onsubmit=async e=>{e.preventDefault();
  const v=parseFloat($("ix").value.replace(/\s/g,"").replace(",","."));
  if(!isFinite(v)||v<0){msg("Saisissez un index valide.","ko");return}
@@ -68,15 +84,20 @@ $("f").onsubmit=async e=>{e.preventDefault();
  const nom=$("nm").value.trim();if(nom.length<2){msg("Indiquez votre nom.","ko");$("nm").focus();return}
  $("go").disabled=true;
  try{try{localStorage.setItem("stades_releve_nom",nom)}catch(e){}document.cookie="stades_nom="+encodeURIComponent(nom)+"; max-age=31536000; path=/; SameSite=Lax";
-  const {data,error}=await sb.rpc("releve_saisir",{p_token:tok,p_index:v,p_appareil:app,p_nom:nom});
-  if(error)throw error;
-  if(data&&data.ok){const f=data.anomalie==="fuite",b=data.anomalie==="baisse";
-   msg(f?"⚠ FUITE SUSPECTÉE : ce relevé correspond à une consommation anormalement élevée"+(data.conso_j!=null?` (${fmt(data.conso_j)} m³ par jour)`:"")+". Vérifiez que l'index saisi est exact. S'il l'est, signalez-le immédiatement au responsable du site et, si possible, fermez l'arrivée d'eau. Le relevé est mis en vérification.":b?"Cet index est inférieur au précédent relevé : il est enregistré mais sera vérifié par un responsable.":data.statut==="a_verifier"?"Relevé enregistré, il sera vérifié par un responsable.":"Merci, votre relevé a bien été enregistré.",f?"fuite":b?"wr":data.statut==="a_verifier"?"wr":"ok");
-   if(f)$("m").scrollIntoView({behavior:"smooth",block:"center"});
-   if(data.statut==="valide"){c.dernier_index=v;c.dernier_at=new Date().toISOString();$("cd").textContent=`Dernier relevé : ${fmt(v)} m³ à l'instant`}$("ix").value="";return}
+  let data;
+  try{if(!navigator.onLine)throw new Error("Failed to fetch");const r=await sb.rpc("releve_saisir",{p_token:tok,p_index:v,p_appareil:app,p_nom:nom});if(r.error)throw r.error;data=r.data}
+  catch(err){if(!isNet(err))throw err;
+   qset(qget().concat([{id:Date.now()+"-"+Math.random().toString(36).slice(2,8),e:EK,t:tok,v,n:nom,at:new Date().toISOString()}]));pend();$("ix").value="";
+   msg("📶 Pas de réseau : votre relevé est enregistré sur ce téléphone. Il sera envoyé automatiquement dès le retour du réseau (gardez cette page ouverte ou rouvrez-la quand vous aurez du réseau).","wr");return}
+  if(data&&data.ok){const [t,k]=decr(data);msg(t,k);
+   if(k==="fuite")$("m").scrollIntoView({behavior:"smooth",block:"center"});
+   if(data.statut==="valide"){c.dernier_index=v;c.dernier_at=new Date().toISOString();$("cd").textContent=`Dernier relevé : ${fmt(v)} m³ à l'instant`;try{localStorage.setItem(CK,JSON.stringify(c))}catch(e){}}$("ix").value="";return}
   msg((data&&data.message)||"Enregistrement impossible.","ko");if(data&&data.code==="bloque")show("bloque")}
  catch(err){msg("Enregistrement impossible : vérifiez votre connexion et réessayez.","ko")}
  finally{$("go").disabled=false}};
+pend();if(hors)msg("📶 Pas de réseau : vous pouvez saisir le relevé, il sera envoyé dès le retour du réseau.","wr");
+window.addEventListener("online",flush);document.addEventListener("visibilitychange",()=>{if(!document.hidden)flush()});setInterval(flush,20000);flush();
+if("serviceWorker" in navigator)navigator.serviceWorker.register("sw.js").catch(()=>{});
 $("gob").onclick=()=>{const g=(t,k)=>{const m=$("gm");m.className="msg "+k;m.textContent=t};
  if(!navigator.geolocation){g("Géolocalisation indisponible sur cet appareil.","ko");return}
  g("Recherche de la position… (autorisez l'accès à la position si votre téléphone le demande)","wr");$("gob").disabled=true;

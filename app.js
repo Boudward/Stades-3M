@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.17.1 */
+/* STADES 3M – application – version 4.18.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -73,7 +73,11 @@ $("fgt").onclick=async()=>{const m=$("em").value.trim();$("lmsg").style.color=""
  const {error}=await sb.auth.resetPasswordForEmail(m,{redirectTo:location.origin+location.pathname});$("lmsg").style.color=error?"":"var(--ok)";$("lmsg").textContent=error?errMsg(error):"Si cette adresse correspond à un compte, un lien de réinitialisation vient d'être envoyé."};
 
 let NT=[],dtm;
-async function loadNot(){const {data,error}=await sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(50);if(error)return;NT=data;const n=NT.filter(x=>!x.lu).length;$("bn").textContent=n>99?"99+":n;$("bn").classList.toggle("hide",!n)}
+const T0=document.title;
+function sensBan(){const L=NT.filter(x=>!x.lu&&x.type==="ticket_sensible"),b=$("sensb");b.classList.toggle("hide",!L.length);document.title=(L.length?"(!) ":"")+T0;
+ b.innerHTML=L.slice(0,3).map(x=>`<div class="sb1"><span>⚠ ${esc(x.titre)} : ${esc(x.message||"")}</span><button data-sbo="${x.ticket_id||""}" data-sbn="${x.id}">Ouvrir</button><button data-sbk="${x.id}">Pris en compte</button></div>`).join("")+(L.length>3?`<div class="sb1">… et ${L.length-3} autre(s) ticket(s) sensible(s)</div>`:"")}
+$("sensb").onclick=e=>{const o=e.target.closest("[data-sbo]"),k=e.target.closest("[data-sbk]");if(!o&&!k)return;const id=+(o?o.dataset.sbn:k.dataset.sbk);sb.rpc("notif_lire",{p_id:id}).then(loadNot);if(o&&o.dataset.sbo)openDet(+o.dataset.sbo)};
+async function loadNot(){const {data,error}=await sb.from("notifications").select("*").order("created_at",{ascending:false}).limit(50);if(error)return;NT=data;sensBan();const n=NT.filter(x=>!x.lu).length;$("bn").textContent=n>99?"99+":n;$("bn").classList.toggle("hide",!n)}
 function drawNot(){$("dNb").innerHTML=NT.map(x=>`<div class="tl${x.lu?"":" nt"}" data-n="${x.id}" data-y="${x.type||""}" data-t="${x.ticket_id||""}" data-i="${x.intervention_id||""}" style="cursor:pointer"><span>${tlTime(x.created_at)}</span><b>${esc(x.titre)}</b>${x.message?" – "+esc(x.message):""}</div>`).join("")||`<p class="empty" style="padding:8px">Aucune notification.</p>`}
 $("bell").onclick=()=>{drawNot();$("dNot").showModal()};
 $("dNa").onclick=async()=>{await sb.rpc("notif_lire");await loadNot();drawNot()};
@@ -261,15 +265,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.17.1",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.17.1",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.18.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.18.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.17.1",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.18.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -969,7 +973,7 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (4.17.1) =====
+// ===== COMPTEURS D'EAU (4.18.0) =====
 const CPOK=()=>["admin","supervision"].includes(role()),canCp=()=>role()==="admin";
 const CCOLS={
  nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},
@@ -1019,6 +1023,8 @@ function renderCp(){const ok=CPOK(),inAdm=!$("ad").classList.contains("hide");
  let st=CP.filter(c=>(!sv||c.site_id==sv)&&(!q||[c.nom,c.ref_concessionnaire,c.local].join(" ").toLowerCase().includes(q))).map(cpStats);
  const nA=st.filter(s=>s.al.length&&s.c.actif).length;if(onlyA)st=st.filter(s=>s.al.length);
  $("cp_n").textContent=`${st.length} compteur(s)${nA?` · ${nA} en alerte`:""}`;
+ {const late=CP.filter(c=>c.actif&&c.delai_releve_j&&(!sv||c.site_id==sv)).map(cpStats).map(s=>{const ref=s.lastR?new Date(s.lastR.releve_at):new Date(s.c.created_at),j=Math.floor((Date.now()-ref)/864e5);return{s,j,r:j-s.c.delai_releve_j}}).filter(x=>x.r>0).sort((x,y)=>y.r-x.r);
+  $("cp_late").classList.toggle("hide",!late.length);$("cp_late").innerHTML=late.length?`<b>⏰ Relevés à effectuer (${late.length})</b> – ${late.map(x=>`<a href="#" data-cpl="${x.s.c.id}">${esc(x.s.c.nom)}</a> <span class="mute">(${x.s.lastR?"dernier relevé il y a "+x.j+" j":"jamais relevé"}, délai ${x.s.c.delai_releve_j} j, retard ${x.r} j)</span>`).join(" · ")}`:""}
  TB.c.base=st;const list=sortFilt(st,"c");
  if(!list.length){$("cpbody").innerHTML=`<p class="empty">${CP.length?"Aucun compteur ne correspond à ces filtres.":"Aucun compteur enregistré."}</p>`;return}
  const g={};list.forEach(s=>(g[s.c.site_id]=g[s.c.site_id]||[]).push(s));const many=list.length>60,srt=!!TB.c.s.k;
@@ -1036,15 +1042,37 @@ function cpChart(s){const W=720,H=170,t1=Date.now(),t0=t1-CPD*864e5,iv=s.iv.filt
 document.addEventListener("input",e=>{const t=e.target;if(!t||!(t.tagName==="TEXTAREA"||(t.tagName==="INPUT"&&(!t.type||t.type==="text")))||t.readOnly||t.dataset.nocap!==undefined||["numeric","decimal"].includes(t.inputMode)||t.type==="search"||["cp_q","pq","ce_r","ce_url"].includes(t.id)||/^[\s]*[A-ZÀ-Ý0-9]/.test(t.value)||!/^\s*[a-zà-ÿ]/.test(t.value))return;
  const s=t.selectionStart,n=t.selectionEnd,v=t.value,i=v.search(/\S/);t.value=v.slice(0,i)+v[i].toLocaleUpperCase("fr")+v.slice(i+1);try{t.setSelectionRange(s,n)}catch(_){}});
 $("cpd").addEventListener("click",e=>{const l=e.target.closest("[data-apl]");if(l){e.preventDefault();cpApp(l.dataset.apl)}});
+const csvC=v=>{v=v==null?"":String(v);return /[";\n\r]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v},csvN=v=>v==null||!isFinite(v)?"":String(Math.round(v*1000)/1000).replace(".",","),csvD=d=>d?new Date(d).toLocaleString("fr-FR",{day:"2-digit",month:"2-digit",year:"numeric",hour:"2-digit",minute:"2-digit"}):"",
+ csvOut=(rows,name)=>dlB(new Blob(["﻿"+rows.map(r=>r.map(csvC).join(";")).join("\r\n")],{type:"text/csv;charset=utf-8"}),name),
+ cpLoc=c=>[siteN(c.site_id),c.zone_id?zoneN(c.zone_id):"",c.local||""],stm=()=>new Date().toLocaleDateString("sv-SE");
+async function cpAllRl(ids){let r=[];for(let i=0;;i+=1000){const {data,error}=await sb.from("releves_compteur").select("*").in("compteur_id",ids).order("releve_at").order("id").range(i,i+999);if(error)throw error;r=r.concat(data);if(data.length<1000)return r}}
+async function cpExpRel(list,name,btn){if(!list.length)return;const t=btn&&btn.textContent;try{if(btn){btn.disabled=true;btn.textContent="Export…"}const rl=await cpAllRl(list.map(c=>c.id)),SL={valide:"Validé",a_verifier:"À vérifier",rejete:"Rejeté"},
+  rows=[["Compteur","Site","Zone","Local","Référence concessionnaire","Date du relevé","Index (m³)","Consommation depuis le relevé valide précédent (m³)","Jours écoulés","Consommation moyenne (m³/jour)","Statut","Motif","Source","Saisi par","Appareil"]];
+  list.forEach(c=>{let prev=null;rl.filter(r=>r.compteur_id==c.id).forEach(r=>{let d=null,j=null,cj=null;if(prev&&r.statut!=="rejete"){j=(new Date(r.releve_at)-new Date(prev.releve_at))/864e5;d=+r.index_m3-+prev.index_m3;if(d>=0&&j>0)cj=d/Math.max(j,.5);else d=null}
+   rows.push([c.nom,...cpLoc(c),c.ref_concessionnaire||"",csvD(r.releve_at),csvN(+r.index_m3),csvN(d),csvN(j),csvN(cj),SL[r.statut]||r.statut,r.motif||"",r.source==="qr"?"QR code":"Saisie manuelle",r.auteur_nom||"",r.appareil_id||""]);if(r.statut==="valide")prev=r})});
+  csvOut(rows,name)}catch(e){alert("Export impossible : "+errMsg(e))}finally{if(btn){btn.disabled=false;btn.textContent=t}}}
+function cpExpSyn(){const idx=(p,t)=>{if(!p.length||t<p[0].t)return null;const l=p[p.length-1];if(t>=l.t)return l.x;for(let i=0;i<p.length-1;i++)if(p[i].t<=t&&t<p[i+1].t)return p[i].x+(p[i+1].x-p[i].x)*(t-p[i].t)/(p[i+1].t-p[i].t);return null},
+  sv=$("cp_s").value,cn=(p,j)=>{if(!p.length)return null;const a=idx(p,Date.now()-j*864e5);return a==null?null:p[p.length-1].x-a},
+  rows=[["Compteur","Site","Zone","Local","Référence concessionnaire","Actif","Dernier index (m³)","Date du dernier relevé","Consommation sur 30 jours (m³, estimée)","Consommation sur 12 mois (m³, estimée)","Consommation du dernier intervalle (m³/jour)","Consommation habituelle (m³/jour)","Écart à l'habituel (%)","Seuil d'alerte (m³/jour)","Relevés à vérifier","Alertes"]];
+ CP.filter(c=>!sv||c.site_id==sv).forEach(c=>{const s=cpStats(c);rows.push([c.nom,...cpLoc(c),c.ref_concessionnaire||"",c.actif?"Oui":"Non",s.lastR?csvN(+s.lastR.index_m3):"",s.lastR?csvD(s.lastR.releve_at):"",csvN(cn(s.pts,30)),csvN(cn(s.pts,365)),csvN(s.cj),csvN(s.base),s.ecart==null?"":csvN(s.ecart),csvN(c.seuil_jour_m3),RL.filter(r=>r.compteur_id==c.id&&r.statut==="a_verifier").length,s.al.join(" ; ")])});
+ csvOut(rows,`compteurs_synthese_${stm()}.csv`)}
+function cpTicket(rid){const r=RL.find(x=>x.id==rid),c=r&&CP.find(x=>x.id==r.compteur_id);if(!c)return;$("dCp").close();$("new").onclick();
+ const fu=/anormale/.test(r.motif||"");$("ns").value=c.site_id;$("nt2").innerHTML=tOpts(c.site_id);if(c.zone_id)$("nt2").value=c.zone_id;$("nl").value=c.local||"";
+ const ca=cats.find(x=>/travaux|maint/i.test(x.nom))||cats[0];if(ca){$("ncat").value=ca.id;$("ncorps").innerHTML=corpsOpts(ca.id);const cp=corps.find(x=>x.categorie_id==ca.id&&/plomb|eau/i.test(x.nom));if(cp)$("ncorps").value=cp.id}
+ $("nt").value=`${fu?"Fuite suspectée":"Relevé à contrôler"} – compteur ${c.nom}`;
+ $("nd").value=`Compteur d'eau « ${c.nom} »${c.ref_concessionnaire?" (réf. "+c.ref_concessionnaire+")":""}.\nRelevé du ${fdh(r.releve_at)} : ${fm3(r.index_m3)} m³ (saisi par ${r.auteur_nom||"—"}).\nMotif : ${r.motif||"—"}.\nÀ contrôler sur place.`;$("np").value=fu?"haute":"normale"}
+$("cpd").addEventListener("click",e=>{const b=e.target.closest("[data-tkr]");if(b)cpTicket(b.dataset.tkr);const x=e.target.closest("#cpxr1");if(x){const c=CP.find(y=>y.id==CPCUR);if(c)cpExpRel([c],`releves_${c.nom.replace(/[^\w-]+/g,"_")}_${stm()}.csv`,x)}});
+$("cp_late").addEventListener("click",e=>{const l=e.target.closest("[data-cpl]");if(l){e.preventDefault();cpDetail(l.dataset.cpl)}});
+$("cp_xs").onclick=cpExpSyn;$("cp_xr").onclick=e=>{const sv=$("cp_s").value;cpExpRel(CP.filter(c=>!sv||c.site_id==sv),`compteurs_releves_${stm()}.csv`,e.currentTarget)};
 function cpDetail(id){const c=CP.find(x=>x.id==id);if(!c)return;CPCUR=c.id;const s=cpStats(c),m=gmap(c),rl=RL.filter(r=>r.compteur_id==c.id).slice().reverse();
  const tl=rl.slice(0,60).map(r=>{const prev=RL.filter(p=>p.compteur_id==c.id&&p.statut==="valide"&&(p.releve_at<r.releve_at||(p.releve_at===r.releve_at&&p.id<r.id))).pop(),dl=prev&&r.index_m3>=prev.index_m3?fm3(r.index_m3-prev.index_m3):"—",ap=APP.find(a=>a.appareil_id===r.appareil_id);
-  return`<tr class="${r.statut==="rejete"?"arc":""}"><td>${fdh(r.releve_at)}</td><td class="num">${fm3(r.index_m3)}</td><td class="num">${dl}</td><td>${esc(r.auteur_nom||(r.source==="manuel"?"saisie manuelle":"—"))}</td><td title="${esc(r.appareil_id||"")}">${r.appareil_id?`<a href="#" data-apl="${esc(r.appareil_id)}">${esc(r.appareil_id.slice(0,6))}</a>`:"—"}${ap&&ap.statut!=="inconnu"?` <span class="tag ${ap.statut==="fiable"?"s-resolue":"p-urgente"}">${ap.statut}</span>`:""}</td><td>${r.statut==="valide"?"":r.statut==="rejete"?`<span class="tag p-urgente" title="${esc(r.motif||"")}">rejeté</span>`:`<span class="tag" style="background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700">À VÉRIFIER</span><div style="color:var(--bad);font-size:12px;font-weight:600;white-space:normal">${esc(r.motif||"")}</div>`}</td><td>${canCp()?(r.statut==="valide"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:`<button class="sec" data-rr="${r.id}" data-to="valide">${r.statut==="rejete"?"Rétablir":"Valider"}</button>${r.statut==="a_verifier"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:""}`):""}</td></tr>`}).join("");
+  return`<tr class="${r.statut==="rejete"?"arc":""}"><td>${fdh(r.releve_at)}</td><td class="num">${fm3(r.index_m3)}</td><td class="num">${dl}</td><td>${esc(r.auteur_nom||(r.source==="manuel"?"saisie manuelle":"—"))}</td><td title="${esc(r.appareil_id||"")}">${r.appareil_id?`<a href="#" data-apl="${esc(r.appareil_id)}">${esc(r.appareil_id.slice(0,6))}</a>`:"—"}${ap&&ap.statut!=="inconnu"?` <span class="tag ${ap.statut==="fiable"?"s-resolue":"p-urgente"}">${ap.statut}</span>`:""}</td><td>${r.statut==="valide"?"":r.statut==="rejete"?`<span class="tag p-urgente" title="${esc(r.motif||"")}">rejeté</span>`:`<span class="tag" style="background:var(--bad);color:#fff;border-color:var(--bad);font-weight:700">À VÉRIFIER</span><div style="color:var(--bad);font-size:12px;font-weight:600;white-space:normal">${esc(r.motif||"")}</div>`}</td><td>${canCp()?(r.statut==="valide"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button>`:`<button class="sec" data-rr="${r.id}" data-to="valide">${r.statut==="rejete"?"Rétablir":"Valider"}</button>${r.statut==="a_verifier"?`<button class="sec" data-rr="${r.id}" data-to="rejete">Rejeter</button><button class="sec" data-tkr="${r.id}" title="Créer un ticket prérempli">Créer un ticket</button>`:""}`):""}</td></tr>`}).join("");
  $("cpd").innerHTML=`<h2 style="margin-top:0;padding-right:38px">${esc(c.nom)}${c.actif?"":" (inactif)"}</h2><p class="mute">${esc(siteN(c.site_id))}${c.zone_id?" · "+esc(zoneN(c.zone_id)):""}${c.local?" · "+esc(c.local):""}${c.ref_concessionnaire?" · réf. "+esc(c.ref_concessionnaire):""}${m?` · <a href="${m}" target="_blank" rel="noopener noreferrer">Voir sur Google Maps</a>`:""}</p>
  ${s.al.length?`<p class="msg">⚠ ${esc(s.al.join(" ; "))}</p>`:""}
  <div class="row dper" style="margin:8px 0">${[30,90,180,365].map(d=>`<button class="${CPD===d?"":"sec"}" data-cpd="${d}">${d} j</button>`).join("")}</div>${cpChart(s)}
  ${canCp()?`<div class="row" style="margin:12px 0;align-items:end"><div><label for="cpx">Saisie manuelle d'un index (m³)</label><input id="cpx" inputmode="decimal" placeholder="ex. 12345,6"></div><div><label for="cpt">Date et heure</label><input id="cpt" type="datetime-local"></div><button id="cpxb" style="flex:0 0 auto">Ajouter</button></div><div id="cpxm" class="msg"></div>`:""}
  <div class="table"><table class="cpt"><thead><tr><th>Date</th><th class="num">Index (m³)</th><th class="num">Conso (m³)</th><th>Auteur</th><th>Appareil</th><th>Statut</th><th></th></tr></thead><tbody>${tl||'<tr><td colspan="7" class="empty">Aucun relevé.</td></tr>'}</tbody></table></div>
- <div class="row xfoot">${canCp()?'<button type="button" class="sec" id="cpedit">Modifier le compteur / QR code</button>':""}<button type="button" class="sec" data-close>Fermer</button></div>`;
+ <div class="row xfoot">${canCp()?'<button type="button" class="sec" id="cpedit">Modifier le compteur / QR code</button>':""}<button type="button" class="sec" id="cpxr1">Exporter les relevés (CSV)</button><button type="button" class="sec" data-close>Fermer</button></div>`;
  if(canCp()){const d=new Date(Date.now()-new Date().getTimezoneOffset()*6e4);$("cpt").value=d.toISOString().slice(0,16);
   $("cpedit").onclick=()=>cpEdit(c.id);
   $("cpxb").onclick=async()=>{const v=parseFloat($("cpx").value.replace(/\s/g,"").replace(",","."));if(!isFinite(v)||v<0){$("cpxm").textContent="Index invalide.";return}
