@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- STADES 3M – version 4.18.0 (23/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
+<!-- STADES 3M – version 4.19.0 (24/11/2026) – page publique de saisie d'index de compteur d'eau (production par défaut ; ?e=test pour la base de test) -->
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow"><title>Relevé de compteur</title>
 <style>
@@ -18,7 +18,7 @@ button:disabled{opacity:.5}
 .fuite{background:var(--bad);color:#fff;font-weight:700;font-size:17px;border:3px solid #7a1510;padding:16px}.msg{margin-top:12px;padding:12px;border-radius:8px;font-size:15px}.ok{background:#e6f4ec;color:var(--ok)}.ko{background:#fbe9e7;color:var(--bad)}.wr{background:#fdf6ef;color:var(--warn)}
 .hide{display:none}small{display:block;margin-top:14px;color:var(--mute);font-size:12px}
 </style></head><body>
-<header>Relevé de compteur d'eau</header><div class="test hide" id="tst">BASE DE TEST</div>
+<header>Relevé de compteur d'eau<a id="bk" href="scan.html" style="float:right;color:#fff;font-weight:400;font-size:14px;text-decoration:underline">📷 Scanner</a></header><div class="test hide" id="tst">BASE DE TEST</div>
 <main>
  <div id="load" class="card mute">Chargement…</div>
  <div id="nok" class="card hide"><h1>Compteur introuvable</h1><p class="mute">Ce QR code n'est plus valide ou le compteur est désactivé. Prévenez le responsable du site.</p></div>
@@ -42,7 +42,7 @@ button:disabled{opacity:.5}
 <script src="lib/supabase.min.js"></script><script src="config.js"></script>
 <script>
 (async()=>{
-const $=id=>document.getElementById(id),TST=new URLSearchParams(location.search).get("e")==="test",E=window.STADES_ENVS&&window.STADES_ENVS[TST?"test":"prod"];if(TST)$("tst").classList.remove("hide");
+const $=id=>document.getElementById(id),TST=new URLSearchParams(location.search).get("e")==="test",E=window.STADES_ENVS&&window.STADES_ENVS[TST?"test":"prod"];if(TST){$("tst").classList.remove("hide");$("bk").href="scan.html?e=test"}
 const show=id=>{["load","nok","bloque","f"].forEach(x=>$(x).classList.toggle("hide",x!==id))};
 let app="";try{app=localStorage.getItem("stades_appareil")||"";if(!app){app=(crypto.randomUUID?crypto.randomUUID():String(Math.random()).slice(2)+Date.now().toString(36)+"0000000000000000").replace(/-/g,"");localStorage.setItem("stades_appareil",app)}$("nm").value=localStorage.getItem("stades_releve_nom")||""}catch(e){}
 if(!$("nm").value){const m=document.cookie.match(/(?:^|; )stades_nom=([^;]*)/);if(m)try{$("nm").value=decodeURIComponent(m[1])}catch(e){}}
@@ -53,7 +53,7 @@ const sb=supabase.createClient(E.url,E.key,{auth:{persistSession:false}});
 const fmt=n=>Number(n).toLocaleString("fr-FR",{maximumFractionDigits:3});
 const isNet=err=>!navigator.onLine||/failed to fetch|networkerror|load failed|network request failed|fetch/i.test(String(err&&(err.message||err))),CK="stades_cp_"+tok;
 let c,hors=false;
-try{const {data,error}=await sb.rpc("compteur_public",{p_token:tok,p_appareil:app});if(error)throw error;c=data;if(c)try{localStorage.setItem(CK,JSON.stringify(c))}catch(e){}}
+try{const {data,error}=await sb.rpc("compteur_public",{p_token:tok,p_appareil:app});if(error)throw error;c=data;if(c){c.__e=TST?"test":"prod";try{localStorage.setItem(CK,JSON.stringify(c))}catch(e){}}}
 catch(e){if(isNet(e)){try{c=JSON.parse(localStorage.getItem(CK)||"null")}catch(_){c=null}hors=!!c;if(!c){$("load").textContent="Pas de réseau, et ce compteur n'a encore jamais été ouvert sur ce téléphone. Réessayez avec du réseau.";return}}else{$("load").textContent="Service indisponible, réessayez plus tard.";return}}
 if(!c){show("nok");return}if(c.bloque){show("bloque");return}
 $("cn").textContent=c.nom;$("cs").textContent=[c.site,c.local].filter(Boolean).join(" · ");

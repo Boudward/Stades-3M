@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.18.0 */
+/* STADES 3M – feuille de style – version 4.19.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -119,5 +119,5 @@ table.cpt{width:100%;border-collapse:collapse;font-size:14px}.cpt th,.cpt td{pad
 /* 4.15.0 : les boutons d'action ne sont jamais tronqués par « … » */
 .rt td.ac{overflow:visible;text-overflow:clip}
 
-/* 4.18.0 – alerte ticket sensible */
+/* 4.19.0 – alerte ticket sensible */
 #sensb{background:#b3261e;color:#fff;padding:8px 16px;font-weight:600}#sensb .sb1{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:3px 0}#sensb button{background:#fff;color:#b3261e;border:0;padding:4px 10px;border-radius:6px;font-weight:700;cursor:pointer}
