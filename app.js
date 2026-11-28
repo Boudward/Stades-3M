@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.19.0 */
+/* STADES 3M – application – version 4.20.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -265,15 +265,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.19.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.19.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.20.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.20.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.19.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.20.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -618,7 +618,7 @@ const isResp=r=>r==="responsable";
 const dom=r=>({agent_travaux:"batiments",agent_exploitation:"exploitation"})[r];
 const catDom=x=>(cats.find(c=>c.id===x.categorie_id)||{}).domaine;
 const peutEditer=(x,r)=>r==="admin"||isResp(r);
-const canSee=(x,r)=>peutEditer(x,r)||r==="supervision"||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee");
+const canSee=(x,r)=>peutEditer(x,r)||r==="supervision"||(["demandeur","responsable"].includes(r)&&x.demandeur_id===me.id&&x.statut!=="archivee")||(r==="demandeur"&&!x.sensible&&x.statut!=="archivee"&&me.site_defaut_id!=null&&x.site_id===me.site_defaut_id);
 let cats=[],corps=[];
 const ET={a_planifier:"À planifier",planifiee:"Planifiée",en_attente_pieces:"En attente de pièces",en_cours:"En cours",terminee:"Terminée",annulee:"Annulée"};
 const FINANCES=false;   // passer à true pour réactiver le suivi financier (devis, bon de commande, factures, montants)
@@ -662,7 +662,7 @@ function openDet(id){cur=tk.find(x=>x.id===id);ed=false;drawT();$("dDet").showMo
 function drawT(){const c=cur,E=ed&&canF(),cn=canT();
  $("tbody").innerHTML=`${hdr(c)}<div class="dhb">${canF()?`<button class="ic" data-edit title="Modifier" aria-label="Modifier">✎</button>`:""}${XCL}</div></div>
  <p class="big"><b>${c.ref}</b> – ${esc(c.titre)}</p><div class="desc">${esc(c.description||"Aucune description.")}</div>${PH()?'<div id="phz"></div>':""}
- ${E?`<div class="ep">${baseF(c)}<label>Description</label><textarea data-f="description" rows="3">${esc(c.description||"")}</textarea><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select><label class="ck"><input type="checkbox" data-f="sensible"${c.sensible?" checked":""}> Ticket sensible</label>${cn?`<label>En charge</label><select data-f="en_charge_id">${chargeO(c)}</select>`:""}</div>`:""}
+ ${E?`<div class="ep"><label class="ck sens"><input type="checkbox" data-f="sensible"${c.sensible?" checked":""}><span>⚠ Ticket sensible<small>Visible uniquement du demandeur, de la personne en charge, des responsables, de la supervision et de l'administrateur.</small></span></label>${baseF(c)}<label>Description</label><textarea data-f="description" rows="3">${esc(c.description||"")}</textarea><label>Priorité</label><select data-f="priorite">${prioO(c.priorite)}</select>${cn?`<label>En charge</label><select data-f="en_charge_id">${chargeO(c)}</select>`:""}</div>`:""}
  <p class="meta">${esc(catLab(c))} · demandé par ${esc(c.demandeur_nom||"—")} le ${fdate(c.created_at)} · Priorité ${PR[c.priorite]}${c.sensible?' · <span class="tag" style="background:var(--bad);color:#fff;border-color:var(--bad)">Sensible</span>':""}</p>
  <p><span class="tag s-${c.statut}">${ST[c.statut]}</span>${c.fin_prevue?` &nbsp;Fin d'intervention prévue : <b>${fdate(c.fin_prevue)}</b>`:""}</p>
  ${c.en_charge_nom||cn?`<p>En charge : <b>${esc(c.en_charge_nom||"personne pour l'instant")}</b>${cn&&c.en_charge_id!==me.id?` <button class="sec" data-me>Me l'attribuer</button>`:""}</p>`:""}
@@ -973,7 +973,7 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (4.19.0) =====
+// ===== COMPTEURS D'EAU (4.20.0) =====
 const CPOK=()=>["admin","supervision"].includes(role()),canCp=()=>role()==="admin";
 const CCOLS={
  nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},

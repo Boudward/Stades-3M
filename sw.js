@@ -1,4 +1,4 @@
-/* STADES 3M – version 4.19.0 – service worker : la page de relevé (QR code) reste utilisable sans réseau */
+/* STADES 3M – version 4.20.0 – service worker : la page de relevé (QR code) reste utilisable sans réseau */
 const C="stades-releve-v2",FILES=["releve.html","scan.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png","config.js","lib/supabase.min.js"],PRE=["lib/jsQR/jsQR.js","lib/jsQR/dist/jsQR.js","lib/jsQR/jsQR.min.js","lib/jsQR/dist/jsQR.min.js","lib/jsQR/package/dist/jsQR.js"];
 self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(FILES.concat(PRE).map(f=>c.add(f).catch(()=>{})))).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(x=>x!==C).map(x=>caches.delete(x)))).then(()=>self.clients.claim()))});
