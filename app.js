@@ -1,4 +1,4 @@
-/* STADES 3M – application – version 4.20.0 */
+/* STADES 3M – application – version 4.21.0 */
 const INVITE=/type=(invite|recovery)/.test(location.hash); // lien d'invitation reçu par e-mail
 const ENVS = window.STADES_ENVS, TITRE0 = document.title;
 function envDuLien(){ // lien d'invitation ou de réinitialisation : la base est déduite de l'émetteur du jeton
@@ -56,9 +56,10 @@ const IC=(a,i,t)=>{const m={e:["✎","Renommer"],x:[TRASH,"Supprimer"],r:["↺",
 function renderGrids(){const row=(t,x,d)=>`<div class="gr${x.actif===false?" off":""}"><span>${esc(x.nom)}</span><span>${t==="corps_etat"?refSel(x,d):""}${x.actif===false?IC("r",x.id,t):IC("e",x.id,t)}${IC("x",x.id,t)}</span></div>`,
  add=(ph,t,p)=>`<div class="gadd"><input placeholder="${ph}" data-n aria-label="${ph}"><button data-add="${t}" data-p="${p}" aria-label="${ph}">+</button></div>`;
  $("clists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(${cats.length||1},minmax(0,1fr))">`+cats.map(c=>`<div class="gc"><h4>${esc(c.nom)}</h4>${corps.filter(x=>x.categorie_id===c.id).map(x=>row("corps_etat",x,c.domaine)).join("")}${add("Nouveau lot","corps_etat",c.id)}</div>`).join("")+`</div>`;
- $("lists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">`+sites.map(s=>`<div class="gc"><h4><span>${esc(s.nom)}${s.actif===false?" (désactivé)":""}</span><span>${s.actif===false?IC("r",s.id,"sites"):IC("e",s.id,"sites")}${IC("x",s.id,"sites")}</span></h4>${zoneL.filter(t=>t.site_id===s.id).map(t=>row("zones",t)).join("")}${add("Nouvelle zone","zones",s.id)}</div>`).join("")+`</div>`}
+ $("lists").innerHTML=`<div class="grid" style="grid-template-columns:repeat(auto-fill,minmax(240px,1fr))">`+sites.map(s=>`<div class="gc"><h4><span>${esc(s.nom)}${s.actif===false?" (désactivé)":""}</span><span>${s.actif===false?IC("r",s.id,"sites"):IC("e",s.id,"sites")}${IC("x",s.id,"sites")}</span></h4><p class="mute" style="margin:0 0 6px;font-size:12px">${s.categorie_site?`${SCAT[s.categorie_site]||esc(s.categorie_site)} · fonction ${s.fonction_comptable||"—"} · sous-fonction ${s.sous_fonction||"—"}`:"Catégorie et fonction comptable à renseigner (crayon)"}</p>${zoneL.filter(t=>t.site_id===s.id).map(t=>row("zones",t)).join("")}${add("Nouvelle zone","zones",s.id)}</div>`).join("")+`</div>`}
 async function gridClick(e){const b=e.target.closest("button");if(!b)return;const d=b.dataset;
  if(d.add){const n=b.previousElementSibling.value.trim();if(n)adm(sb.from(d.add).insert({[d.add==="corps_etat"?"categorie_id":"site_id"]:+d.p,nom:n}));return}
+ if(d.a==="e"&&d.t==="sites"){openSite(sites.find(x=>x.id==d.i));return}
  if(d.a==="e"){const o=(d.t==="sites"?sites:d.t==="zones"?zoneL:corps).find(x=>x.id==d.i),n=(prompt("Nouveau nom :",o.nom)||"").trim();if(n&&n!==o.nom)adm(sb.from(d.t).update({nom:n}).eq("id",d.i))}
  else if(d.a==="r")adm(sb.from(d.t).update({actif:true}).eq("id",d.i));
  else if(d.a==="x"){if(!confirm("Supprimer cet élément ?"))return;const {error}=await sb.from(d.t).delete().eq("id",d.i);
@@ -265,15 +266,15 @@ async function exportLocal(btn){const m=$("dmsg"),old=btn.textContent;btn.disabl
     else{const r=await sb.storage.from("photos").download(p.chemin);if(r.error||!r.data)throw new Error("absente");buf=new Uint8Array(await r.data.arrayBuffer());telech++}
     await zip.add("photos/"+p.chemin,buf)}catch(_){manq.push(p.chemin)}}
   m.textContent="Écriture des données…";
-  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.20.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
-  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.20.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
+  const hist=((prev&&prev.copies)||[]).concat([{date:new Date().toISOString(),version:"4.21.0",environnement:ENV,tickets:tables.tickets.length,interventions:tables.interventions.length,photos:tables.photos.length-manq.length,photos_ajoutees:telech,cumul:!!prev}]);
+  await zip.add("donnees.json",enc.encode(JSON.stringify({application:"STADES 3M",type:"export-consultable",version:"4.21.0",date:new Date().toISOString(),environnement:ENV,photos_manquantes:manq,copies:hist,tables})));
   try{const r=await fetch("consultation/consulter.html");if(r.ok)await zip.add("consulter.html",new Uint8Array(await r.arrayBuffer()))}catch(_){}
   await zip.add("LISEZ-MOI.txt",enc.encode(LISEZ_LOCAL));await zip.end();if(w){await w.close();w=null}if(parts)dlB(new Blob(parts,{type:"application/zip"}),name);
   m.style.color="var(--ok)";m.textContent=`Copie ${prev?"mise à jour":"créée"} : ${tables.tickets.length} ticket(s), ${tables.interventions.length} intervention(s), ${tables.photos.length-manq.length} photo(s)`+(prev?` (${telech} nouvelle(s), ${copiees} reprise(s) de la copie précédente)`:"")+"."+(manq.length?` ${manq.length} photo(s) introuvable(s) (listées dans le fichier).`:"")+" Conservez ce nouveau ZIP ; l'ancien peut être supprimé une fois vérifié."}
  catch(e){if(w)try{await w.abort()}catch(_){}m.style.color="";m.textContent="Copie impossible : "+errMsg(e)}
  btn.disabled=false;btn.textContent=old}
 $("exl").onclick=()=>exportLocal($("exl"));
-$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.20.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
+$("bkp").onclick=async()=>{const m=$("dmsg");m.style.color="";try{const o={application:"STADES 3M",type:"sauvegarde",version:"4.21.0",date:new Date().toISOString(),tables:{}};for(const t of TBX()){m.textContent="Export : "+t+"…";o.tables[t]=await tbl(t,OB[t]||"id")}
  dl(o,`stades3m_sauvegarde_${today()}.json`);m.style.color="var(--ok)";m.textContent="Sauvegarde téléchargée : conservez le fichier en lieu sûr (il contient des données personnelles)."+(PH()?" Les fichiers des photos ne sont pas inclus (seule leur liste l'est) : ils sont dans le stockage Supabase et dans les archives.":"")}catch(e){m.textContent=errMsg(e)}};
 let CAND=null;
 $("acand").onclick=async()=>{$("dmsg").textContent="";const {data,error}=await sb.rpc("archive_candidats",{p_mois_tickets:+$("amt").value,p_mois_audit:+$("ama").value});if(error){$("dmsg").style.color="";$("dmsg").textContent=errMsg(error);return}
@@ -498,7 +499,15 @@ async function loadAdmin(){
 async function adm(p){const {error}=await p;$("amsg").textContent=error?"Action impossible : "+errMsg(error):"";if(error)alert("Action impossible : "+errMsg(error));await load();loadAdmin()}
 $("urows").onchange=e=>{const t=e.target,f=t.dataset.f==="site_defaut_id"?"site_defaut_id":"role";adm(sb.from("profiles").update({[f]:f==="role"?t.value:(t.value?+t.value:null)}).eq("id",t.dataset.u))};
 $("urows").onclick=e=>{const b=e.target.closest("button");if(b&&b.dataset.e)editU(b.dataset.u);else if(b)adm(sb.from("profiles").update({actif:b.dataset.v==="true"}).eq("id",b.dataset.u))};
-$("asb").onclick=()=>{if($("as").value.trim()){adm(sb.from("sites").insert({nom:$("as").value.trim()}));$("as").value=""}};
+const SCAT={gymnase:"Gymnase",stade:"Stade",terrain:"Terrain",mobilier:"Mobilier"};let SITE_E=null;
+$("sx_s").innerHTML='<option value="">—</option>'+Array.from({length:20},(_,i)=>`<option>${i+1}</option>`).join("");
+function openSite(s){SITE_E=s?s.id:null;$("fSite").reset();$("dSiteT").textContent=s?"Modifier le site":"Nouveau site";$("sx_n").value=s?s.nom:"";$("sx_c").value=s&&s.categorie_site||"";$("sx_f").value=s&&s.fonction_comptable||"";$("sx_s").value=s&&s.sous_fonction||"";$("sxmsg").textContent="";$("dSite").showModal();setTimeout(()=>$("sx_n").focus(),50)}
+$("asb").onclick=()=>openSite(null);
+$("fSite").onsubmit=async e=>{e.preventDefault();const p={nom:$("sx_n").value.trim(),categorie_site:$("sx_c").value,fonction_comptable:+$("sx_f").value,sous_fonction:+$("sx_s").value};
+ if(!p.nom||!p.categorie_site||!$("sx_f").value||!$("sx_s").value){$("sxmsg").textContent="Renseignez tous les champs.";return}
+ const {error}=await (SITE_E?sb.from("sites").update(p).eq("id",SITE_E):sb.from("sites").insert(p));
+ if(error){$("sxmsg").textContent="Enregistrement impossible : "+errMsg(error);return}
+ $("dSite").close();await load();loadAdmin()};
 $("drows").onclick=async e=>{const b=e.target.closest("button");if(!b)return;
  if(b.dataset.a==="suppr"){if(!confirm("Supprimer cette demande ? Le compte éventuellement déjà créé n'est pas touché."))return;
   const {error}=await sb.from("demandes_compte").delete().eq("id",b.dataset.d);
@@ -973,7 +982,7 @@ document.querySelectorAll("dialog").forEach(d=>{if(d.id==="dPw")return;d.addEven
 const catOpts=()=>cats.map(c=>`<option value="${c.id}">${esc(c.nom)}</option>`).join("");
 const corpsOpts=cid=>`<option value="">— Choisir un corps d'état —</option>`+corps.filter(x=>x.actif!==false&&x.categorie_id==cid).map(x=>`<option value="${x.id}">${esc(x.nom)}</option>`).join("");
 $("ncat").onchange=()=>$("ncorps").innerHTML=corpsOpts($("ncat").value);
-// ===== COMPTEURS D'EAU (4.20.0) =====
+// ===== COMPTEURS D'EAU (4.21.0) =====
 const CPOK=()=>["admin","supervision"].includes(role()),canCp=()=>role()==="admin";
 const CCOLS={
  nom:{...mk("Compteur",s=>s.c.nom+(s.c.actif?"":" (inactif)")),c:"tt",lock:1,h:s=>`<b>${esc(s.c.nom)}</b>${s.c.actif?"":" (inactif)"}`},

@@ -1,4 +1,4 @@
-/* STADES 3M – feuille de style – version 4.20.0 */
+/* STADES 3M – feuille de style – version 4.21.0 */
 :root{--bg:#eef1f7;--ink:#1c2b33;--mute:#5d6e77;--line:#d3d9e6;--accent:#102d69;--warn:#c8641b;--bad:#b3261e;--ok:#2f7d4f;font-family:"Segoe UI",system-ui,sans-serif}
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font-size:15px}
 header{background:var(--accent);color:#fff;padding:10px 20px;display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap}
@@ -119,8 +119,8 @@ table.cpt{width:100%;border-collapse:collapse;font-size:14px}.cpt th,.cpt td{pad
 /* 4.15.0 : les boutons d'action ne sont jamais tronqués par « … » */
 .rt td.ac{overflow:visible;text-overflow:clip}
 
-/* 4.20.0 – alerte ticket sensible */
+/* 4.21.0 – alerte ticket sensible */
 #sensb{background:#b3261e;color:#fff;padding:8px 16px;font-weight:600}#sensb .sb1{display:flex;gap:10px;align-items:center;flex-wrap:wrap;padding:3px 0}#sensb button{background:#fff;color:#b3261e;border:0;padding:4px 10px;border-radius:6px;font-weight:700;cursor:pointer}
 
-/* 4.20.0 – case « ticket sensible » mise en évidence */
+/* 4.21.0 – case « ticket sensible » mise en évidence */
 label.ck.sens{display:flex;align-items:flex-start;gap:10px;margin:0 0 12px;padding:10px 12px;border:2px solid var(--bad,#b3261e);border-radius:10px;background:#fdecea;color:var(--bad,#b3261e);font-weight:800;font-size:16px;cursor:pointer}label.ck.sens input{width:22px;height:22px;margin-top:2px;accent-color:#b3261e;flex:none}label.ck.sens small{display:block;margin-top:2px;font-weight:400;font-size:12px;color:#5d1a15}
